@@ -61,6 +61,29 @@ export default function Vehicles() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [profiles, setProfiles] = useState<Record<string, CarProfile>>(loadProfiles);
+  const [overrideHistory, setOverrideHistory] = useState<Record<string, any[]>>(() => {
+    try { return JSON.parse(localStorage.getItem("palma_state_overrides") || "{}"); } catch { return {}; }
+  });
+  const [customStates, setCustomStates] = useState<any[]>(() => {
+    try { return JSON.parse(localStorage.getItem("palma_custom_states") || "[]"); } catch { return []; }
+  });
+
+  // Sync overrides and custom states from Firebase
+  useEffect(() => {
+    const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+    fetch(`${DB}/app_settings/overrides.json`).then(r => r.json()).then(data => {
+      if (data && typeof data === "object") {
+        localStorage.setItem("palma_state_overrides", JSON.stringify(data));
+        setOverrideHistory(data);
+      }
+    }).catch(() => {});
+    fetch(`${DB}/app_settings/custom_states.json`).then(r => r.json()).then(data => {
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem("palma_custom_states", JSON.stringify(data));
+        setCustomStates(data);
+      }
+    }).catch(() => {});
+  }, []);
 
   // Load profiles from bundled car-data.json on mount
   useEffect(() => {
@@ -150,10 +173,9 @@ export default function Vehicles() {
 
     // Check overrides history
     try {
-      const history = JSON.parse(localStorage.getItem("palma_state_overrides") || "{}");
-      const entries: any[] = history[key] || [];
+      const entries: any[] = overrideHistory[key] || [];
       const allContracts = contracts.filter(c => norm(c.registration) === key && !c._deleted);
-      const entry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to >= t));
+      const entry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to === undefined || e.to >= t));
       if (entry) {
         const overrideFrom = entry.from;
         const newerContract = allContracts.some(c => c.departureDate >= overrideFrom && c.departureDate <= t);
@@ -183,11 +205,9 @@ export default function Vehicles() {
       try {
         const key = norm(registration);
         const t = today();
-        const history = JSON.parse(localStorage.getItem("palma_state_overrides") || "{}");
-        const entries: any[] = history[key] || [];
-        const entry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to >= t));
+        const entries: any[] = overrideHistory[key] || [];
+        const entry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to === undefined || e.to >= t));
         if (entry) {
-          const customStates = JSON.parse(localStorage.getItem("palma_custom_states") || "[]");
           const cs = customStates.find((s: any) => s.id === entry.state);
           if (cs) return cs.label;
         }
@@ -207,10 +227,8 @@ export default function Vehicles() {
       try {
         const key = norm(registration);
         const t = today();
-        const history = JSON.parse(localStorage.getItem("palma_state_overrides") || "{}");
-        const entries: any[] = history[key] || [];
-        const entry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to >= t));
-        const customStates = JSON.parse(localStorage.getItem("palma_custom_states") || "[]");
+        const entries: any[] = overrideHistory[key] || [];
+        const entry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to === undefined || e.to >= t));
         const cs = customStates.find((s: any) => s.id === entry?.state);
         if (cs) return <span className="px-2 py-0.5 text-white rounded-full text-[10px] font-medium" style={{ backgroundColor: cs.color }}>{cs.label}</span>;
       } catch {}
