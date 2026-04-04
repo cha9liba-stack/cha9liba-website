@@ -1,0 +1,10 @@
+/**
+ * Google Sheets Service Account credentials.
+ * ⚠️ In production, store these in Tauri's secure storage or env variables.
+ * Never commit the real private_key to a public repository.
+ */
+export const SHEETS_CONFIG = {
+  client_email: "palma-sheets-sync@engaged-time-492111-u2.iam.gserviceaccount.com",
+  // Replace \n with actual newlines
+  private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDEWR8p+lecKp4l\nCOMtXS3ZZHM6ldM++SHrIRcTx01pP8qxnqMgvb9rFx7rB4fF2lCQQre9dc5nIR9P\ngyECO5gO/6iE862wpSsH7W7bAp54YiUnL1RXmT8Qbab8NMha7uIsR+aHGzUBfC8+\nZSnHvq+RjbMP2Ys00CO/ergABd4ZLbmjcZChObapzoANvzKvnrGd+e7vQhledosA\nZ4Fe/TgNOqtMxtXVss4hq8qZQVUQ+glCcXz4ZnKiIygX0CzKVzTQN9chUi9ewQpD\nijZSPLjagewSvGn7mzNx+WMLhG5H5CEe5S8RRiR3jIkzi0KKezkpAxm0lYiaJy/Z\nIgfV4rOdAgMBAAECggEAAJCja5GWGMkG8U3W04MCC68DkDQCqoV5K230sktKRdGC\nbI5A42pQXPHxK5V3C/geb7qAFgTlrhEfv9uS0n4SkwZ5eRUiFzuecFR7/hgs6w/t\n50XhAlXaoy+MQbZdgOTQ6fY0q7JbGHDqSjhsd+/snZNbZCII3xhzOzeSmc4VLxwx\nMuRo/GKzR1ap2yTHjhPlOXAVkRqlx/iizRzLph3qEN95gqho98KvRsthCbzsJ+hp\nlZcL/0ejQc51HJlIdzhN00KcAhNxgPtENjF1y1ed5pp1BiyxGiIg9rd5Hd5fbSjS\nmEQOOT6laQoWWq5BrYHhCWXpJkHudftyUcBtQ+oOYQKBgQDpcZ4rT4Cgt9sRoUuk\nhAkTPWEwA6NhvvQUsd9jFluBCErPOHdmrHvR2MtEdf2T1NwbUW6b6uL+J4W9XpZh\na70xD2vFzWt8fztPRwrYLYqAipDAcokeG82eufnCC0ww75NZMZTVTzo+PuwYxMWE\nhECIixVz07/x00YdtDMyoe4F/QKBgQDXUesXUJC0JzKhQH0DrIAN6vsoUpx/Win3\n8v7/ETppI6bTpDL7ivkrX2def6CpJLh3uS0RtIcjVOEtG490fHCMxcANOtp8cwI+\nfcqcvjaVriQhJxc0lPDbZ6cqb29iEQxyvM5FqrGHZcQ3u6jcjIssrWJw0iGmuz1s\nX+A3f1AGIQKBgG3Mk/GZFk4BzBdRv0tlEwOqphC4VVt/PjyRoRlxBZ7+MHmg/IAd\ndquwBYNw39FtmA19UsIhS5zxJ/V3DNJLo5P0xeMmiHzpNxNFvfMKEI//HLB37shr\nmV4j6TZ8q9yEgtC8Al4GQsXOQKwxuRloPxY6HN/649gxYFROUpppEZRdAoGAXiAg\nXfPJHgfYmScgvz9kRzFGk8zxPrbCi/J8yDHWz+lW30PzSYTqAazV+jhemjJENYoM\niqXZQXe0a8yVfH19kfxMRTxKEIcSHxFMRhLct7gFcTyuZz0IwVDhgapvDXaYc3vX\nzBqfOqohCaAOZENH/8LXuqwRK9rEMiEDWh9ccyECgYEAzrwuQQ4NOn/tRnHW29L9\nIMMjlRy8wpS9zelp69w2FuISwe8a2L60LzBlarbBJr+3Ho+NR5yVEd4OPRJ24XxV\n3B/sv5cXL25fNX7Io+hNXvxLpxIYXOcwDBYaBbxgPff4tZWsaFMvNJTPk4feiymK\nvNvkEssiuCQqxD2i97KYnDA=\n-----END PRIVATE KEY-----\n",
+};
