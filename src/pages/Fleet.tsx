@@ -21,6 +21,26 @@ function saveLastContracts(d: Record<string, Contract>) {
 
 // Manual state overrides per car — historical: each entry has from/to dates
 const OVERRIDES_KEY = "palma_state_overrides";
+const DB_URL_FLEET = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
+async function fbSaveOverrides(d: OverrideHistory) {
+  localStorage.setItem(OVERRIDES_KEY, JSON.stringify(d));
+  try {
+    await fetch(`${DB_URL_FLEET}/app_settings/overrides.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(d),
+    });
+  } catch {}
+}
+
+async function fbLoadOverrides(): Promise<OverrideHistory | null> {
+  try {
+    const res = await fetch(`${DB_URL_FLEET}/app_settings/overrides.json`);
+    if (res.ok) { const d = await res.json(); return d; }
+  } catch {}
+  return null;
+}
 type BuiltinOverride = "available" | "maintenance";
 type CarOverride = BuiltinOverride | string; // string = custom state id
 
@@ -52,6 +72,7 @@ function loadOverrideHistory(): OverrideHistory {
 }
 function saveOverrideHistory(d: OverrideHistory) {
   localStorage.setItem(OVERRIDES_KEY, JSON.stringify(d));
+  fbSaveOverrides(d);
 }
 
 // Get the active override for a car on a given date
@@ -217,6 +238,30 @@ export default function Fleet() {
   useEffect(() => { save(K.maint, maint); }, [maint]);
   useEffect(() => { save(K.res, res); }, [res]);
   useEffect(() => { save(K.unpaid, unpaid); }, [unpaid]);
+
+  // Sync overrides from Firebase on mount and every 30s
+  useEffect(() => {
+    function syncOverrides() {
+      fbLoadOverrides().then(data => {
+        if (!data) return;
+        // Migrate if needed
+        const migrated: OverrideHistory = {};
+        for (const [key, val] of Object.entries(data)) {
+          if (typeof val === "string") {
+            migrated[key] = [{ state: val as CarOverride, from: "2020-01-01", to: null }];
+          } else if (Array.isArray(val)) {
+            migrated[key] = val as OverrideEntry[];
+          }
+        }
+        localStorage.setItem(OVERRIDES_KEY, JSON.stringify(migrated));
+        setOverrideHistory(migrated);
+        setOverrides(buildOverridesForDate(migrated, date));
+      });
+    }
+    syncOverrides();
+    const interval = setInterval(syncOverrides, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Persist last contract per car whenever contracts change
   useEffect(() => {
