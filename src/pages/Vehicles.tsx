@@ -1,49 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
-import { Car, ChevronRight, AlertTriangle, Search, X, Download, RefreshCw } from "lucide-react";
+import { Car, ChevronRight, AlertTriangle, Search, X } from "lucide-react";
 import type { CarProfile } from "../types";
 
-const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
-
-// ─── Firebase + localStorage hybrid for profiles ──────────────────────────────
+// ─── localStorage for profiles ────────────────────────────────────────────────
 const PROFILES_KEY = "palma_car_profiles";
-
-async function fbGetProfiles(): Promise<Record<string, CarProfile>> {
-  try {
-    const res = await fetch(`${DB_URL}/car_profiles.json`);
-    if (res.ok) {
-      const d = await res.json();
-      if (!d) return {};
-      // Ensure documents and expenses arrays exist
-      const result: Record<string, CarProfile> = {};
-      for (const [key, val] of Object.entries(d as Record<string, any>)) {
-        result[key] = {
-          registration: key,
-          documents: [],
-          expenses: [],
-          ...val,
-        };
-      }
-      return result;
-    }
-  } catch {}
-  return {};
-}
-
-async function fbSaveProfile(key: string, profile: CarProfile) {
-  try {
-    await fetch(`${DB_URL}/car_profiles/${key}.json`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
-    });
-  } catch {}
-  // Also save locally
-  const all = loadProfiles();
-  all[key] = profile;
-  localStorage.setItem(PROFILES_KEY, JSON.stringify(all));
-}
 
 function loadProfiles(): Record<string, CarProfile> {
   try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || "{}"); } catch { return {}; }
@@ -99,54 +61,28 @@ export default function Vehicles() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [profiles, setProfiles] = useState<Record<string, CarProfile>>(loadProfiles);
-  const [importing, setImporting] = useState(false);
-  const [importMsg, setImportMsg] = useState("");
 
-  // Load profiles from Firebase on mount
+  // Load profiles from bundled car-data.json on mount
   useEffect(() => {
-    fbGetProfiles().then(data => {
-      if (Object.keys(data).length > 0) {
-        const merged = { ...loadProfiles(), ...data };
+    fetch("/car-data.json")
+      .then(r => r.json())
+      .then((carData: Record<string, any>) => {
+        const current = loadProfiles();
+        const merged: Record<string, CarProfile> = { ...current };
+        for (const [key, data] of Object.entries(carData)) {
+          const normKey = key.toUpperCase();
+          merged[normKey] = {
+            registration: normKey,
+            documents: current[normKey]?.documents || [],
+            expenses: current[normKey]?.expenses || [],
+            ...data,
+            photo: current[normKey]?.photo || data.photo,
+          };
+        }
         setProfiles(merged);
         localStorage.setItem(PROFILES_KEY, JSON.stringify(merged));
-      }
-    });
+      }).catch(() => {});
   }, []);
-
-  async function importAllFromOldSystem() {
-    setImporting(true);
-    setImportMsg("");
-    try {
-      // Load from bundled car-data.json (no external dependency)
-      const res = await fetch("/car-data.json");
-      const carData: Record<string, any> = await res.json();
-      let count = 0;
-      for (const [key, data] of Object.entries(carData)) {
-        const existing = profiles[key] || { registration: key, documents: [], expenses: [] };
-        const updated: CarProfile = {
-          ...existing,
-          priceAchat: data.priceAchat,
-          avance: data.avance,
-          priceTrait: data.priceTrait,
-          nombreMoisFix: data.nombreMoisFix,
-          dateFirstCirculation: data.dateFirstCirculation,
-          dateFirstTrait: data.dateFirstTrait,
-          kilometrage: data.kilometrage,
-          color: data.color,
-          year: data.year,
-          photo: existing.photo || data.photo,
-        };
-        await fbSaveProfile(key, updated);
-        count++;
-      }
-      setProfiles(loadProfiles());
-      setImportMsg(`✓ ${count} véhicules importés`);
-    } catch {
-      setImportMsg("Erreur lors de l'import");
-    } finally {
-      setImporting(false);
-    }
-  }
 
   const fleetCars = useMemo(() => {
     try {
@@ -290,14 +226,6 @@ export default function Vehicles() {
         <div>
           <h1 className="text-lg font-bold text-slate-800">Véhicules</h1>
           <p className="text-xs text-slate-400 mt-0.5">{fleetCars.length} véhicules · Cliquez pour voir les détails</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={importAllFromOldSystem} disabled={importing}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white rounded-xl font-medium transition-colors">
-            {importing ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
-            {importing ? "Import..." : "Sync données"}
-          </button>
-          {importMsg && <span className="text-xs text-green-600 font-medium">{importMsg}</span>}
         </div>
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
