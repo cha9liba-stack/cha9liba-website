@@ -244,7 +244,6 @@ export default function Fleet() {
     function syncOverrides() {
       fbLoadOverrides().then(data => {
         if (!data) return;
-        // Migrate if needed
         const migrated: OverrideHistory = {};
         for (const [key, val] of Object.entries(data)) {
           if (typeof val === "string") {
@@ -255,11 +254,10 @@ export default function Fleet() {
         }
         localStorage.setItem(OVERRIDES_KEY, JSON.stringify(migrated));
         setOverrideHistory(migrated);
-        setOverrides(buildOverridesForDate(migrated, date));
       });
     }
     syncOverrides();
-    const interval = setInterval(syncOverrides, 30000);
+    const interval = setInterval(syncOverrides, 15000);
     return () => clearInterval(interval);
   }, []);
 
