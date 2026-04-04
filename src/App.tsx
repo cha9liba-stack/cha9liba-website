@@ -9,6 +9,7 @@ import Fleet from "./pages/Fleet";
 import Vehicles from "./pages/Vehicles";
 import VehicleDetail from "./pages/VehicleDetail";
 import Clients from "./pages/Clients";
+import InvoicePublic from "./pages/InvoicePublic";
 import { lazy, Suspense } from "react";
 
 const Invoices = lazy(() => import("./pages/Invoices"));
@@ -23,6 +24,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/invoice" element={<InvoicePublic />} />
         <Route
           path="/"
           element={

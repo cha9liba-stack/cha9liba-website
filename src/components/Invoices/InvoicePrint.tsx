@@ -66,20 +66,14 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   // ── Generate QR code ───────────────────────────────────────────────────────
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   useEffect(() => {
-    // QR content: invoice summary readable on any phone
-    const qrText = [
-      `${typeLabel}: ${invNum}`,
-      `Date: ${invDate}`,
-      `Client: ${client.name}`,
-      client.mf ? `MF: ${client.mf}` : "",
-      `Total TTC: ${fmt(totalTTC)} TND`,
-      lines.map(l => `#${l.contractNumber || l.date} - ${l.designation} - ${fmt(l.amount||0)} TND`).join(" | "),
-      `${CO.nameFr} | Tel:${CO.tel}`,
-    ].filter(Boolean).join("\n");
+    // QR content: link to public invoice page
+    const baseUrl = window.location.origin;
+    const qrText = `${baseUrl}/invoice?id=${invoice.id || invNum}`;
 
     QRCode.toDataURL(qrText, {
       width: 120,
       margin: 1,
+      errorCorrectionLevel: "M",
       color: { dark: "#000000", light: "#ffffff" },
     }).then(setQrDataUrl).catch(console.warn);
   }, [invNum, invDate, totalTTC, lines]);
