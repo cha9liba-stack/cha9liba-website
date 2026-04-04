@@ -310,7 +310,7 @@ export default function Fleet() {
   // ── Fleet = user-managed list ──────────────────────────────────────────────
   const allCars = useMemo(() => fleetCars, [fleetCars]);
 
-  const rentedRegs = useMemo(() => new Set(rentedCars.map(c => norm(c.registration || ""))), [rentedCars]);  const maintRegs  = useMemo(() => new Set(maintOnDate.map(m => norm(m.registration || ""))), [maintOnDate]);
+  const maintRegs  = useMemo(() => new Set(maintOnDate.map(m => norm(m.registration || ""))), [maintOnDate]);
 
   // ── Fleet status: each car with its current state ──
   type CarState = "rented" | "late" | "maintenance" | "available" | "custom";

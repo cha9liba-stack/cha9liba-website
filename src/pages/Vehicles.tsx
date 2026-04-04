@@ -5,7 +5,6 @@ import { Car, ChevronRight, AlertTriangle, Search, X, Download, RefreshCw } from
 import type { CarProfile } from "../types";
 
 const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
-const OLD_API = "https://palmarentcar.tn/api/cars";
 
 // ─── Firebase + localStorage hybrid for profiles ──────────────────────────────
 const PROFILES_KEY = "palma_car_profiles";
@@ -34,16 +33,6 @@ async function fbSaveProfile(key: string, profile: CarProfile) {
 
 function loadProfiles(): Record<string, CarProfile> {
   try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || "{}"); } catch { return {}; }
-}
-
-function matchMatricule(a: string, b: string): boolean {
-  const clean = (s: string) => s.replace(/\s+/g, "").toLowerCase();
-  const ca = clean(a); const cb = clean(b);
-  if (ca === cb) return true;
-  const parse = (s: string) => { const m = s.match(/^(\d+)(tu)(\d+)$/i); return m ? { l: m[1], r: m[3] } : null; };
-  const pa = parse(ca); const pb = parse(cb);
-  if (!pa || !pb) return false;
-  return (pa.l === pb.l && pa.r === pb.r) || (pa.l === pb.r && pa.r === pb.l);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -114,40 +103,32 @@ export default function Vehicles() {
     setImporting(true);
     setImportMsg("");
     try {
-      const res = await fetch(OLD_API);
-      const cars: any[] = await res.json();
+      // Load from bundled car-data.json (no external dependency)
+      const res = await fetch("/car-data.json");
+      const carData: Record<string, any> = await res.json();
       let count = 0;
-      for (const car of cars) {
-        if (!car.matricule) continue;
-        const key = car.matricule.replace(/\s+/g, "").toUpperCase();
+      for (const [key, data] of Object.entries(carData)) {
         const existing = profiles[key] || { registration: key, documents: [], expenses: [] };
         const updated: CarProfile = {
           ...existing,
-          priceAchat: car.price_achat,
-          priceVent: car.price_vent,
-          avance: car.avance,
-          priceTrait: car.price_trait,
-          nombreMoisFix: car.nombre_de_mois_fix,
-          dateFirstCirculation: car.date_first_circulation?.slice(0, 10),
-          dateFirstTrait: car.date_first_trait?.slice(0, 10),
-          kilometrage: car.kilometrage,
-          color: car.color,
-          year: car.year,
-          category: car.category,
+          priceAchat: data.priceAchat,
+          avance: data.avance,
+          priceTrait: data.priceTrait,
+          nombreMoisFix: data.nombreMoisFix,
+          dateFirstCirculation: data.dateFirstCirculation,
+          dateFirstTrait: data.dateFirstTrait,
+          kilometrage: data.kilometrage,
+          color: data.color,
+          year: data.year,
+          photo: existing.photo || data.photo,
         };
-        // Use local image from /car-images/ folder
-        if (car.images?.length > 0) {
-          const imgPath = car.images[0];
-          const ext = imgPath.split('.').pop();
-          updated.photo = `/car-images/${key}.${ext}`;
-        }
         await fbSaveProfile(key, updated);
         count++;
       }
       setProfiles(loadProfiles());
       setImportMsg(`✓ ${count} véhicules importés`);
     } catch {
-      setImportMsg("Erreur de connexion");
+      setImportMsg("Erreur lors de l'import");
     } finally {
       setImporting(false);
     }

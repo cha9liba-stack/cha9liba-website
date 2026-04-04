@@ -8,27 +8,6 @@ import {
 } from "lucide-react";
 import type { CarProfile, CarDocument, CarExpense } from "../types";
 
-const OLD_API = "https://palmarentcar.tn/api/cars";
-
-// Match matricules regardless of order: "1162TU245" == "245tu1162"
-function matchMatricule(a: string, b: string): boolean {
-  const clean = (s: string) => s.replace(/\s+/g, "").toLowerCase();
-  const ca = clean(a);
-  const cb = clean(b);
-  if (ca === cb) return true;
-  // Extract digits and letters parts and compare reversed
-  const parse = (s: string) => {
-    const m = s.match(/^(\d+)(tu)(\d+)$/i);
-    if (m) return { left: m[1], right: m[3] };
-    return null;
-  };
-  const pa = parse(ca);
-  const pb = parse(cb);
-  if (!pa || !pb) return false;
-  return (pa.left === pb.left && pa.right === pb.right) ||
-         (pa.left === pb.right && pa.right === pb.left);
-}
-
 const PROFILES_KEY = "palma_car_profiles";
 const DB_URL_PROFILES = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
 
