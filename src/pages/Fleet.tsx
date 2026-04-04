@@ -125,6 +125,12 @@ function loadCustomStates(): CustomCarState[] {
 }
 function saveCustomStates(d: CustomCarState[]) {
   localStorage.setItem(CUSTOM_STATES_KEY, JSON.stringify(d));
+  // Sync to Firebase
+  fetch(`${DB_URL_FLEET}/app_settings/custom_states.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(d),
+  }).catch(() => {});
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -237,9 +243,9 @@ export default function Fleet() {
   useEffect(() => { save(K.res, res); }, [res]);
   useEffect(() => { save(K.unpaid, unpaid); }, [unpaid]);
 
-  // Sync overrides from Firebase on mount and every 30s
+  // Sync overrides and custom states from Firebase on mount and every 15s
   useEffect(() => {
-    function syncOverrides() {
+    function syncFromFirebase() {
       fbLoadOverrides().then(data => {
         if (!data) return;
         const migrated: OverrideHistory = {};
@@ -253,9 +259,18 @@ export default function Fleet() {
         localStorage.setItem(OVERRIDES_KEY, JSON.stringify(migrated));
         setOverrideHistory(migrated);
       });
+      // Sync custom states
+      fetch(`${DB_URL_FLEET}/app_settings/custom_states.json`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            localStorage.setItem(CUSTOM_STATES_KEY, JSON.stringify(data));
+            setCustomStates(data);
+          }
+        }).catch(() => {});
     }
-    syncOverrides();
-    const interval = setInterval(syncOverrides, 15000);
+    syncFromFirebase();
+    const interval = setInterval(syncFromFirebase, 15000);
     return () => clearInterval(interval);
   }, []);
 
