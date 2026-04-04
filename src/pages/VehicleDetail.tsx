@@ -30,11 +30,22 @@ function matchMatricule(a: string, b: string): boolean {
 }
 
 const PROFILES_KEY = "palma_car_profiles";
+const DB_URL_PROFILES = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
 function loadProfiles(): Record<string, CarProfile> {
   try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || "{}"); } catch { return {}; }
 }
 function saveProfiles(p: Record<string, CarProfile>) {
   localStorage.setItem(PROFILES_KEY, JSON.stringify(p));
+}
+async function fbSaveProfileDetail(key: string, profile: CarProfile) {
+  try {
+    await fetch(`${DB_URL_PROFILES}/car_profiles/${key}.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(profile),
+    });
+  } catch {}
 }
 function norm(s: string) { return String(s || "").replace(/\s+/g, "").toUpperCase(); }
 function today() { return new Date().toISOString().split("T")[0]; }
@@ -111,6 +122,19 @@ export default function VehicleDetail() {
   const car = fleetCars.find((c: { registration: string }) => norm(c.registration) === norm(registration));
 
   const [profiles, setProfiles] = useState<Record<string, CarProfile>>(loadProfiles);
+
+  // Load this car's profile from Firebase on mount
+  useEffect(() => {
+    fetch(`${DB_URL_PROFILES}/car_profiles/${norm(registration)}.json`)
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          const next = { ...loadProfiles(), [norm(registration)]: data };
+          setProfiles(next);
+          saveProfiles(next);
+        }
+      }).catch(() => {});
+  }, [registration]);
   const profileKey = norm(registration);
   const profile: CarProfile = profiles[profileKey] || { registration, documents: [], expenses: [] };
 
@@ -118,6 +142,7 @@ export default function VehicleDetail() {
     const next = { ...profiles, [profileKey]: updated };
     setProfiles(next);
     saveProfiles(next);
+    fbSaveProfileDetail(profileKey, updated);
   }
 
   // Sell car
