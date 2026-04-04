@@ -263,25 +263,35 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
   const data = useMemo(() => contractToLegacy(contract), [contract]);
 
-  // Reload settings and positions from localStorage on mount (ensures persistence)
+  // Reload settings and positions from localStorage on mount
+  // Only sync from Firebase if no local settings exist
   useEffect(() => {
-    setSettings(loadSettings());
-    setPositions(loadPositions());
-    // Also sync from Firebase in background
-    loadFromFirebase("app_settings/print_settings").then(data => {
-      if (data) {
-        const merged = { ...DEFAULT_SETTINGS, ...data };
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
-        setSettings(merged);
-      }
-    });
-    loadFromFirebase("app_settings/field_positions").then(data => {
-      if (data) {
-        const merged = { ...DEFAULT_POSITIONS, ...data };
-        localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(data));
-        setPositions(merged);
-      }
-    });
+    const localSettings = loadSettings();
+    const localPositions = loadPositions();
+    setSettings(localSettings);
+    setPositions(localPositions);
+
+    // Only load from Firebase if localStorage is empty (first time on new device)
+    const hasLocalSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    const hasLocalPositions = localStorage.getItem(POSITIONS_STORAGE_KEY);
+
+    if (!hasLocalSettings) {
+      loadFromFirebase("app_settings/print_settings").then(data => {
+        if (data) {
+          const merged = { ...DEFAULT_SETTINGS, ...data };
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+          setSettings(merged);
+        }
+      });
+    }
+    if (!hasLocalPositions) {
+      loadFromFirebase("app_settings/field_positions").then(data => {
+        if (data) {
+          localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(data));
+          setPositions({ ...DEFAULT_POSITIONS, ...data });
+        }
+      });
+    }
   }, []);
 
   // ─── Draw ─────────────────────────────────────────────────────────────────
