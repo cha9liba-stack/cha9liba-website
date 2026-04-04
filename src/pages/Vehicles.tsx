@@ -135,25 +135,11 @@ export default function Vehicles() {
           year: car.year,
           category: car.category,
         };
-        // Import photo if missing
-        if (!existing.photo && car.images?.length > 0) {
-          try {
-            const imgRes = await fetch(`https://palmarentcar.tn${car.images[0]}`);
-            const blob = await imgRes.blob();
-            const canvas = document.createElement("canvas");
-            const img = new Image();
-            const objUrl = URL.createObjectURL(blob);
-            await new Promise<void>(resolve => {
-              img.onload = () => {
-                const scale = Math.min(1, 800 / img.width);
-                canvas.width = img.width * scale; canvas.height = img.height * scale;
-                canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-                updated.photo = canvas.toDataURL("image/jpeg", 0.7);
-                URL.revokeObjectURL(objUrl); resolve();
-              };
-              img.src = objUrl;
-            });
-          } catch {}
+        // Use local image from /car-images/ folder
+        if (car.images?.length > 0) {
+          const imgPath = car.images[0];
+          const ext = imgPath.split('.').pop();
+          updated.photo = `/car-images/${key}.${ext}`;
         }
         await fbSaveProfile(key, updated);
         count++;
