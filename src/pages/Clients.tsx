@@ -223,6 +223,7 @@ export default function Clients() {
     selected ? getClientStats(selected) : null, [selected, contracts]);
 
   return (
+    <>
     <div className="flex h-[calc(100vh-0px)] overflow-hidden">
 
       {/* ── LEFT: Client list ── */}
@@ -770,5 +771,6 @@ export default function Clients() {
         </div>
       </div>
     )}
+  </>
   );
 }
