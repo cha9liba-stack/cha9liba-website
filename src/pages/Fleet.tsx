@@ -78,8 +78,7 @@ function saveOverrideHistory(d: OverrideHistory) {
 // Get the active override for a car on a given date
 function getOverrideOnDate(history: OverrideHistory, reg: string, date: string): CarOverride | null {
   const entries = history[norm(reg)] || [];
-  // Find entry where from <= date and (to is null OR to >= date)
-  const entry = [...entries].reverse().find(e => e.from <= date && (e.to === null || e.to >= date));
+  const entry = [...entries].reverse().find(e => e.from <= date && (e.to === null || e.to === undefined || e.to >= date));
   return entry ? entry.state : null;
 }
 
@@ -87,8 +86,7 @@ function getOverrideOnDate(history: OverrideHistory, reg: string, date: string):
 function setOverrideEntry(history: OverrideHistory, reg: string, state: CarOverride | null, date: string): OverrideHistory {
   const key = norm(reg);
   const entries = [...(history[key] || [])];
-  // Close the current active entry
-  const activeIdx = entries.findIndex(e => e.to === null);
+  const activeIdx = entries.findIndex(e => e.to === null || e.to === undefined);
   if (activeIdx >= 0) {
     entries[activeIdx] = { ...entries[activeIdx], to: addDaysStr(date, -1) };
   }
@@ -108,7 +106,7 @@ function addDaysStr(date: string, n: number): string {
 function buildOverridesForDate(history: OverrideHistory, date: string): Record<string, CarOverride> {
   const result: Record<string, CarOverride> = {};
   for (const [reg, entries] of Object.entries(history)) {
-    const entry = [...entries].reverse().find(e => e.from <= date && (e.to === null || e.to >= date));
+    const entry = [...entries].reverse().find(e => e.from <= date && (e.to === null || e.to === undefined || e.to >= date));
     if (entry) result[reg] = entry.state;
   }
   return result;
