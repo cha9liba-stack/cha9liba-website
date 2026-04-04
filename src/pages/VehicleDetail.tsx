@@ -108,7 +108,13 @@ export default function VehicleDetail() {
       .then(r => r.json())
       .then(data => {
         if (data) {
-          const next = { ...loadProfiles(), [norm(registration)]: data };
+          const profile: CarProfile = {
+            registration: norm(registration),
+            documents: [],
+            expenses: [],
+            ...data,
+          };
+          const next = { ...loadProfiles(), [norm(registration)]: profile };
           setProfiles(next);
           saveProfiles(next);
         }

@@ -12,7 +12,21 @@ const PROFILES_KEY = "palma_car_profiles";
 async function fbGetProfiles(): Promise<Record<string, CarProfile>> {
   try {
     const res = await fetch(`${DB_URL}/car_profiles.json`);
-    if (res.ok) { const d = await res.json(); return d || {}; }
+    if (res.ok) {
+      const d = await res.json();
+      if (!d) return {};
+      // Ensure documents and expenses arrays exist
+      const result: Record<string, CarProfile> = {};
+      for (const [key, val] of Object.entries(d as Record<string, any>)) {
+        result[key] = {
+          registration: key,
+          documents: [],
+          expenses: [],
+          ...val,
+        };
+      }
+      return result;
+    }
   } catch {}
   return {};
 }
