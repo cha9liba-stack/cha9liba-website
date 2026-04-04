@@ -95,6 +95,26 @@ export default function ContractModal({ contract, onClose }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [bannedWarning, setBannedWarning] = useState<{ name: string; reason: string } | null>(null);
+
+  // Check if client is banned when CIN changes
+  const watchedCin = watch("driverCin");
+  const watchedName = watch("driverName");
+  useEffect(() => {
+    if (!watchedCin && !watchedName) return;
+    try {
+      const clients = JSON.parse(localStorage.getItem("palma_clients") || "[]");
+      const found = clients.find((c: any) =>
+        (watchedCin && c.cin?.trim().toUpperCase() === watchedCin?.trim().toUpperCase()) ||
+        (watchedName && c.name?.trim().toLowerCase() === watchedName?.trim().toLowerCase())
+      );
+      if (found?.banned) {
+        setBannedWarning({ name: found.name, reason: found.banReason || "" });
+      } else {
+        setBannedWarning(null);
+      }
+    } catch {}
+  }, [watchedCin, watchedName]);
   const [previewData, setPreviewData] = useState<Contract | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
 
@@ -270,7 +290,18 @@ export default function ContractModal({ contract, onClose }: Props) {
 
             {/* Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              <div className="flex-1">
+                {error && <p className="text-sm text-red-500">{error}</p>}
+                {bannedWarning && (
+                  <div className="flex items-center gap-2 bg-red-100 border border-red-300 rounded-lg px-3 py-2">
+                    <span className="text-red-600 text-lg">⛔</span>
+                    <div>
+                      <p className="text-sm font-bold text-red-700">Client bloqué: {bannedWarning.name}</p>
+                      {bannedWarning.reason && <p className="text-xs text-red-600">Raison: {bannedWarning.reason}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-3 ms-auto">
                 <button
                   type="button"

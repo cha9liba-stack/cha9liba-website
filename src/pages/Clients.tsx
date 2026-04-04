@@ -4,7 +4,7 @@ import type { Client } from "../types";
 import {
   Users, Plus, Search, X, Building2, User, Phone, MapPin,
   FileText, TrendingUp, ChevronRight, Trash2, Edit2, CreditCard,
-  Mail, Hash, AlertCircle, GitMerge, DollarSign
+  Mail, Hash, AlertCircle, GitMerge, DollarSign, ShieldOff, ShieldCheck
 } from "lucide-react";
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
@@ -147,6 +147,33 @@ export default function Clients() {
     if (selected?.id === id) setSelected(null);
   }
 
+  const [showBanModal, setShowBanModal] = useState(false);
+  const [banReason, setBanReason] = useState("");
+
+  function toggleBan(client: Client) {
+    if (client.banned) {
+      // Unban
+      const updated = clients.map(c => c.id === client.id ? { ...c, banned: false, banReason: "" } : c);
+      persist(updated);
+      setSelected(updated.find(c => c.id === client.id) || null);
+    } else {
+      setBanReason("");
+      setShowBanModal(true);
+    }
+  }
+
+  function confirmBan() {
+    if (!selected) return;
+    const updated = clients.map(c => c.id === selected.id
+      ? { ...c, banned: true, banReason: banReason.trim() }
+      : c
+    );
+    persist(updated);
+    setSelected(updated.find(c => c.id === selected.id) || null);
+    setShowBanModal(false);
+    setBanReason("");
+  }
+
   // Auto-import clients from contracts (CIN-based dedup)
   function importFromContracts() {
     const existing = new Set(clients.map(c => c.cin?.trim().toUpperCase()).filter(Boolean));
@@ -268,6 +295,7 @@ export default function Clients() {
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-slate-800 truncate">{c.name}</p>
                       {hasDup && <AlertCircle size={11} className="text-red-400 flex-shrink-0" />}
+                      {c.banned && <ShieldOff size={11} className="text-red-600 flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-slate-400 truncate">
                       {c.isCompany && c.company?.name ? c.company.name : c.cin || c.phone}
@@ -299,7 +327,10 @@ export default function Clients() {
                 {selected.isCompany ? <Building2 size={22} className="text-blue-600" /> : <User size={22} className="text-slate-600" />}
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-800">{selected.name}</h2>
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  {selected.name}
+                  {selected.banned && <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium flex items-center gap-1"><ShieldOff size={10}/> Bloqué</span>}
+                </h2>
                 {selected.isCompany && selected.company?.name && (
                   <p className="text-sm text-blue-600 font-medium">{selected.company.name}</p>
                 )}
@@ -309,6 +340,10 @@ export default function Clients() {
               <button onClick={() => openEdit(selected)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-amber-300 text-slate-600 text-xs rounded-lg transition-colors">
                 <Edit2 size={12} /> Modifier
+              </button>
+              <button onClick={() => toggleBan(selected)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs rounded-lg transition-colors ${selected.banned ? "bg-green-50 border-green-300 text-green-700 hover:bg-green-100" : "bg-white border-slate-200 hover:border-red-300 hover:text-red-600 text-slate-600"}`}>
+                {selected.banned ? <><ShieldCheck size={12} /> Débloquer</> : <><ShieldOff size={12} /> Bloquer</>}
               </button>
               <button onClick={() => deleteClient(selected.id)}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-red-300 hover:text-red-500 text-slate-600 text-xs rounded-lg transition-colors">
@@ -333,6 +368,17 @@ export default function Clients() {
               </div>
             ))}
           </div>
+
+          {/* Ban alert */}
+          {selected.banned && (
+            <div className="flex items-center gap-3 bg-red-100 border border-red-300 rounded-xl px-4 py-3">
+              <ShieldOff size={16} className="text-red-600 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-red-700">Client bloqué</p>
+                {selected.banReason && <p className="text-xs text-red-600 mt-0.5">Raison: {selected.banReason}</p>}
+              </div>
+            </div>
+          )}
 
           {/* Debt alert */}
           {selectedStats.totalDebt > 0 && (
@@ -695,5 +741,34 @@ export default function Clients() {
         </div>
       )}
     </div>
+
+    {/* Ban Modal */}
+    {showBanModal && selected && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-red-50 rounded-t-2xl">
+            <ShieldOff size={18} className="text-red-600" />
+            <h3 className="font-bold text-slate-800">Bloquer {selected.name}</h3>
+          </div>
+          <div className="p-5 space-y-3">
+            <p className="text-sm text-slate-600">Ce client sera signalé comme bloqué. Un avertissement apparaîtra lors de la création d'un contrat.</p>
+            <div>
+              <label className="text-xs font-medium text-slate-500 block mb-1">Raison du blocage *</label>
+              <textarea value={banReason} onChange={e => setBanReason(e.target.value)}
+                placeholder="Ex: Accident non déclaré, dommages non payés..."
+                rows={3}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100">
+            <button onClick={() => setShowBanModal(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Annuler</button>
+            <button onClick={confirmBan} disabled={!banReason.trim()}
+              className="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-lg font-medium flex items-center gap-1.5">
+              <ShieldOff size={13} /> Bloquer
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }

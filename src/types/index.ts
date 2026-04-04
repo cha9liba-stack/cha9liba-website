@@ -170,6 +170,8 @@ export interface Client {
   notes?: string;
   isCompany: boolean;
   company?: ClientCompany;
+  banned?: boolean;
+  banReason?: string;
   // Metadata
   _createdAt: number;
   _updatedAt: number;
