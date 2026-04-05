@@ -59,8 +59,10 @@ export default function Contracts() {
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
+    // Search in both real contracts and archive contracts
+    const allContracts = q ? [...contracts, ...archiveContracts] : [...contracts];
     let result = q
-      ? contracts.filter(c =>
+      ? allContracts.filter(c =>
           c.contractNumber.includes(q) ||
           (c.driverName || "").toLowerCase().includes(q) ||
           (c.brand || "").toLowerCase().includes(q) ||
