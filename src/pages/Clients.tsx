@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import { useContractStore } from "../store/useContractStore";
-import type { Client } from "../types";
+import type { Client, ClientAlert } from "../types";
 import {
   Users, Plus, Search, X, Building2, User, Phone, MapPin,
   FileText, TrendingUp, ChevronRight, Trash2, Edit2, CreditCard,
-  Mail, Hash, AlertCircle, GitMerge, DollarSign, ShieldOff, ShieldCheck
+  Mail, Hash, AlertCircle, GitMerge, DollarSign, ShieldOff, ShieldCheck, Bell, Plus
 } from "lucide-react";
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
@@ -174,6 +174,48 @@ export default function Clients() {
     setBanReason("");
   }
 
+  // ── Alerts ────────────────────────────────────────────────────────────────
+  const ALERT_TYPES: { value: ClientAlert["type"]; label: string; color: string; icon: string }[] = [
+    { value: "debt",    label: "Dette impayée",    color: "bg-red-500",    icon: "💰" },
+    { value: "damage",  label: "Dommages véhicule", color: "bg-orange-500", icon: "🔧" },
+    { value: "fine",    label: "Amende / Infraction", color: "bg-yellow-500", icon: "⚠️" },
+    { value: "problem", label: "Problème signalé",  color: "bg-purple-500", icon: "🚨" },
+    { value: "other",   label: "Autre",             color: "bg-slate-500",  icon: "📝" },
+  ];
+
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [newAlert, setNewAlert] = useState<Partial<ClientAlert>>({ type: "debt", date: new Date().toISOString().split("T")[0] });
+
+  function addAlert() {
+    if (!selected || !newAlert.message?.trim()) return;
+    const alert: ClientAlert = {
+      id: uid(),
+      type: newAlert.type || "other",
+      message: newAlert.message.trim(),
+      amount: newAlert.amount,
+      date: newAlert.date || new Date().toISOString().split("T")[0],
+      resolved: false,
+    };
+    const updated = clients.map(c => c.id === selected.id
+      ? { ...c, alerts: [...(c.alerts || []), alert] }
+      : c
+    );
+    persist(updated);
+    setSelected(updated.find(c => c.id === selected.id) || null);
+    setNewAlert({ type: "debt", date: new Date().toISOString().split("T")[0] });
+    setShowAlertModal(false);
+  }
+
+  function resolveAlert(alertId: string) {
+    if (!selected) return;
+    const updated = clients.map(c => c.id === selected.id
+      ? { ...c, alerts: (c.alerts || []).filter(a => a.id !== alertId) }
+      : c
+    );
+    persist(updated);
+    setSelected(updated.find(c => c.id === selected.id) || null);
+  }
+
   // Auto-import clients from contracts (CIN-based dedup)
   function importFromContracts() {
     const existing = new Set(clients.map(c => c.cin?.trim().toUpperCase()).filter(Boolean));
@@ -297,6 +339,7 @@ export default function Clients() {
                       <p className="text-sm font-semibold text-slate-800 truncate">{c.name}</p>
                       {hasDup && <AlertCircle size={11} className="text-red-400 flex-shrink-0" />}
                       {c.banned && <ShieldOff size={11} className="text-red-600 flex-shrink-0" />}
+                      {(c.alerts?.length || 0) > 0 && <Bell size={11} className="text-amber-500 flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-slate-400 truncate">
                       {c.isCompany && c.company?.name ? c.company.name : c.cin || c.phone}
@@ -368,6 +411,47 @@ export default function Clients() {
                 <div><p className="text-sm font-bold text-slate-800">{value}</p><p className="text-xs text-slate-400">{label}</p></div>
               </div>
             ))}
+          </div>
+
+          {/* Alerts section */}
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+              <h3 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+                <Bell size={14} className="text-amber-500" />
+                Alertes {(selected.alerts?.filter(a => !a.resolved).length || 0) > 0 &&
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{selected.alerts?.filter(a => !a.resolved).length}</span>
+                }
+              </h3>
+              <button onClick={() => setShowAlertModal(true)}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                <Plus size={11} /> Ajouter
+              </button>
+            </div>
+            <div className="p-3 space-y-2">
+              {(!selected.alerts || selected.alerts.length === 0)
+                ? <p className="text-center text-slate-400 text-xs py-3">Aucune alerte</p>
+                : selected.alerts.map(alert => {
+                  const type = ALERT_TYPES.find(t => t.value === alert.type);
+                  return (
+                    <div key={alert.id} className="flex items-start gap-3 p-3 bg-red-50 border border-red-100 rounded-xl">
+                      <span className="text-lg flex-shrink-0">{type?.icon || "📝"}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full text-white ${type?.color || "bg-slate-500"}`}>{type?.label}</span>
+                          <span className="text-[10px] text-slate-400">{alert.date}</span>
+                        </div>
+                        <p className="text-sm text-slate-800 mt-1">{alert.message}</p>
+                        {alert.amount && <p className="text-xs font-bold text-red-600 mt-0.5">{alert.amount.toFixed(3)} TND</p>}
+                      </div>
+                      <button onClick={() => resolveAlert(alert.id)}
+                        className="text-slate-300 hover:text-green-500 transition-colors flex-shrink-0" title="Résolu / Supprimer">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  );
+                })
+              }
+            </div>
           </div>
 
           {/* Ban alert */}
@@ -742,6 +826,58 @@ export default function Clients() {
         </div>
       )}
     </div>
+
+    {/* Alert Modal */}
+    {showAlertModal && selected && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-amber-50 rounded-t-2xl">
+            <Bell size={18} className="text-amber-600" />
+            <h3 className="font-bold text-slate-800">Nouvelle alerte — {selected.name}</h3>
+          </div>
+          <div className="p-5 space-y-3">
+            <div>
+              <label className="text-xs font-medium text-slate-500 block mb-1">Type</label>
+              <div className="flex flex-wrap gap-2">
+                {ALERT_TYPES.map(t => (
+                  <button key={t.value} onClick={() => setNewAlert(p => ({ ...p, type: t.value }))}
+                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded-lg border transition-colors ${newAlert.type === t.value ? `${t.color} text-white border-transparent` : "border-slate-200 text-slate-600"}`}>
+                    {t.icon} {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-500 block mb-1">Description *</label>
+              <textarea value={newAlert.message || ""} onChange={e => setNewAlert(p => ({ ...p, message: e.target.value }))}
+                placeholder="Ex: Doit 500 TND suite à accident..."
+                rows={3}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">Montant (optionnel)</label>
+                <input type="number" step="0.001" value={newAlert.amount || ""} onChange={e => setNewAlert(p => ({ ...p, amount: parseFloat(e.target.value) || undefined }))}
+                  placeholder="0.000"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-500 block mb-1">Date</label>
+                <input type="date" value={newAlert.date || ""} onChange={e => setNewAlert(p => ({ ...p, date: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100">
+            <button onClick={() => setShowAlertModal(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Annuler</button>
+            <button onClick={addAlert} disabled={!newAlert.message?.trim()}
+              className="px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-lg font-medium">
+              Ajouter
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Ban Modal */}
     {showBanModal && selected && (

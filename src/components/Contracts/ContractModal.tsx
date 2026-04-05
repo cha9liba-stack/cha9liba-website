@@ -123,6 +123,10 @@ export default function ContractModal({ contract, onClose }: Props) {
       } else {
         setBannedWarning(null);
       }
+      // Also check alerts
+      if (found?.alerts?.length > 0) {
+        setBannedWarning(prev => prev || { name: found.name, reason: `⚠️ ${found.alerts.length} alerte(s): ${found.alerts.map((a: any) => a.message).join(" | ")}` });
+      }
     } catch {}
   }, [watchedCin, watchedName]);
 

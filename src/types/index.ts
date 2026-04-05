@@ -160,6 +160,15 @@ export interface ClientCompany {
   email?: string;
 }
 
+export interface ClientAlert {
+  id: string;
+  type: "debt" | "damage" | "fine" | "problem" | "other";
+  message: string;
+  amount?: number;
+  date: string;
+  resolved: boolean;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -172,6 +181,7 @@ export interface Client {
   company?: ClientCompany;
   banned?: boolean;
   banReason?: string;
+  alerts?: ClientAlert[];
   // Metadata
   _createdAt: number;
   _updatedAt: number;
