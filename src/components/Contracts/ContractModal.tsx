@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Eye, History } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
