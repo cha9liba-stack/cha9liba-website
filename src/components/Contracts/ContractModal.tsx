@@ -96,8 +96,18 @@ export default function ContractModal({ contract, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [bannedWarning, setBannedWarning] = useState<{ name: string; reason: string } | null>(null);
+  const [previewData, setPreviewData] = useState<Contract | null>(null);
+  const [lookupOpen, setLookupOpen] = useState(false);
 
-  // Check if client is banned when CIN changes
+  const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } =
+    useForm<FormData>({
+      resolver: zodResolver(schema) as any,
+      defaultValues: contract
+        ? { ...contract }
+        : { date: new Date().toISOString().split("T")[0] },
+    });
+
+  // Check if client is banned when CIN or name changes
   const watchedCin = watch("driverCin");
   const watchedName = watch("driverName");
   useEffect(() => {
@@ -115,16 +125,6 @@ export default function ContractModal({ contract, onClose }: Props) {
       }
     } catch {}
   }, [watchedCin, watchedName]);
-  const [previewData, setPreviewData] = useState<Contract | null>(null);
-  const [lookupOpen, setLookupOpen] = useState(false);
-
-  const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } =
-    useForm<FormData>({
-      resolver: zodResolver(schema) as any,
-      defaultValues: contract
-        ? { ...contract }
-        : { date: new Date().toISOString().split("T")[0] },
-    });
 
   // Jump to first tab with errors
   const TAB_FIELDS: Record<number, string[]> = {
