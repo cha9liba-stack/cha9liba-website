@@ -774,11 +774,17 @@ export default function Fleet() {
                             </button>
                           ))}
                           {customStates.map(cs => (
-                            <button key={cs.id} onClick={() => setCarOverride(car.registration, cs.id)}
-                              className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
-                              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cs.color }} />
-                              {cs.label}
-                            </button>
+                            <div key={cs.id} className="flex items-center">
+                              <button onClick={() => setCarOverride(car.registration, cs.id)}
+                                className="flex-1 text-left px-3 py-2 text-xs font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cs.color }} />
+                                {cs.label}
+                              </button>
+                              <button onClick={e => { e.stopPropagation(); deleteCustomState(cs.id); }}
+                                className="px-2 py-2 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                <X size={11} />
+                              </button>
+                            </div>
                           ))}
                           <button onClick={() => { setStateMenu(null); setShowCustomStateModal(true); }}
                             className="w-full text-left px-3 py-2 text-xs text-amber-600 hover:bg-amber-50 border-t border-slate-100 flex items-center gap-1.5 transition-colors">
