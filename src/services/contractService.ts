@@ -54,6 +54,23 @@ export async function fbGetAllContracts(): Promise<Contract[]> {
     .map(([id, v]) => mapFirebaseToContract(id, v));
 }
 
+// Get only the latest N contracts (faster initial load)
+export async function fbGetRecentContracts(limit = 300): Promise<Contract[]> {
+  try {
+    // Use limitToLast on keys (Firebase key order = insertion order)
+    const url = `${DB_URL}/${CONTRACTS_PATH}.json?orderBy=%22%24key%22&limitToLast=${limit}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`REST GET failed: ${res.status}`);
+    const raw = await res.json();
+    if (!raw) return [];
+    return Object.entries(raw as Record<string, Record<string, any>>)
+      .filter(([, v]) => v && !v._deleted)
+      .map(([id, v]) => mapFirebaseToContract(id, v));
+  } catch {
+    return fbGetAllContracts();
+  }
+}
+
 export async function fbInsertContract(contract: Omit<Contract, "id">): Promise<string> {
   const now = Date.now();
   const payload = {
@@ -86,13 +103,19 @@ export function isRealContract(c: Contract): boolean {
 // ─── Unified API ──────────────────────────────────────────────────────────────
 
 export async function getAllContracts(): Promise<Contract[]> {
-  // Always try Firebase first — never use stale local cache as primary source
   if (isOnline()) {
     try {
-      const contracts = await fbGetAllContracts();
-      // Update local cache in background
-      localBulkPut("contracts", contracts).catch(() => {});
-      return contracts;
+      // Load recent contracts fast (last 300)
+      const recent = await fbGetRecentContracts(300);
+      // Merge with local cache (which may have older contracts)
+      const cached = await localGetAll<Contract>("contracts");
+      const recentIds = new Set(recent.map(c => c.id));
+      // Keep cached contracts not in recent (older ones), plus all recent
+      const older = cached.filter(c => !recentIds.has(c.id!) && !c._deleted);
+      const merged = [...recent, ...older];
+      // Update cache in background
+      localBulkPut("contracts", recent).catch(() => {});
+      return merged;
     } catch (e) {
       console.warn("[Firebase] getAllContracts failed, using local cache:", e);
     }
@@ -180,11 +203,11 @@ export function subscribeToContracts(
     const poll = async () => {
       if (!active) return;
       try {
-        const contracts = await fbGetAllContracts();
+        const contracts = await fbGetRecentContracts(300);
         callback(contracts);
         await localBulkPut("contracts", contracts);
       } catch {/* silent */}
-      if (active) setTimeout(poll, 15000); // poll every 15s
+      if (active) setTimeout(poll, 15000);
     };
     poll();
   }
