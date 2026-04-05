@@ -184,17 +184,23 @@ export default function ContractModal({ contract, onClose }: Props) {
           if (reg) {
             const history = JSON.parse(localStorage.getItem("palma_state_overrides") || "{}");
             const entries: any[] = history[reg] || [];
-            // Close any override that was active on or after the departure date
+            const prev = new Date(depDate);
+            prev.setDate(prev.getDate() - 1);
+            const prevStr = prev.toISOString().split("T")[0];
             history[reg] = entries.map((e: any) => {
-              if (e.to === null || e.to >= depDate) {
-                // Close it the day before departure
-                const prev = new Date(depDate);
-                prev.setDate(prev.getDate() - 1);
-                return { ...e, to: prev.toISOString().split("T")[0] };
+              if (e.to === null || e.to === undefined || e.to >= depDate) {
+                return { ...e, to: prevStr };
               }
               return e;
             });
             localStorage.setItem("palma_state_overrides", JSON.stringify(history));
+            // Sync to Firebase
+            const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+            fetch(`${DB}/app_settings/overrides/${reg}.json`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(history[reg]),
+            }).catch(() => {});
           }
         } catch {}
       }

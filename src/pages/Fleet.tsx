@@ -795,7 +795,7 @@ export default function Fleet() {
                             className="w-full text-left px-3 py-2 text-xs text-amber-600 hover:bg-amber-50 border-t border-slate-100 flex items-center gap-1.5 transition-colors">
                             <Plus size={11} /> Nouvelle état...
                           </button>
-                          {getOverrideOnDate(overrideHistory, car.registration, date) && (
+                          {(overrides[norm(car.registration)] || getOverrideOnDate(overrideHistory, car.registration, date)) && (
                             <button onClick={() => setCarOverride(car.registration, null)}
                               className="w-full text-left px-3 py-2 text-xs text-slate-500 hover:bg-slate-50 border-t border-slate-100">
                               ↩ Réinitialiser
