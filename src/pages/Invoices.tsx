@@ -1,8 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Printer, Trash2, Search, FileText, RefreshCw } from "lucide-react";
+import { Plus, Printer, Trash2, Search, FileText, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { getAllInvoices, deleteInvoice } from "../services/invoiceService";
 import type { Invoice } from "../types/invoice";
+
+type SortKey = "number" | "date" | "type" | "client";
+type SortDir = "asc" | "desc";
+
+function SortBtn({ col, sortKey, sortDir, onClick }: { col: SortKey; sortKey: SortKey; sortDir: SortDir; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="flex items-center gap-1 hover:text-slate-700 transition-colors">
+      {col === sortKey
+        ? sortDir === "asc" ? <ChevronUp size={12} className="text-amber-500"/> : <ChevronDown size={12} className="text-amber-500"/>
+        : <ChevronsUpDown size={12} className="opacity-30"/>
+      }
+    </button>
+  );
+}
 
 export default function Invoices() {
   const { i18n } = useTranslation();
@@ -14,6 +28,13 @@ export default function Invoices() {
   const [printInvoice, setPrintInvoice] = useState<Invoice | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("number");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+  }
 
   useEffect(() => {
     getAllInvoices()
@@ -24,12 +45,20 @@ export default function Invoices() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return invoices;
-    return invoices.filter(inv =>
+    let result = !q ? [...invoices] : invoices.filter(inv =>
       (inv.number || "").toLowerCase().includes(q) ||
       (inv.client?.name || "").toLowerCase().includes(q)
     );
-  }, [invoices, search]);
+    result.sort((a, b) => {
+      let va = "", vb = "";
+      if (sortKey === "number") { va = a.number || ""; vb = b.number || ""; }
+      else if (sortKey === "date") { va = a.date || ""; vb = b.date || ""; }
+      else if (sortKey === "type") { va = a.type || ""; vb = b.type || ""; }
+      else if (sortKey === "client") { va = a.client?.name || ""; vb = b.client?.name || ""; }
+      return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    return result;
+  }, [invoices, search, sortKey, sortDir]);
 
   async function handleDelete(id: string) {
     await deleteInvoice(id);
@@ -96,10 +125,10 @@ export default function Invoices() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-500 text-xs uppercase bg-slate-50 border-b border-slate-100">
-                  <th className="px-5 py-3 text-start">N°</th>
-                  <th className="px-5 py-3 text-start">{isRTL ? "التاريخ" : "Date"}</th>
-                  <th className="px-5 py-3 text-start">{isRTL ? "النوع" : "Type"}</th>
-                  <th className="px-5 py-3 text-start">{isRTL ? "العميل" : "Client"}</th>
+                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("number")} className="flex items-center gap-1 hover:text-slate-700">N° <SortBtn col="number" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("number")}/></button></th>
+                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("date")} className="flex items-center gap-1 hover:text-slate-700">{isRTL ? "التاريخ" : "Date"} <SortBtn col="date" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("date")}/></button></th>
+                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("type")} className="flex items-center gap-1 hover:text-slate-700">{isRTL ? "النوع" : "Type"} <SortBtn col="type" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("type")}/></button></th>
+                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("client")} className="flex items-center gap-1 hover:text-slate-700">{isRTL ? "العميل" : "Client"} <SortBtn col="client" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("client")}/></button></th>
                   <th className="px-5 py-3 text-start">Total TTC</th>
                   <th className="px-5 py-3"></th>
                 </tr>
