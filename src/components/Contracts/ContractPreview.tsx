@@ -306,6 +306,27 @@ export default function ContractPreview({ contract, onClose }: Props) {
       canvas.width  = ORIG_W;
       canvas.height = ORIG_H;
       ctx.drawImage(tmpl, 0, 0, ORIG_W, ORIG_H);
+
+      // Helper: draw text with correct direction (numbers/latin = ltr, arabic = rtl)
+      function drawText(val: string, x: number, y: number) {
+        const hasArabic = /[\u0600-\u06FF]/.test(val);
+        const isNumericOrLatin = /^[\d\s\+\-\.\/\\:]+$/.test(val);
+        if (isNumericOrLatin || !hasArabic) {
+          // Numbers and latin text: use ltr to prevent reversal
+          ctx.save();
+          ctx.direction = "ltr";
+          ctx.textAlign = "left";
+          // Adjust x position (was right-aligned, now left-aligned)
+          const metrics = ctx.measureText(val);
+          ctx.fillText(val, x - metrics.width, y);
+          ctx.restore();
+          ctx.direction = "rtl";
+          ctx.textAlign = "right";
+        } else {
+          ctx.fillText(val, x, y);
+        }
+      }
+
       ctx.textAlign = "right";
       ctx.direction = "rtl";
 
@@ -323,7 +344,6 @@ export default function ContractPreview({ contract, onClose }: Props) {
         if (dragMode) {
           const isHovered = field === highlightField || field === dragging;
           if (isHovered) {
-            // Draw highlight box
             const metrics = ctx.measureText(val === "X" ? "X" : val);
             const w = metrics.width + 20;
             const h = fontSize + 10;
@@ -345,7 +365,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
           ctx.fillText("X", x, y);
           ctx.textAlign = "right";
         } else {
-          ctx.fillText(val, x, y);
+          drawText(val, x, y);
         }
       }
     }).catch(() => {});
