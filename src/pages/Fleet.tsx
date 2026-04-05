@@ -205,6 +205,7 @@ export default function Fleet() {
   );
   const [overrideHistory, setOverrideHistory] = useState<OverrideHistory>(loadOverrideHistory);
   const [stateMenu, setStateMenu] = useState<string | null>(null);
+  const [statsModal, setStatsModal] = useState<"retour" | "retard" | null>(null);
   const [customStates, setCustomStates] = useState<CustomCarState[]>(loadCustomStates);
   const [showCustomStateModal, setShowCustomStateModal] = useState(false);
   const [newStateName, setNewStateName] = useState("");
@@ -571,12 +572,16 @@ export default function Fleet() {
       {/* ── Stats ── */}
       <div className="flex flex-wrap gap-3">
         {[
-          { label: isRTL ? "مكراة" : "Louées",      n: fleetStatus.filter(c => c.state === "rented" || c.state === "late").length, color: "bg-slate-800",  Icon: Car },
-          { label: isRTL ? "متاحة" : "Disponibles", n: fleetStatus.filter(c => c.state === "available").length,                    color: "bg-green-500",  Icon: Car },
-          { label: isRTL ? "صيانة" : "En panne",    n: fleetStatus.filter(c => c.state === "maintenance").length,                  color: "bg-purple-500", Icon: Wrench },
-          { label: isRTL ? "محجوزة" : "Réservées",  n: resOnDate.length,                                                           color: "bg-amber-500",  Icon: CalendarClock },
-        ].map(({ label, n, color, Icon }) => (
-          <div key={label} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-3 min-w-[130px]">
+          { label: isRTL ? "مكراة" : "Louées",      n: fleetStatus.filter(c => c.state === "rented" || c.state === "late").length, color: "bg-slate-800",  Icon: Car, key: null },
+          { label: isRTL ? "متاحة" : "Disponibles", n: fleetStatus.filter(c => c.state === "available").length,                    color: "bg-green-500",  Icon: Car, key: null },
+          { label: isRTL ? "صيانة" : "En panne",    n: fleetStatus.filter(c => c.state === "maintenance").length,                  color: "bg-purple-500", Icon: Wrench, key: null },
+          { label: isRTL ? "محجوزة" : "Réservées",  n: resOnDate.length,                                                           color: "bg-amber-500",  Icon: CalendarClock, key: null },
+          { label: isRTL ? "رجوع اليوم" : "Retour auj.", n: fleetStatus.filter(c => c.contract?.returnDate === todayStr && (c.state === "rented" || c.state === "late")).length, color: "bg-orange-400", Icon: Bell, key: "retour" as const },
+          { label: isRTL ? "متأخرة" : "Retard",     n: fleetStatus.filter(c => c.state === "late").length,                        color: "bg-red-500",    Icon: AlertCircle, key: "retard" as const },
+        ].map(({ label, n, color, Icon, key }) => (
+          <div key={label}
+            onClick={() => key && setStatsModal(key)}
+            className={`bg-white rounded-xl border border-slate-100 shadow-sm p-4 flex items-center gap-3 min-w-[130px] ${key ? "cursor-pointer hover:shadow-md hover:border-slate-200 transition-all" : ""}`}>
             <div className={`${color} rounded-lg p-2`}><Icon size={16} className="text-white" /></div>
             <div><p className="text-xl font-bold text-slate-800">{n}</p><p className="text-xs text-slate-500">{label}</p></div>
           </div>
@@ -961,6 +966,67 @@ export default function Fleet() {
           </div>
         </div>
       )}
+
+      {/* ── Stats Modal (Retour auj. / Retard) ── */}
+      {statsModal && (() => {
+        const isRetour = statsModal === "retour";
+        const cars = isRetour
+          ? fleetStatus.filter(c => c.contract?.returnDate === todayStr && (c.state === "rented" || c.state === "late"))
+          : fleetStatus.filter(c => c.state === "late");
+        const title = isRetour ? "🔔 Retour aujourd'hui" : "⚠ Retard";
+        const color = isRetour ? "bg-orange-400" : "bg-red-500";
+        return (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+              <div className={`flex items-center justify-between px-5 py-4 ${color} rounded-t-2xl`}>
+                <h3 className="font-bold text-white">{title} <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full ms-2">{cars.length}</span></h3>
+                <button onClick={() => setStatsModal(null)} className="text-white/70 hover:text-white text-xl">×</button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {cars.length === 0
+                  ? <p className="text-center text-slate-400 py-10 text-sm">Aucun véhicule</p>
+                  : <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-slate-50">
+                        <tr className="text-slate-400 text-xs uppercase">
+                          <th className="px-4 py-2.5 text-start">Véhicule</th>
+                          <th className="px-4 py-2.5 text-start">Série</th>
+                          <th className="px-4 py-2.5 text-start">Client</th>
+                          <th className="px-4 py-2.5 text-start">Tél</th>
+                          <th className="px-4 py-2.5 text-start">Retour prévu</th>
+                          <th className="px-4 py-2.5 text-start">N°C</th>
+                          <th className="px-4 py-2.5 text-start">Montant</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {cars.map(car => {
+                          const c = car.contract;
+                          return (
+                            <tr key={car.registration} className="hover:bg-slate-50">
+                              <td className="px-4 py-3 font-semibold text-slate-800">{car.brand} {car.model}</td>
+                              <td className="px-4 py-3 font-mono text-slate-500">{car.registration}</td>
+                              <td className="px-4 py-3 text-slate-700">{c?.driverName || "—"}</td>
+                              <td className="px-4 py-3 text-slate-500">{c?.driverPhone || "—"}</td>
+                              <td className="px-4 py-3">
+                                <span className={`font-medium ${car.state === "late" ? "text-red-600" : "text-orange-600"}`}>
+                                  {c ? `${fmtDate(c.returnDate)} ${c.returnTime || ""}` : "—"}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 font-mono text-amber-600 text-xs">{c?.contractNumber ? `#${c.contractNumber}` : "—"}</td>
+                              <td className="px-4 py-3 font-semibold text-green-600">{c ? parseFloat(c.totalFacture||"0").toFixed(3) : "—"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                }
+              </div>
+              <div className="px-5 py-3 border-t border-slate-100 flex justify-end">
+                <button onClick={() => setStatsModal(null)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Fermer</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
