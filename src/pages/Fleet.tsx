@@ -395,8 +395,8 @@ export default function Fleet() {
         const nowDateTime = date + " " + String(new Date().getHours()).padStart(2,"0") + ":" + String(new Date().getMinutes()).padStart(2,"0");
         const isLate = returnDateTime < nowDateTime || contract.returnDate < date;
 
-        // If late AND user manually set to available → car was returned, respect override
-        if (isLate && overrides[key] === "available") {
+        // If user manually set to available → car was returned, always respect this override
+        if (overrides[key] === "available") {
           return { ...car, state: "available" as CarState, contract: lastC };
         }
 
