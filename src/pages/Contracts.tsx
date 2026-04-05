@@ -34,6 +34,8 @@ export default function Contracts() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [showArchive, setShowArchive] = useState(false);
   const [archiveContracts, setArchiveContracts] = useState<Contract[]>([]);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     setLoading(true);
@@ -84,7 +86,10 @@ export default function Contracts() {
     });
 
     return result;
-  }, [contracts, searchQuery, sortKey, sortDir]);
+  }, [contracts, archiveContracts, searchQuery, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function openNew() { setEditingContract(null); setModalOpen(true); }
   function openEdit(c: Contract) { setEditingContract(c); setModalOpen(true); }
@@ -167,7 +172,7 @@ export default function Contracts() {
       {/* Search */}
       <div className="relative">
         <Search size={16} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? "right-3" : "left-3"}`} />
-        <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+        <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
           placeholder={t("search_placeholder")}
           className={`w-full bg-white border border-slate-200 rounded-xl py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${isRTL ? "pr-9 pl-4" : "pl-9 pr-4"}`} />
       </div>
@@ -197,7 +202,7 @@ export default function Contracts() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filtered.map((c) => (
+                {paginated.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-3 font-semibold text-amber-600">#{c.contractNumber}</td>
                     <td className="px-5 py-3 text-slate-700">{c.driverName}</td>
@@ -229,6 +234,35 @@ export default function Contracts() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white rounded-xl border border-slate-100 shadow-sm px-4 py-3">
+          <p className="text-xs text-slate-500">
+            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length} contrats
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(1)} disabled={page === 1}
+              className="px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30">«</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+              className="px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30">‹</button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+              const p = start + i;
+              return (
+                <button key={p} onClick={() => setPage(p)}
+                  className={`px-2.5 py-1 text-xs rounded font-medium transition-colors ${p === page ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+                  {p}
+                </button>
+              );
+            })}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+              className="px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30">›</button>
+            <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
+              className="px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 rounded disabled:opacity-30">»</button>
+          </div>
+        </div>
+      )}
 
       {modalOpen && <ContractModal contract={editingContract} onClose={() => setModalOpen(false)} />}
       {previewContract && <ContractPreview contract={previewContract} onClose={() => setPreviewContract(null)} />}
