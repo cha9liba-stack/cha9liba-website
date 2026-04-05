@@ -390,37 +390,19 @@ export default function Fleet() {
       const contract = rentedCars.find(c => norm(c.registration || "") === key) || null;
       const lastC = lastContractsOnDate[key] || null;
 
-      // Active contract ALWAYS takes priority over any override
+      // User override has ABSOLUTE priority — only cleared by new contract or Réinitialiser
+      const override = overrides[key];
+      if (override === "available")   return { ...car, state: "available"   as CarState, contract: contract || lastC };
+      if (override === "maintenance") return { ...car, state: "maintenance" as CarState, contract: contract || lastC };
+      if (override)                   return { ...car, state: "custom"      as CarState, contract: contract || lastC, customStateId: override };
+
+      // No override — calculate from contract
       if (contract) {
         const returnDateTime = contract.returnDate + (contract.returnTime ? " " + contract.returnTime : " 23:59");
         const nowDateTime = date + " " + String(new Date().getHours()).padStart(2,"0") + ":" + String(new Date().getMinutes()).padStart(2,"0");
         const isLate = returnDateTime < nowDateTime || contract.returnDate < date;
-
-        // If user manually set to available → car was returned, always respect this override
-        if (overrides[key] === "available") {
-          return { ...car, state: "available" as CarState, contract: lastC };
-        }
-
         return { ...car, state: (isLate ? "late" : "rented") as CarState, contract };
       }
-
-      // Check override — but only if no contract was active on this date
-      const override = overrides[key];
-      // Ignore override if any contract covers this date
-      const coveredByContract = (contractRanges[key] || []).some(r => r.dep <= date && r.ret >= date);
-      // Also ignore override if the last contract ended AFTER the override started
-      // (means the car was rented after the override was set, so override is stale)
-      const overrideEntry = (overrideHistory[key] || []).slice().reverse()
-        .find(e => e.from <= date && (e.to === null || e.to >= date));
-      const overrideFrom = overrideEntry?.from || "9999-99-99";
-      const lastContractEndedAfterOverride = (contractRanges[key] || [])
-        .some(r => r.dep >= overrideFrom && r.dep <= date);
-
-      const overrideValid = !coveredByContract && !lastContractEndedAfterOverride;
-
-      if (overrideValid && override === "available")   return { ...car, state: "available"   as CarState, contract: lastC };
-      if (overrideValid && override === "maintenance") return { ...car, state: "maintenance" as CarState, contract: lastC };
-      if (overrideValid && override)                   return { ...car, state: "custom"      as CarState, contract: lastC, customStateId: override };
 
       // Maintenance from maint list
       if (maintRegs.has(key)) return { ...car, state: "maintenance" as CarState, contract: lastC };
