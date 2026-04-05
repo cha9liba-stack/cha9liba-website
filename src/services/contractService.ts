@@ -77,6 +77,12 @@ export async function fbDeleteContract(id: string): Promise<void> {
   await restDelete(`${CONTRACTS_PATH}/${id}`);
 }
 
+// ─── Filter: exclude "virtual" contracts (number doesn't start with 0) ────────
+export function isRealContract(c: Contract): boolean {
+  const num = String(c.contractNumber || "").trim();
+  return num.startsWith("0") || num === "";
+}
+
 // ─── Unified API ──────────────────────────────────────────────────────────────
 
 export async function getAllContracts(): Promise<Contract[]> {

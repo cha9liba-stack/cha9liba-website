@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, Search, Edit2, Trash2, RefreshCw, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
-import { deleteContract, getAllContracts, subscribeToContracts } from "../services/contractService";
+import { deleteContract, getAllContracts, subscribeToContracts, isRealContract } from "../services/contractService";
 import { logAction } from "../services/auditService";
 import { useAuthStore } from "../store/useAuthStore";
 import ContractModal from "../components/Contracts/ContractModal";
@@ -32,11 +32,19 @@ export default function Contracts() {
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("contractNumber");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [showArchive, setShowArchive] = useState(false);
+  const [archiveContracts, setArchiveContracts] = useState<Contract[]>([]);
 
   useEffect(() => {
     setLoading(true);
-    getAllContracts().then(setContracts).finally(() => setLoading(false));
-    const unsub = subscribeToContracts(setContracts);
+    getAllContracts().then(data => {
+      setContracts(data.filter(isRealContract));
+      setArchiveContracts(data.filter(c => !isRealContract(c) && !c._deleted));
+    }).finally(() => setLoading(false));
+    const unsub = subscribeToContracts(data => {
+      setContracts(data.filter(isRealContract));
+      setArchiveContracts(data.filter(c => !isRealContract(c) && !c._deleted));
+    });
     return unsub;
   }, []);
 
@@ -102,11 +110,57 @@ export default function Contracts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">{t("contracts")}</h1>
-        <button onClick={openNew}
-          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-          <Plus size={16} />{t("new_contract")}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowArchive(p => !p)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${showArchive ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"}`}>
+            📁 Archives {archiveContracts.length > 0 && <span className="bg-slate-500 text-white text-xs px-1.5 py-0.5 rounded-full">{archiveContracts.length}</span>}
+          </button>
+          <button onClick={openNew}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Plus size={16} />{t("new_contract")}
+          </button>
+        </div>
       </div>
+
+      {/* Archive view */}
+      {showArchive && (
+        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4">
+          <p className="text-sm font-semibold text-slate-600 mb-3">📁 Contrats archivés ({archiveContracts.length})</p>
+          {archiveContracts.length === 0
+            ? <p className="text-xs text-slate-400 text-center py-4">Aucun contrat archivé</p>
+            : <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="text-slate-400 uppercase bg-white">
+                    <th className="px-3 py-2 text-start">N°</th>
+                    <th className="px-3 py-2 text-start">Client</th>
+                    <th className="px-3 py-2 text-start">Véhicule</th>
+                    <th className="px-3 py-2 text-start">Départ</th>
+                    <th className="px-3 py-2 text-start">Retour</th>
+                    <th className="px-3 py-2 text-start">Montant</th>
+                    <th className="px-3 py-2"></th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {archiveContracts.sort((a,b) => b.contractNumber.localeCompare(a.contractNumber)).map(c => (
+                      <tr key={c.id} className="hover:bg-white transition-colors">
+                        <td className="px-3 py-2 font-mono text-slate-500">#{c.contractNumber}</td>
+                        <td className="px-3 py-2 text-slate-700">{c.driverName}</td>
+                        <td className="px-3 py-2 text-slate-500">{c.brand} {c.model} · {c.registration}</td>
+                        <td className="px-3 py-2 text-slate-400">{c.departureDate}</td>
+                        <td className="px-3 py-2 text-slate-400">{c.returnDate}</td>
+                        <td className="px-3 py-2 font-semibold text-green-600">{parseFloat(c.totalFacture||"0").toFixed(3)}</td>
+                        <td className="px-3 py-2">
+                          <button onClick={() => setPreviewContract(c)} className="p-1 text-slate-400 hover:text-amber-500">
+                            <Eye size={13}/>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+          }
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">

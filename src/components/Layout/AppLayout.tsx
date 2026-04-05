@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
 import Sidebar from "./Sidebar";
-import { getAllContracts, subscribeToContracts } from "../../services/contractService";
+import { getAllContracts, subscribeToContracts, isRealContract } from "../../services/contractService";
 import { useContractStore } from "../../store/useContractStore";
 
 export default function AppLayout() {
@@ -19,7 +19,7 @@ export default function AppLayout() {
       setLoading(true);
       getAllContracts()
         .then((data) => {
-          setContracts(data);
+          setContracts(data.filter(isRealContract));
         })
         .catch(console.warn)
         .finally(() => setLoading(false));
@@ -27,7 +27,7 @@ export default function AppLayout() {
 
     // Subscribe to realtime updates
     const unsub = subscribeToContracts((data) => {
-      setContracts(data);
+      setContracts(data.filter(isRealContract));
       setLoading(false);
     });
     return unsub;
