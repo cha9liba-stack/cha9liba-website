@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { CheckCircle, Search } from "lucide-react";
 import type { UseFormSetValue } from "react-hook-form";
@@ -67,6 +67,18 @@ export default function RegistrationInput({ setValue, defaultValue = "" }: Props
   function buildReg(l: string, r: string) {
     return `${l}TU${r}`;
   }
+
+  // Update when defaultValue changes (e.g. when importing from old contract)
+  useEffect(() => {
+    const p = parseReg(defaultValue);
+    setLeft(p.left);
+    setRight(p.right);
+    if (p.left && p.right) {
+      const full = normReg(buildReg(p.left, p.right));
+      const car = FLEET[full];
+      setMatched(car || null);
+    }
+  }, [defaultValue]);
 
   function tryAutoFill(l: string, r: string) {
     const full = normReg(buildReg(l, r));
