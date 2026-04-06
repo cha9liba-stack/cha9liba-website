@@ -368,6 +368,26 @@ export default function ContractPreview({ contract, onClose }: Props) {
           drawText(val, x, y);
         }
       }
+
+      // Draw "لا شيء" diagonally if no second driver
+      if (!contract.hasDriver2) {
+        const x1 = 100, y1 = 2200, x2 = 1200, y2 = 2900;
+        const cx = (x1 + x2) / 2;
+        const cy = (y1 + y2) / 2;
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const diagWidth = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.font = `bold ${Math.round(diagWidth / 5)}px 'Tahoma','Arial',sans-serif`;
+        ctx.fillStyle = "rgba(0,0,0,0.12)";
+        ctx.textAlign = "center";
+        ctx.direction = "rtl";
+        ctx.fillText("لا شيء", 0, 0);
+        ctx.restore();
+        ctx.textAlign = "right";
+        ctx.direction = "rtl";
+      }
     }).catch(() => {});
   }, [positions, data, settings, dragMode, dragging, contract]);
   useEffect(() => { draw(hoveredField); }, [draw, hoveredField]);
@@ -474,6 +494,20 @@ export default function ContractPreview({ contract, onClose }: Props) {
       }
     }
 
+    // Draw "لا شيء" if no second driver
+    if (!contract.hasDriver2) {
+      const cx = 650, cy = 2550, angle = Math.atan2(700, 1100);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+      ctx.font = `bold 200px 'Tahoma','Arial',sans-serif`;
+      ctx.fillStyle = "rgba(0,0,0,0.10)";
+      ctx.textAlign = "center";
+      ctx.direction = "rtl";
+      ctx.fillText("لا شيء", 0, 0);
+      ctx.restore();
+    }
+
     const dataUrl = canvas.toDataURL("image/png");
     const win = window.open("", "_blank");
     if (!win) return;
@@ -526,6 +560,20 @@ export default function ContractPreview({ contract, onClose }: Props) {
         } else {
           ctx.fillText(val, x, y);
         }
+      }
+
+      // Draw "لا شيء" if no second driver
+      if (!contract.hasDriver2) {
+        const cx = 650, cy = 2550, angle = Math.atan2(700, 1100);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.font = `bold 200px 'Tahoma','Arial',sans-serif`;
+        ctx.fillStyle = "rgba(0,0,0,0.10)";
+        ctx.textAlign = "center";
+        ctx.direction = "rtl";
+        ctx.fillText("لا شيء", 0, 0);
+        ctx.restore();
       }
 
       // Page 2: background below page 1
