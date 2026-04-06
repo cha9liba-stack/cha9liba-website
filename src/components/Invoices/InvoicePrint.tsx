@@ -173,7 +173,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               const nameFontSize = client.name.length > 25 ? Math.max(9, 13 - Math.floor((client.name.length - 25) / 4)) : 13;
               const addrFontSize = client.address.length > 35 ? Math.max(9, 12 - Math.floor((client.address.length - 35) / 5)) : 12;
               return (
-                <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px", tableLayout:"fixed" }}>
+                <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"20px", tableLayout:"fixed" }}>
                   <colgroup>
                     <col style={{ width:"33%" }}/>
                     <col style={{ width:"17%" }}/>
