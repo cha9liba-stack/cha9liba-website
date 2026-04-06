@@ -61,7 +61,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   const isFacture = invType === "facture";
   const typeLabel = { facture: "Facture", bon: "Bon de livraison", devis: "Devis" }[invType] || "Facture";
   const fmt = (n: number) => n.toFixed(3);
-  const emptyRows = Math.max(0, 10 - lines.length);
+  const emptyRows = Math.max(0, 6 - lines.length);
 
   // ── Generate QR code ───────────────────────────────────────────────────────
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
@@ -89,8 +89,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
       <title>${typeLabel} ${invNum}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:Arial,sans-serif;font-size:10px;color:#000;background:#fff}
-        @media print{@page{margin:8mm;size:A4}}
+        body{font-family:Arial,sans-serif;font-size:12px;color:#000;background:#fff}
+        @media print{
+          @page{margin:8mm;size:A4}
+          body{width:210mm}
+        }
         table{width:100%;border-collapse:collapse}
       </style>
     </head><body>${content}</body></html>`);
@@ -124,14 +127,14 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
         {/* Preview */}
         <div className="flex-1 overflow-auto p-4 bg-slate-100">
-          <div ref={ref} style={{ background:"#fff", padding:"14px 18px", maxWidth:"760px", margin:"0 auto", fontFamily:"Arial,sans-serif", fontSize:"10px" }}>
+          <div ref={ref} style={{ background:"#fff", padding:"14px 18px", maxWidth:"760px", margin:"0 auto", fontFamily:"Arial,sans-serif", fontSize:"12px" }}>
 
             {/* ── Header ── */}
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:"10px" }}>
               <tbody><tr>
                 <td style={{ border:"none", width:"33%", verticalAlign:"top" }}>
-                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"18px" }}>{CO.nameFr}</div>
-                  <div style={{ fontWeight:"bold", fontSize:"14px" }}>{CO.addrFr}</div>
+                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"20px" }}>{CO.nameFr}</div>
+                  <div style={{ fontWeight:"bold", fontSize:"15px" }}>{CO.addrFr}</div>
                   <div style={{ fontSize:"13px" }}>Mail:{CO.email}</div>
                   <div style={{ fontSize:"13px" }}>Tel:{CO.tel}</div>
                   <div style={{ fontSize:"13px" }}>MF:{CO.mf}</div>
@@ -141,8 +144,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
                 </td>
                 <td style={{ border:"none", width:"33%", textAlign:"right", verticalAlign:"top" }}>
-                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"18px" }}>{CO.nameAr}</div>
-                  <div style={{ fontWeight:"bold", fontSize:"14px" }}>{CO.addrAr}</div>
+                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"20px" }}>{CO.nameAr}</div>
+                  <div style={{ fontWeight:"bold", fontSize:"15px" }}>{CO.addrAr}</div>
                   <div style={{ fontSize:"13px" }}>{CO.email}</div>
                   <div style={{ fontSize:"13px" }}>الهاتف : {CO.telAr}</div>
                   <div style={{ fontSize:"13px" }}>{CO.mf}</div>
@@ -221,10 +224,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     {[0,1,2,3,4].map(j => (
                       <td key={j} style={{
                         borderTop: "none",
-                        borderBottom: i === emptyRows - 1 ? "none" : "none",
+                        borderBottom: "none",
                         borderLeft: j === 0 ? "none" : "1px solid #bbb",
-                        borderRight: j === 4 ? "none" : "none",
-                        padding: "14px 6px"
+                        borderRight: "none",
+                        padding: "8px 6px"
                       }}></td>
                     ))}
                   </tr>
