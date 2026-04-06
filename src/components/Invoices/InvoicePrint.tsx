@@ -169,9 +169,9 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             {/* ── Client ── */}
             <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px", tableLayout:"fixed" }}>
               <colgroup>
-                <col style={{ width:"28%" }}/>
+                <col style={{ width:"33%" }}/>
                 <col style={{ width:"17%" }}/>
-                <col style={{ width:"40%" }}/>
+                <col style={{ width:"35%" }}/>
                 <col style={{ width:"15%" }}/>
               </colgroup>
               <tbody><tr style={{ verticalAlign:"top" }}>
