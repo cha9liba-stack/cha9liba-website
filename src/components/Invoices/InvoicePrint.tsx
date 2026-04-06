@@ -98,7 +98,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
           .lines-wrap table{height:100%!important}
         }
         table{width:100%;border-collapse:collapse;table-layout:fixed}
-        td,th{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+        td,th{overflow:hidden;white-space:nowrap}
         .inv-wrap{height:1050px;display:flex;flex-direction:column}
         .lines-wrap{flex:1;display:flex;flex-direction:column}
         .lines-wrap table{height:100%}
@@ -167,29 +167,29 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             </table>
 
             {/* ── Client ── */}
-            <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px", tableLayout:"fixed" }}>
               <colgroup>
-                <col style={{ width:"30%" }}/>
-                <col style={{ width:"20%" }}/>
-                <col style={{ width:"35%" }}/>
+                <col style={{ width:"28%" }}/>
+                <col style={{ width:"17%" }}/>
+                <col style={{ width:"40%" }}/>
                 <col style={{ width:"15%" }}/>
               </colgroup>
-              <tbody><tr>
-                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"5px 7px", overflow:"hidden" }}>
-                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>Nom de client:</span>
-                  <strong style={{ fontSize:"13px", display:"block", wordBreak:"break-word", whiteSpace:"normal" }}>{client.name}</strong>
+              <tbody><tr style={{ verticalAlign:"top" }}>
+                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
+                  <div style={{ fontSize:"10px", color:"#555" }}>Nom de client:</div>
+                  <div style={{ fontWeight:"bold", whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.8vw,13px)" }}>{client.name}</div>
                 </td>
-                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"5px 7px", overflow:"hidden" }}>
-                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>MF:</span>
-                  <span style={{ fontSize:"12px", display:"block", wordBreak:"break-all" }}>{client.mf}</span>
+                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
+                  <div style={{ fontSize:"10px", color:"#555" }}>MF:</div>
+                  <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.5vw,12px)" }}>{client.mf}</div>
                 </td>
-                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"5px 7px", overflow:"hidden" }}>
-                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>Adresse:</span>
-                  <span style={{ fontSize:"12px", display:"block", wordBreak:"break-word", whiteSpace:"normal" }}>{client.address}</span>
+                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
+                  <div style={{ fontSize:"10px", color:"#555" }}>Adresse:</div>
+                  <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.5vw,12px)" }}>{client.address}</div>
                 </td>
-                <td style={{ border:"none", padding:"5px 7px", overflow:"hidden" }}>
-                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>Tel:</span>
-                  <span style={{ fontSize:"12px", display:"block" }}>{client.phone}</span>
+                <td style={{ border:"none", padding:"4px 6px", overflow:"hidden" }}>
+                  <div style={{ fontSize:"10px", color:"#555" }}>Tel:</div>
+                  <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.5vw,12px)" }}>{client.phone}</div>
                 </td>
               </tr></tbody>
             </table>
