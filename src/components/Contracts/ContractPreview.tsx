@@ -587,6 +587,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
       // Page 2: background below page 1
       if (bg) {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, ORIG_H, ORIG_W, ORIG_H);
         ctx.drawImage(bg, 0, ORIG_H + BG_OFFSET_Y, ORIG_W, ORIG_H);
       }
 
