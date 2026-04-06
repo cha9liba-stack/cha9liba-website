@@ -309,6 +309,9 @@ export default function ContractPreview({ contract, onClose }: Props) {
     loadImage(getTemplate(contract)).then((tmpl) => {
       canvas.width  = ORIG_W;
       canvas.height = ORIG_H;
+      // White background first
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, ORIG_W, ORIG_H);
       ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
 
       // Helper: draw text with correct direction (numbers/latin = ltr, arabic = rtl)
@@ -546,6 +549,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const ctx = merged.getContext("2d")!;
 
       // Page 1: template with data
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, ORIG_W, ORIG_H);
       if (tmpl) ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
       else { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, ORIG_W, ORIG_H); }
 
