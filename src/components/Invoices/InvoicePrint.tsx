@@ -203,19 +203,19 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <tr key={i}>
                     {isDevis ? (
                       <>
-                        {cell(l.date, { padding:"4px 6px" })}
-                        {cell(l.designation, { textAlign:"center", padding:"4px 6px" })}
-                        {cell(l.days, { textAlign:"center", padding:"4px 6px" })}
-                        {cell(fmt(l.pricePerDay||0), { textAlign:"right", padding:"4px 6px" })}
-                        {cell(fmt(l.amount||0), { textAlign:"right", padding:"4px 6px" })}
+                        {cell(l.date, { padding:"3px 6px" })}
+                        {cell(l.designation, { textAlign:"center", padding:"3px 6px" })}
+                        {cell(l.days, { textAlign:"center", padding:"3px 6px" })}
+                        {cell(fmt(l.pricePerDay||0), { textAlign:"right", padding:"3px 6px" })}
+                        {cell(fmt(l.amount||0), { textAlign:"right", padding:"3px 6px" })}
                       </>
                     ) : (
                       <>
-                        {cell(l.contractNumber, { padding:"4px 6px" })}
-                        {cell(l.date, { padding:"4px 6px" })}
-                        {cell(l.designation, { textAlign:"center", padding:"4px 6px" })}
-                        {cell(l.days, { textAlign:"center", padding:"4px 6px" })}
-                        {cell(fmt(l.amount||0), { textAlign:"right", padding:"4px 6px" })}
+                        {cell(l.contractNumber, { padding:"3px 6px" })}
+                        {cell(l.date, { padding:"3px 6px" })}
+                        {cell(l.designation, { textAlign:"center", padding:"3px 6px" })}
+                        {cell(l.days, { textAlign:"center", padding:"3px 6px" })}
+                        {cell(fmt(l.amount||0), { textAlign:"right", padding:"3px 6px" })}
                       </>
                     )}
                   </tr>
@@ -229,7 +229,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                         borderBottom: "none",
                         borderLeft: j === 0 ? "none" : "1px solid #bbb",
                         borderRight: "none",
-                        padding: "4px 6px"
+                        padding: "2px 6px",
+                        height: "18px"
                       }}></td>
                     ))}
                   </tr>
