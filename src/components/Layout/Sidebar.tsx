@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from "../../store/useAuthStore";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { useState } from "react";
+import { isSousTraitant } from "../../lib/permissions";
 
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
@@ -23,19 +24,20 @@ export default function Sidebar() {
   const isOnline = useOnlineStatus();
   const isRTL = i18n.language === "ar";
   const [gestionOpen, setGestionOpen] = useState(true);
+  const isST = isSousTraitant(user);
 
   const mainItems = [
-    { to: "/",          icon: LayoutDashboard, label: isRTL ? "لوحة القيادة" : "Tableau de bord" },
-    { to: "/contracts", icon: FileText,         label: isRTL ? "العقود" : "Contrats" },
-    { to: "/invoices",  icon: Receipt,          label: isRTL ? "الفواتير" : "Factures" },
-    { to: "/settings",  icon: Settings,         label: isRTL ? "الإعدادات" : "Paramètres" },
-  ];
+    { to: "/",          icon: LayoutDashboard, label: isRTL ? "لوحة القيادة" : "Tableau de bord", hidden: isST },
+    { to: "/contracts", icon: FileText,         label: isRTL ? "العقود" : "Contrats", hidden: false },
+    { to: "/invoices",  icon: Receipt,          label: isRTL ? "الفواتير" : "Factures", hidden: isST },
+    { to: "/settings",  icon: Settings,         label: isRTL ? "الإعدادات" : "Paramètres", hidden: isST },
+  ].filter(i => !i.hidden);
 
   const gestionItems = [
-    { to: "/fleet",    icon: Gauge, label: isRTL ? "الأسطول اليومي" : "Flotte" },
-    { to: "/vehicles", icon: Car,   label: isRTL ? "السيارات"       : "Véhicules" },
-    { to: "/clients",  icon: Users, label: isRTL ? "العملاء"        : "Clients" },
-  ];
+    { to: "/fleet",    icon: Gauge, label: isRTL ? "الأسطول اليومي" : "Flotte", hidden: false },
+    { to: "/vehicles", icon: Car,   label: isRTL ? "السيارات"       : "Véhicules", hidden: isST },
+    { to: "/clients",  icon: Users, label: isRTL ? "العملاء"        : "Clients", hidden: isST },
+  ].filter(i => !i.hidden);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${

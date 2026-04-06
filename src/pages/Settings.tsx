@@ -28,7 +28,7 @@ interface AppUser {
   id: string;
   username: string;
   password: string;
-  role: "admin" | "user";
+  role: "admin" | "user" | "sous-traitant";
   permissions: string[];
 }
 
@@ -45,7 +45,7 @@ export default function Settings() {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ username: "", password: "", role: "user" as "admin" | "user" });
+  const [newUser, setNewUser] = useState({ username: "", password: "", role: "user" as "admin" | "user" | "sous-traitant" });
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [userMsg, setUserMsg] = useState("");
 
@@ -233,12 +233,12 @@ export default function Settings() {
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <label className="text-xs font-medium text-slate-500">Role:</label>
-                {(["user", "admin"] as const).map(r => (
+                {(["user", "admin", "sous-traitant"] as const).map(r => (
                   <button key={r} onClick={() => setNewUser(p => ({ ...p, role: r }))}
                     className={`px-3 py-1 text-xs rounded-lg border font-medium transition-colors ${newUser.role === r ? "bg-blue-500 text-white border-blue-500" : "border-slate-200 text-slate-600"}`}>
-                    {r === "admin" ? "Admin" : "Employé"}
+                    {r === "admin" ? "Admin" : r === "sous-traitant" ? "Sous-traitant" : "Employé"}
                   </button>
                 ))}
                 <button onClick={addUser} disabled={!newUser.username || !newUser.password}
@@ -301,8 +301,8 @@ function UserRow({ u, currentUserId, showPass, onTogglePass, onDelete, onResetPa
         <div className="flex items-center gap-2">
           <p className="text-sm font-semibold text-slate-800">{u.username}</p>
           {isCurrent && <span className="text-[10px] bg-amber-200 text-amber-700 px-1.5 py-0.5 rounded-full">Vous</span>}
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${u.role === "admin" ? "bg-blue-100 text-blue-700" : "bg-slate-200 text-slate-600"}`}>
-            {u.role === "admin" ? "Admin" : "Employé"}
+          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${u.role === "admin" ? "bg-blue-100 text-blue-700" : u.role === "sous-traitant" ? "bg-purple-100 text-purple-700" : "bg-slate-200 text-slate-600"}`}>
+            {u.role === "admin" ? "Admin" : u.role === "sous-traitant" ? "Sous-traitant" : "Employé"}
           </span>
         </div>
         {editing

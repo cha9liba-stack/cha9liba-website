@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Car, Wrench, CalendarClock, AlertCircle, Bell, X } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { isSousTraitant } from "../lib/permissions";
 import type { Contract, MaintenanceCar, Reservation, UnpaidRecord } from "../types";
 // ─── localStorage ─────────────────────────────────────────────────────────────
 function load<T>(key: string): T[] {
@@ -194,6 +196,8 @@ export default function Fleet() {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const contracts = useContractStore(s => s.contracts);
+  const user = useAuthStore(s => s.user);
+  const isST = isSousTraitant(user);
 
   const [date, setDate] = useState(today);
   const [maint, setMaint] = useState<MaintenanceCar[]>(() => load(K.maint));
@@ -734,9 +738,9 @@ export default function Fleet() {
                     {/* État — clickable to change */}
                     <td className="px-3 py-2 relative">
                       <button
-                        onClick={e => { e.stopPropagation(); setStateMenu(stateMenu === car.registration ? null : car.registration); }}
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        title="Cliquer pour changer l'état"
+                        onClick={e => { e.stopPropagation(); if (!isST) setStateMenu(stateMenu === car.registration ? null : car.registration); }}
+                        className={`${isST ? "cursor-default" : "cursor-pointer hover:opacity-80"} transition-opacity`}
+                        title={isST ? "" : "Cliquer pour changer l'état"}
                       >
                       {{
                           rented:      isReturningToday

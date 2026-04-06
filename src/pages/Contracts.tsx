@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, Search, Edit2, Trash2, RefreshCw, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
 import { deleteContract, getAllContracts, subscribeToContracts, isRealContract } from "../services/contractService";
+import { isSousTraitant } from "../lib/permissions";
 import { logAction } from "../services/auditService";
 import { useAuthStore } from "../store/useAuthStore";
 import ContractModal from "../components/Contracts/ContractModal";
@@ -37,18 +38,25 @@ export default function Contracts() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
 
+  const isST = isSousTraitant(user);
+
   useEffect(() => {
     setLoading(true);
     getAllContracts().then(data => {
-      setContracts(data.filter(isRealContract));
-      setArchiveContracts(data.filter(c => !isRealContract(c) && !c._deleted));
+      const real = data.filter(isRealContract);
+      // Sous-traitant sees only their own contracts
+      const visible = isST ? real.filter(c => c._createdBy === user?.username) : real;
+      setContracts(visible);
+      setArchiveContracts(isST ? [] : data.filter(c => !isRealContract(c) && !c._deleted));
     }).finally(() => setLoading(false));
     const unsub = subscribeToContracts(data => {
-      setContracts(data.filter(isRealContract));
-      setArchiveContracts(data.filter(c => !isRealContract(c) && !c._deleted));
+      const real = data.filter(isRealContract);
+      const visible = isST ? real.filter(c => c._createdBy === user?.username) : real;
+      setContracts(visible);
+      setArchiveContracts(isST ? [] : data.filter(c => !isRealContract(c) && !c._deleted));
     });
     return unsub;
-  }, []);
+  }, [isST, user?.username]);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -118,10 +126,12 @@ export default function Contracts() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-slate-800">{t("contracts")}</h1>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowArchive(p => !p)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${showArchive ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"}`}>
-            📁 Archives {archiveContracts.length > 0 && <span className="bg-slate-500 text-white text-xs px-1.5 py-0.5 rounded-full">{archiveContracts.length}</span>}
-          </button>
+          {!isST && (
+            <button onClick={() => setShowArchive(p => !p)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${showArchive ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"}`}>
+              📁 Archives {archiveContracts.length > 0 && <span className="bg-slate-500 text-white text-xs px-1.5 py-0.5 rounded-full">{archiveContracts.length}</span>}
+            </button>
+          )}
           <button onClick={openNew}
             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             <Plus size={16} />{t("new_contract")}
@@ -217,14 +227,18 @@ export default function Contracts() {
                           className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title={t("preview")}>
                           <Eye size={15} />
                         </button>
-                        <button onClick={() => openEdit(c)}
-                          className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title={t("edit")}>
-                          <Edit2 size={15} />
-                        </button>
-                        <button onClick={() => setConfirmDeleteId(c.id!)}
-                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t("delete")}>
-                          <Trash2 size={15} />
-                        </button>
+                        {!isST && (
+                          <button onClick={() => openEdit(c)}
+                            className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title={t("edit")}>
+                            <Edit2 size={15} />
+                          </button>
+                        )}
+                        {!isST && (
+                          <button onClick={() => setConfirmDeleteId(c.id!)}
+                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title={t("delete")}>
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

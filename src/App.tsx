@@ -11,12 +11,20 @@ import VehicleDetail from "./pages/VehicleDetail";
 import Clients from "./pages/Clients";
 import InvoicePublic from "./pages/InvoicePublic";
 import { lazy, Suspense } from "react";
+import { isSousTraitant } from "./lib/permissions";
 
 const Invoices = lazy(() => import("./pages/Invoices"));
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
   return user ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function STProtectedRoute({ children }: { children: React.ReactNode }) {
+  const user = useAuthStore((s) => s.user);
+  if (!user) return <Navigate to="/login" replace />;
+  if (isSousTraitant(user)) return <Navigate to="/contracts" replace />;
+  return <>{children}</>;
 }
 
 export default function App() {
@@ -33,18 +41,20 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Dashboard />} />
+          <Route index element={<STProtectedRoute><Dashboard /></STProtectedRoute>} />
           <Route path="contracts" element={<Contracts />} />
           <Route path="fleet" element={<Fleet />} />
-          <Route path="vehicles" element={<Vehicles />} />
-          <Route path="vehicles/:registration" element={<VehicleDetail />} />
-          <Route path="clients" element={<Clients />} />
+          <Route path="vehicles" element={<STProtectedRoute><Vehicles /></STProtectedRoute>} />
+          <Route path="vehicles/:registration" element={<STProtectedRoute><VehicleDetail /></STProtectedRoute>} />
+          <Route path="clients" element={<STProtectedRoute><Clients /></STProtectedRoute>} />
           <Route path="invoices" element={
-            <Suspense fallback={<div className="p-6 text-slate-400">Chargement...</div>}>
-              <Invoices />
-            </Suspense>
+            <STProtectedRoute>
+              <Suspense fallback={<div className="p-6 text-slate-400">Chargement...</div>}>
+                <Invoices />
+              </Suspense>
+            </STProtectedRoute>
           } />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<STProtectedRoute><Settings /></STProtectedRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
