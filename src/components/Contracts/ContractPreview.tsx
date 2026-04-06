@@ -376,22 +376,22 @@ export default function ContractPreview({ contract, onClose }: Props) {
         }
       }
 
-      // Draw "Ù„Ø§ Ø´ÙŠØ¡" diagonally if no second driver
+      // Draw "لا شيء" diagonally if no second driver
       if (!contract.hasDriver2) {
-        // Area: top-left to bottom-right (positive angle = top to bottom)
-        const x1 = 100, y1 = 2200, x2 = 1200, y2 = 2900;
+        ctx.save();
+        // Draw from top-left to bottom-right of driver2 area
+        const x1 = 150, y1 = 2220;
+        const x2 = 1150, y2 = 2880;
         const cx = (x1 + x2) / 2;
         const cy = (y1 + y2) / 2;
-        const angle = Math.atan2(y2 - y1, x2 - x1); // positive = top-left to bottom-right
-        const diagWidth = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-        ctx.save();
+        const angle = Math.atan2(y2 - y1, x2 - x1);
         ctx.translate(cx, cy);
         ctx.rotate(angle);
-        ctx.font = `bold ${Math.round(diagWidth / 5)}px 'Tahoma','Arial',sans-serif`;
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.font = `bold 220px 'Tahoma','Arial',sans-serif`;
+        ctx.fillStyle = "rgba(0,0,0,0.55)";
         ctx.textAlign = "center";
         ctx.direction = "rtl";
-        ctx.fillText("Ù„Ø§ Ø´ÙŠØ¡", 0, 0);
+        ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
         ctx.restore();
         ctx.textAlign = "right";
         ctx.direction = "rtl";
@@ -502,17 +502,19 @@ export default function ContractPreview({ contract, onClose }: Props) {
       }
     }
 
-    // Draw "Ù„Ø§ Ø´ÙŠØ¡" if no second driver
+    // Draw "لا شيء" if no second driver
     if (!contract.hasDriver2) {
-      const x1=100,y1=2200,x2=1200,y2=2900,cx=(x1+x2)/2,cy=(y1+y2)/2,angle=Math.atan2(y2-y1,x2-x1),dw=Math.sqrt((x2-x1)**2+(y2-y1)**2);
       ctx.save();
-      ctx.translate(cx,cy);
+      const x1=150, y1=2220, x2=1150, y2=2880;
+      const cx=(x1+x2)/2, cy=(y1+y2)/2;
+      const angle=Math.atan2(y2-y1, x2-x1);
+      ctx.translate(cx, cy);
       ctx.rotate(angle);
-      ctx.font=`bold ${Math.round(dw/5)}px 'Tahoma','Arial',sans-serif`;
-      ctx.fillStyle="rgba(0,0,0,0.25)";
-      ctx.textAlign = "center";
-      ctx.direction = "rtl";
-      ctx.fillText("Ù„Ø§ Ø´ÙŠØ¡", 0, 0);
+      ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
+      ctx.fillStyle="rgba(0,0,0,0.7)";
+      ctx.textAlign="center";
+      ctx.direction="rtl";
+      ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
       ctx.restore();
     }
 
@@ -572,17 +574,19 @@ export default function ContractPreview({ contract, onClose }: Props) {
         }
       }
 
-      // Draw "Ù„Ø§ Ø´ÙŠØ¡" if no second driver
+      // Draw "لا شيء" if no second driver
       if (!contract.hasDriver2) {
-        const x1=100,y1=2200,x2=1200,y2=2900,cx=(x1+x2)/2,cy=(y1+y2)/2,angle=Math.atan2(y2-y1,x2-x1),dw=Math.sqrt((x2-x1)**2+(y2-y1)**2);
-      ctx.save();
-      ctx.translate(cx,cy);
-      ctx.rotate(angle);
-      ctx.font=`bold ${Math.round(dw/5)}px 'Tahoma','Arial',sans-serif`;
-      ctx.fillStyle="rgba(0,0,0,0.25)";
-        ctx.textAlign = "center";
-        ctx.direction = "rtl";
-        ctx.fillText("Ù„Ø§ Ø´ÙŠØ¡", 0, 0);
+        ctx.save();
+        const x1=150, y1=2220, x2=1150, y2=2880;
+        const cx=(x1+x2)/2, cy=(y1+y2)/2;
+        const angle=Math.atan2(y2-y1, x2-x1);
+        ctx.translate(cx, cy);
+        ctx.rotate(angle);
+        ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
+        ctx.fillStyle="rgba(0,0,0,0.7)";
+        ctx.textAlign="center";
+        ctx.direction="rtl";
+        ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
         ctx.restore();
       }
 
