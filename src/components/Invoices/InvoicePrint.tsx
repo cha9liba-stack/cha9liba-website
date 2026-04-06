@@ -167,12 +167,30 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             </table>
 
             {/* ── Client ── */}
-            <table style={{ width:"100%", borderCollapse:"collapse", tableLayout:"fixed", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px" }}>
+              <colgroup>
+                <col style={{ width:"30%" }}/>
+                <col style={{ width:"20%" }}/>
+                <col style={{ width:"35%" }}/>
+                <col style={{ width:"15%" }}/>
+              </colgroup>
               <tbody><tr>
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Nom de client:</span><strong style={{ fontSize:"14px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.name}</strong></>, { width:"28%", border:"none", borderRight:"1px solid #ddd", padding:"5px 7px" })}
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>MF:</span><span style={{ fontSize:"13px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.mf}</span></>, { width:"18%", border:"none", borderRight:"1px solid #ddd", padding:"5px 7px" })}
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Adresse:</span><span style={{ fontSize:"13px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.address}</span></>, { width:"34%", border:"none", borderRight:"1px solid #ddd", padding:"5px 7px" })}
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Tel:</span><span style={{ fontSize:"13px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.phone}</span></>, { width:"20%", border:"none", padding:"5px 7px" })}
+                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"5px 7px", overflow:"hidden" }}>
+                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>Nom de client:</span>
+                  <strong style={{ fontSize:"13px", display:"block", wordBreak:"break-word", whiteSpace:"normal" }}>{client.name}</strong>
+                </td>
+                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"5px 7px", overflow:"hidden" }}>
+                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>MF:</span>
+                  <span style={{ fontSize:"12px", display:"block", wordBreak:"break-all" }}>{client.mf}</span>
+                </td>
+                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"5px 7px", overflow:"hidden" }}>
+                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>Adresse:</span>
+                  <span style={{ fontSize:"12px", display:"block", wordBreak:"break-word", whiteSpace:"normal" }}>{client.address}</span>
+                </td>
+                <td style={{ border:"none", padding:"5px 7px", overflow:"hidden" }}>
+                  <span style={{ fontSize:"11px", color:"#555", display:"block" }}>Tel:</span>
+                  <span style={{ fontSize:"12px", display:"block" }}>{client.phone}</span>
+                </td>
               </tr></tbody>
             </table>
 
