@@ -384,7 +384,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         const x2 = 150, y2 = 2880;
         const cx = (x1 + x2) / 2;
         const cy = (y1 + y2) / 2;
-        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI;
         ctx.translate(cx, cy);
         ctx.rotate(angle);
         ctx.font = `bold 220px 'Tahoma','Arial',sans-serif`;
@@ -507,7 +507,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
       ctx.save();
       const x1=1150, y1=2220, x2=150, y2=2880;
       const cx=(x1+x2)/2, cy=(y1+y2)/2;
-      const angle=Math.atan2(y2-y1, x2-x1);
+      const angle=Math.atan2(y2-y1, x2-x1) + Math.PI;
       ctx.translate(cx, cy);
       ctx.rotate(angle);
       ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
@@ -579,7 +579,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         ctx.save();
         const x1=1150, y1=2220, x2=150, y2=2880;
         const cx=(x1+x2)/2, cy=(y1+y2)/2;
-        const angle=Math.atan2(y2-y1, x2-x1);
+        const angle=Math.atan2(y2-y1, x2-x1) + Math.PI;
         ctx.translate(cx, cy);
         ctx.rotate(angle);
         ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
@@ -842,5 +842,6 @@ export default function ContractPreview({ contract, onClose }: Props) {
     </div>
   );
 }
+
 
 
