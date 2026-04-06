@@ -92,16 +92,22 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
         @media print{
           @page{margin:8mm;size:A4}
-          body{width:210mm}
+          body{width:210mm;height:297mm}
+          .inv-wrap{height:277mm!important;display:flex!important;flex-direction:column!important}
+          .lines-wrap{flex:1!important;display:flex!important;flex-direction:column!important}
+          .lines-wrap table{height:100%!important}
         }
         table{width:100%;border-collapse:collapse;table-layout:fixed}
         td,th{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+        .inv-wrap{height:1050px;display:flex;flex-direction:column}
+        .lines-wrap{flex:1;display:flex;flex-direction:column}
+        .lines-wrap table{height:100%}
         .blue-val{color:#1a56db!important;font-weight:bold}
         .blue-bg{background:#e8f0fe!important;color:#1a56db!important;font-weight:bold}
         .total-row td{background:#1a56db!important;color:#fff!important;font-weight:bold}
         .footer-bar{color:#2d7a2d;font-weight:bold;border-top:2px solid #2d7a2d;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
       </style>
-    </head><body>${content}</body></html>`);
+    </head><body><div class="inv-wrap">${content}</div></body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 600);
   }
@@ -132,7 +138,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
         {/* Preview */}
         <div className="flex-1 overflow-auto p-4 bg-slate-100">
-          <div ref={ref} style={{ background:"#fff", padding:"16px 20px", maxWidth:"760px", margin:"0 auto", fontFamily:"Arial,sans-serif", fontSize:"13px", minHeight:"1050px", display:"flex", flexDirection:"column" }}>
+          <div ref={ref} className="inv-wrap" style={{ background:"#fff", padding:"16px 20px", maxWidth:"760px", margin:"0 auto", fontFamily:"Arial,sans-serif", fontSize:"13px", height:"1050px", display:"flex", flexDirection:"column" }}>
 
             {/* ── Header ── */}
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:"12px" }}>
@@ -170,8 +176,9 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            {/* ── Lines — flex-grow to fill page ── */}
-            <table style={{ width:"100%", borderCollapse:"collapse", tableLayout:"fixed", border:"1px solid #4a7c4a", flexGrow:1 }}>
+            {/* ── Lines — fill remaining space ── */}
+            <div className="lines-wrap" style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+            <table style={{ width:"100%", height:"100%", borderCollapse:"collapse", tableLayout:"fixed", border:"1px solid #1a56db" }}>
               <thead><tr>
                 {isDevis ? (
                   <>
@@ -235,6 +242,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 </tr>
               </tbody>
             </table>
+            </div>
 
             {/* ── Footer ── */}
             <table style={{ width:"100%", borderCollapse:"collapse" }}>
