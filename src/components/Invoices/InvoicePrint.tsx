@@ -19,8 +19,8 @@ const CO = {
   ig:     "palma_car",
 };
 
-const THEAD = "#d6e8d6";
-const BG    = "1px solid #4a7c4a";
+const THEAD = "#e8f0fe";
+const BG    = "1px solid #1a56db";
 const B     = "1px solid #bbb";
 
 export default function InvoicePrint({ invoice, onClose }: Props) {
@@ -61,7 +61,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   const isFacture = invType === "facture";
   const typeLabel = { facture: "Facture", bon: "Bon de livraison", devis: "Devis" }[invType] || "Facture";
   const fmt = (n: number) => n.toFixed(3);
-  const emptyRows = Math.max(0, 6 - lines.length);
+  const emptyRows = Math.max(0, 14 - lines.length);
 
   // ── Generate QR code ───────────────────────────────────────────────────────
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
@@ -99,7 +99,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         .blue-val{color:#1a56db!important;font-weight:bold}
         .blue-bg{background:#e8f0fe!important;color:#1a56db!important;font-weight:bold}
         .total-row td{background:#1a56db!important;color:#fff!important;font-weight:bold}
-        .footer-bar{color:#2d7a2d;font-weight:bold;border-top:2px solid #2d7a2d;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .footer-bar{color:#2d7a2d;font-weight:bold;border-top:2px solid #2d7a2d;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
       </style>
     </head><body>${content}</body></html>`);
     win.document.close();
@@ -110,7 +110,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
     <td style={{ borderTop:"none", borderBottom:"none", borderLeft:"1px solid #bbb", borderRight:"1px solid #bbb", padding: "5px 7px", ...style }}>{content}</td>;
 
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <th style={{ border: BG, padding: "5px 7px", background: THEAD, textAlign: "left", fontWeight: "bold", ...style }}>{content}</th>;
+    <th style={{ border: "1px solid #1a56db", padding: "6px 7px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", ...style }}>{content}</th>;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -278,7 +278,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             </table>
 
             {/* ── Company footer — single line centered ── */}
-            <div className="footer-bar" style={{ marginTop:"12px", textAlign:"center", fontSize:"13px", fontWeight:"bold", color:"#2d7a2d", borderTop:"2px solid #2d7a2d", paddingTop:"8px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+            <div className="footer-bar" style={{ marginTop:"10px", textAlign:"center", fontWeight:"bold", color:"#2d7a2d", borderTop:"2px solid #2d7a2d", paddingTop:"6px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", fontSize:"11px" }}>
               MF: {CO.mf} &nbsp;|&nbsp; RIB: {CO.rib} &nbsp;|&nbsp; {CO.email} &nbsp;|&nbsp; Tél: {CO.tel} &nbsp;|&nbsp; Instagram: {CO.ig}
             </div>
 
