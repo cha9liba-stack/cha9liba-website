@@ -89,18 +89,19 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
       <title>${typeLabel} ${invNum}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff}
+        body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
         @media print{
           @page{margin:8mm;size:A4}
-          body{width:210mm;height:297mm}
-          .invoice-wrap{min-height:277mm;display:flex;flex-direction:column}
-          .lines-table{flex-grow:1}
+          body{width:210mm}
         }
-        table{width:100%;border-collapse:collapse}
-        .invoice-wrap{display:flex;flex-direction:column;min-height:1050px}
-        .lines-table{flex-grow:1}
+        table{width:100%;border-collapse:collapse;table-layout:fixed}
+        td,th{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+        .blue-val{color:#1a56db!important;font-weight:bold}
+        .blue-bg{background:#e8f0fe!important;color:#1a56db!important;font-weight:bold}
+        .total-row td{background:#1a56db!important;color:#fff!important;font-weight:bold}
+        .footer-bar{color:#2d7a2d;font-weight:bold;border-top:2px solid #2d7a2d;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       </style>
-    </head><body><div class="invoice-wrap">${content}</div></body></html>`);
+    </head><body>${content}</body></html>`);
     win.document.close();
     setTimeout(() => win.print(), 600);
   }
@@ -160,17 +161,17 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             </table>
 
             {/* ── Client ── */}
-            <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", tableLayout:"fixed", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px" }}>
               <tbody><tr>
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Nom de client:</span><strong style={{ fontSize:"15px" }}>{client.name}</strong></>, { width:"28%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>MF:</span><span style={{ fontSize:"14px" }}>{client.mf}</span></>, { width:"18%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Adresse:</span><span style={{ fontSize:"14px" }}>{client.address}</span></>, { width:"34%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
-                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Tel:</span><span style={{ fontSize:"14px" }}>{client.phone}</span></>, { width:"20%", border:"none", padding:"6px 8px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Nom de client:</span><strong style={{ fontSize:"14px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.name}</strong></>, { width:"28%", border:"none", borderRight:"1px solid #ddd", padding:"5px 7px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>MF:</span><span style={{ fontSize:"13px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.mf}</span></>, { width:"18%", border:"none", borderRight:"1px solid #ddd", padding:"5px 7px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Adresse:</span><span style={{ fontSize:"13px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.address}</span></>, { width:"34%", border:"none", borderRight:"1px solid #ddd", padding:"5px 7px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Tel:</span><span style={{ fontSize:"13px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block" }}>{client.phone}</span></>, { width:"20%", border:"none", padding:"5px 7px" })}
               </tr></tbody>
             </table>
 
             {/* ── Lines — flex-grow to fill page ── */}
-            <table style={{ width:"100%", borderCollapse:"collapse", border:"1px solid #4a7c4a", flexGrow:1 }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", tableLayout:"fixed", border:"1px solid #4a7c4a", flexGrow:1 }}>
               <thead><tr>
                 {isDevis ? (
                   <>
@@ -195,19 +196,19 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <tr key={i}>
                     {isDevis ? (
                       <>
-                        {cell(l.date)}
-                        {cell(l.designation, { textAlign:"center" })}
-                        {cell(l.days, { textAlign:"center" })}
-                        {cell(fmt(l.pricePerDay||0), { textAlign:"right" })}
-                        {cell(fmt(l.amount||0), { textAlign:"right" })}
+                        {cell(l.date, { padding:"4px 6px" })}
+                        {cell(l.designation, { textAlign:"center", padding:"4px 6px" })}
+                        {cell(l.days, { textAlign:"center", padding:"4px 6px" })}
+                        {cell(fmt(l.pricePerDay||0), { textAlign:"right", padding:"4px 6px" })}
+                        {cell(fmt(l.amount||0), { textAlign:"right", padding:"4px 6px" })}
                       </>
                     ) : (
                       <>
-                        {cell(l.contractNumber)}
-                        {cell(l.date)}
-                        {cell(l.designation, { textAlign:"center" })}
-                        {cell(l.days, { textAlign:"center" })}
-                        {cell(fmt(l.amount||0), { textAlign:"right" })}
+                        {cell(l.contractNumber, { padding:"4px 6px" })}
+                        {cell(l.date, { padding:"4px 6px" })}
+                        {cell(l.designation, { textAlign:"center", padding:"4px 6px" })}
+                        {cell(l.days, { textAlign:"center", padding:"4px 6px" })}
+                        {cell(fmt(l.amount||0), { textAlign:"right", padding:"4px 6px" })}
                       </>
                     )}
                   </tr>
@@ -256,17 +257,17 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <tbody>
                       {!isDevis && (
                         <>
-                          <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>MONTANT HT</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(montantHT)}</td></tr>
-                          <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>TVA %</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(tva)}</td></tr>
+                          <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>MONTANT HT</td><td className="blue-bg" style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(montantHT)}</td></tr>
+                          <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>TVA %</td><td className="blue-bg" style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(tva)}</td></tr>
                         </>
                       )}
                       {tsl2dj > 0 && (
-                        <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>TSL 2 D/J</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(tsl2dj)}</td></tr>
+                        <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>TSL 2 D/J</td><td className="blue-bg" style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(tsl2dj)}</td></tr>
                       )}
                       {isFacture && timbre > 0 && (
-                        <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>Timbre</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(timbre)}</td></tr>
+                        <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>Timbre</td><td className="blue-bg" style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(timbre)}</td></tr>
                       )}
-                      <tr>
+                      <tr className="total-row">
                         <td style={{ border:BG, padding:"6px 8px", fontWeight:"bold", fontSize:"14px", background:"#1a56db", color:"white" }}>TOTAL TTC</td>
                         <td style={{ border:BG, padding:"6px 8px", textAlign:"right", fontWeight:"bold", fontSize:"16px", background:"#1a56db", color:"white" }}>{fmt(totalTTC)}</td>
                       </tr>
@@ -277,7 +278,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             </table>
 
             {/* ── Company footer — single line centered ── */}
-            <div style={{ marginTop:"12px", textAlign:"center", fontSize:"13px", fontWeight:"bold", color:"#2d7a2d", borderTop:"2px solid #2d7a2d", paddingTop:"8px" }}>
+            <div className="footer-bar" style={{ marginTop:"12px", textAlign:"center", fontSize:"13px", fontWeight:"bold", color:"#2d7a2d", borderTop:"2px solid #2d7a2d", paddingTop:"8px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
               MF: {CO.mf} &nbsp;|&nbsp; RIB: {CO.rib} &nbsp;|&nbsp; {CO.email} &nbsp;|&nbsp; Tél: {CO.tel} &nbsp;|&nbsp; Instagram: {CO.ig}
             </div>
 
