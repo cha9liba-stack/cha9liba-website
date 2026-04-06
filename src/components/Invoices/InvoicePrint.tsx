@@ -144,24 +144,24 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:"12px" }}>
               <tbody><tr>
                 <td style={{ border:"none", width:"33%", verticalAlign:"top" }}>
-                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"18px" }}>{CO.nameFr}</div>
-                  <div style={{ fontWeight:"bold", fontSize:"14px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize:"12px" }}>Mail:{CO.email}</div>
-                  <div style={{ fontSize:"12px" }}>Tel:{CO.tel}</div>
-                  <div style={{ fontSize:"12px" }}>MF:{CO.mf}</div>
+                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"22px" }}>{CO.nameFr}</div>
+                  <div style={{ fontWeight:"bold", fontSize:"16px" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize:"13px" }}>Mail:{CO.email}</div>
+                  <div style={{ fontSize:"13px" }}>Tel:{CO.tel}</div>
+                  <div style={{ fontSize:"13px" }}>MF:{CO.mf}</div>
                 </td>
                 <td style={{ border:"none", width:"34%", textAlign:"center", verticalAlign:"middle" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height:"150px", objectFit:"contain", display:"block", margin:"0 auto" }}
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height:"160px", objectFit:"contain", display:"block", margin:"0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
-                  <div style={{ fontWeight:"bold", fontSize:"18px", marginTop:"6px" }}>N° {invNum}</div>
-                  <div style={{ fontSize:"14px" }}>Kélibia le: {invDate}</div>
+                  <div style={{ fontWeight:"bold", fontSize:"20px", marginTop:"6px" }}>N° {invNum}</div>
+                  <div style={{ fontSize:"15px" }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ border:"none", width:"33%", textAlign:"right", verticalAlign:"top" }}>
-                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"18px" }}>{CO.nameAr}</div>
-                  <div style={{ fontWeight:"bold", fontSize:"14px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize:"12px" }}>{CO.email}</div>
-                  <div style={{ fontSize:"12px" }}>الهاتف : {CO.telAr}</div>
-                  <div style={{ fontSize:"12px" }}>{CO.mf}</div>
+                  <div style={{ color:"#2d7a2d", fontWeight:"bold", fontSize:"22px" }}>{CO.nameAr}</div>
+                  <div style={{ fontWeight:"bold", fontSize:"16px" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize:"13px" }}>{CO.email}</div>
+                  <div style={{ fontSize:"13px" }}>الهاتف : {CO.telAr}</div>
+                  <div style={{ fontSize:"13px" }}>{CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
