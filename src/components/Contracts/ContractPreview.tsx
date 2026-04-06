@@ -221,6 +221,10 @@ const ORIG_W = 2480;
 const ORIG_H = 3508;
 const HIT_RADIUS = 60;
 
+// Offsets to adjust image positions
+const TEMPLATE_OFFSET_Y = -150;  // Move template UP (negative = up) to hide white space
+const BG_OFFSET_Y = 80;          // Move background DOWN (positive = down) to avoid text cutoff
+
 /** Choose template based on contract year: 2026+ uses new template with 2dt tax */
 function getTemplate(contract: Contract): string {
   const year = parseInt((contract.departureDate || contract.date || "2026").slice(0, 4), 10);
@@ -305,7 +309,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     loadImage(getTemplate(contract)).then((tmpl) => {
       canvas.width  = ORIG_W;
       canvas.height = ORIG_H;
-      ctx.drawImage(tmpl, 0, 0, ORIG_W, ORIG_H);
+      ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
 
       // Helper: draw text with correct direction (numbers/latin = ltr, arabic = rtl)
       function drawText(val: string, x: number, y: number) {
@@ -542,7 +546,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const ctx = merged.getContext("2d")!;
 
       // Page 1: template with data
-      if (tmpl) ctx.drawImage(tmpl, 0, 0, ORIG_W, ORIG_H);
+      if (tmpl) ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
       else { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, ORIG_W, ORIG_H); }
 
       ctx.textAlign = "right";
@@ -578,7 +582,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
       // Page 2: background below page 1
       if (bg) {
-        ctx.drawImage(bg, 0, ORIG_H, ORIG_W, ORIG_H);
+        ctx.drawImage(bg, 0, ORIG_H + BG_OFFSET_Y, ORIG_W, ORIG_H);
       }
 
       const win = window.open("", "_blank");
