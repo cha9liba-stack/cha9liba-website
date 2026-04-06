@@ -4,7 +4,7 @@ import type { Client, ClientAlert } from "../types";
 import {
   Users, Plus, Search, X, Building2, User, Phone, MapPin,
   FileText, TrendingUp, ChevronRight, Trash2, Edit2, CreditCard,
-  Mail, Hash, AlertCircle, GitMerge, DollarSign, ShieldOff, ShieldCheck, Bell, Plus
+  Mail, Hash, AlertCircle, GitMerge, DollarSign, ShieldOff, ShieldCheck, Bell
 } from "lucide-react";
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
