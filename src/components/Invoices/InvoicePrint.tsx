@@ -61,7 +61,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   const isFacture = invType === "facture";
   const typeLabel = { facture: "Facture", bon: "Bon de livraison", devis: "Devis" }[invType] || "Facture";
   const fmt = (n: number) => n.toFixed(3);
-  const emptyRows = Math.max(0, 14 - lines.length);
+  const emptyRows = Math.max(0, 8 - lines.length);
 
   // ── Generate QR code ───────────────────────────────────────────────────────
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
@@ -220,21 +220,17 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     )}
                   </tr>
                 ))}
-                {/* Empty rows — vertical borders only, no horizontal lines */}
-                {Array.from({ length: emptyRows }).map((_, i) => (
-                  <tr key={`e${i}`}>
-                    {[0,1,2,3,4].map(j => (
-                      <td key={j} style={{
-                        borderTop: "none",
-                        borderBottom: "none",
-                        borderLeft: j === 0 ? "none" : "1px solid #bbb",
-                        borderRight: "none",
-                        padding: "2px 6px",
-                        height: "18px"
-                      }}></td>
-                    ))}
-                  </tr>
-                ))}
+                {/* One expandable empty row to fill remaining space */}
+                <tr style={{ height:"100%" }}>
+                  {[0,1,2,3,4].map(j => (
+                    <td key={j} style={{
+                      borderTop: "none",
+                      borderBottom: "none",
+                      borderLeft: j === 0 ? "none" : "1px solid #bbb",
+                      borderRight: "none",
+                    }}></td>
+                  ))}
+                </tr>
                 {/* Bottom border row */}
                 <tr>
                   {[0,1,2,3,4].map(j => (
