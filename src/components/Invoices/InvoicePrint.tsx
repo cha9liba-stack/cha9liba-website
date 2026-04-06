@@ -182,19 +182,19 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   </colgroup>
                   <tbody><tr style={{ verticalAlign:"top" }}>
                     <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"12px", color:"#555" }}>Nom de client:</div>
+                      <div style={{ fontSize:"12px", color:"#5b9bd5", fontWeight:"600" }}>Nom de client:</div>
                       <div style={{ fontWeight:"bold", whiteSpace:"nowrap", overflow:"hidden", fontSize:`${nameFontSize}px` }}>{client.name}</div>
                     </td>
                     <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"12px", color:"#555" }}>MF:</div>
+                      <div style={{ fontSize:"12px", color:"#5b9bd5", fontWeight:"600" }}>MF:</div>
                       <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"11px" }}>{client.mf}</div>
                     </td>
                     <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"12px", color:"#555" }}>Adresse:</div>
+                      <div style={{ fontSize:"12px", color:"#5b9bd5", fontWeight:"600" }}>Adresse:</div>
                       <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:`${addrFontSize}px` }}>{client.address}</div>
                     </td>
                     <td style={{ border:"none", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"12px", color:"#555" }}>Tel:</div>
+                      <div style={{ fontSize:"12px", color:"#5b9bd5", fontWeight:"600" }}>Tel:</div>
                       <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"12px" }}>{client.phone}</div>
                     </td>
                   </tr></tbody>
