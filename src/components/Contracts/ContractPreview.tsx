@@ -380,8 +380,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
       if (!contract.hasDriver2) {
         ctx.save();
         // Draw from top-right to bottom-left (following arrow direction)
-        const x1 = 1150, y1 = 2220;
-        const x2 = 150, y2 = 2880;
+        const x1 = 1150, y1 = 2100;
+        const x2 = 150, y2 = 2760;
         const cx = (x1 + x2) / 2;
         const cy = (y1 + y2) / 2;
         const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI;
@@ -505,7 +505,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     // Draw "لا شيء" if no second driver
     if (!contract.hasDriver2) {
       ctx.save();
-      const x1=1150, y1=2220, x2=150, y2=2880;
+      const x1=1150, y1=2100, x2=150, y2=2760;
       const cx=(x1+x2)/2, cy=(y1+y2)/2;
       const angle=Math.atan2(y2-y1, x2-x1) + Math.PI;
       ctx.translate(cx, cy);
@@ -577,7 +577,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
       // Draw "لا شيء" if no second driver
       if (!contract.hasDriver2) {
         ctx.save();
-        const x1=1150, y1=2220, x2=150, y2=2880;
+        const x1=1150, y1=2100, x2=150, y2=2760;
         const cx=(x1+x2)/2, cy=(y1+y2)/2;
         const angle=Math.atan2(y2-y1, x2-x1) + Math.PI;
         ctx.translate(cx, cy);
@@ -842,6 +842,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     </div>
   );
 }
+
 
 
 
