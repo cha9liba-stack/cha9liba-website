@@ -92,14 +92,12 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
         @media print{
           @page{margin:8mm;size:A4}
-          body{width:210mm;height:297mm}
-          .inv-wrap{height:277mm!important;display:flex!important;flex-direction:column!important}
-          .lines-wrap{flex:1!important;display:flex!important;flex-direction:column!important}
-          .lines-wrap table{height:100%!important}
+          body{width:210mm}
+          .inv-wrap{page-break-inside:avoid}
         }
         table{width:100%;border-collapse:collapse;table-layout:fixed}
         td,th{overflow:hidden;white-space:nowrap}
-        .inv-wrap{height:1050px;display:flex;flex-direction:column}
+        .inv-wrap{display:flex;flex-direction:column}
         .lines-wrap{flex:1;display:flex;flex-direction:column}
         .lines-wrap table{height:100%}
         .blue-val{color:#1a56db!important;font-weight:bold}
@@ -138,7 +136,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
         {/* Preview */}
         <div className="flex-1 overflow-auto p-4 bg-slate-100">
-          <div ref={ref} className="inv-wrap" style={{ background:"#fff", padding:"16px 20px", maxWidth:"760px", margin:"0 auto", fontFamily:"Arial,sans-serif", fontSize:"13px", height:"1050px", display:"flex", flexDirection:"column" }}>
+          <div ref={ref} className="inv-wrap" style={{ background:"#fff", padding:"16px 20px", maxWidth:"760px", margin:"0 auto", fontFamily:"Arial,sans-serif", fontSize:"13px", display:"flex", flexDirection:"column" }}>
 
             {/* ── Header ── */}
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:"12px" }}>
