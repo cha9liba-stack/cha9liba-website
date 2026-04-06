@@ -167,32 +167,39 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             </table>
 
             {/* ── Client ── */}
-            <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px", tableLayout:"fixed" }}>
-              <colgroup>
-                <col style={{ width:"33%" }}/>
-                <col style={{ width:"17%" }}/>
-                <col style={{ width:"35%" }}/>
-                <col style={{ width:"15%" }}/>
-              </colgroup>
-              <tbody><tr style={{ verticalAlign:"top" }}>
-                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                  <div style={{ fontSize:"10px", color:"#555" }}>Nom de client:</div>
-                  <div style={{ fontWeight:"bold", whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.8vw,13px)" }}>{client.name}</div>
-                </td>
-                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                  <div style={{ fontSize:"10px", color:"#555" }}>MF:</div>
-                  <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.5vw,12px)" }}>{client.mf}</div>
-                </td>
-                <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                  <div style={{ fontSize:"10px", color:"#555" }}>Adresse:</div>
-                  <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.5vw,12px)" }}>{client.address}</div>
-                </td>
-                <td style={{ border:"none", padding:"4px 6px", overflow:"hidden" }}>
-                  <div style={{ fontSize:"10px", color:"#555" }}>Tel:</div>
-                  <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"clamp(9px,1.5vw,12px)" }}>{client.phone}</div>
-                </td>
-              </tr></tbody>
-            </table>
+            {(() => {
+              // Auto-size font based on content length
+              const nameFontSize = client.name.length > 25 ? Math.max(9, 13 - Math.floor((client.name.length - 25) / 4)) : 13;
+              const addrFontSize = client.address.length > 35 ? Math.max(9, 12 - Math.floor((client.address.length - 35) / 5)) : 12;
+              return (
+                <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px", tableLayout:"fixed" }}>
+                  <colgroup>
+                    <col style={{ width:"33%" }}/>
+                    <col style={{ width:"17%" }}/>
+                    <col style={{ width:"35%" }}/>
+                    <col style={{ width:"15%" }}/>
+                  </colgroup>
+                  <tbody><tr style={{ verticalAlign:"top" }}>
+                    <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
+                      <div style={{ fontSize:"10px", color:"#555" }}>Nom de client:</div>
+                      <div style={{ fontWeight:"bold", whiteSpace:"nowrap", overflow:"hidden", fontSize:`${nameFontSize}px` }}>{client.name}</div>
+                    </td>
+                    <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
+                      <div style={{ fontSize:"10px", color:"#555" }}>MF:</div>
+                      <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"11px" }}>{client.mf}</div>
+                    </td>
+                    <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
+                      <div style={{ fontSize:"10px", color:"#555" }}>Adresse:</div>
+                      <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:`${addrFontSize}px` }}>{client.address}</div>
+                    </td>
+                    <td style={{ border:"none", padding:"4px 6px", overflow:"hidden" }}>
+                      <div style={{ fontSize:"10px", color:"#555" }}>Tel:</div>
+                      <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"12px" }}>{client.phone}</div>
+                    </td>
+                  </tr></tbody>
+                </table>
+              );
+            })()}
 
             {/* ── Lines — fill remaining space ── */}
             <div className="lines-wrap" style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
