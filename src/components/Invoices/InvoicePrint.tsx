@@ -181,19 +181,19 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   </colgroup>
                   <tbody><tr style={{ verticalAlign:"top" }}>
                     <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"10px", color:"#555" }}>Nom de client:</div>
+                      <div style={{ fontSize:"12px", color:"#555" }}>Nom de client:</div>
                       <div style={{ fontWeight:"bold", whiteSpace:"nowrap", overflow:"hidden", fontSize:`${nameFontSize}px` }}>{client.name}</div>
                     </td>
                     <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"10px", color:"#555" }}>MF:</div>
+                      <div style={{ fontSize:"12px", color:"#555" }}>MF:</div>
                       <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"11px" }}>{client.mf}</div>
                     </td>
                     <td style={{ border:"none", borderRight:"1px solid #ddd", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"10px", color:"#555" }}>Adresse:</div>
+                      <div style={{ fontSize:"12px", color:"#555" }}>Adresse:</div>
                       <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:`${addrFontSize}px` }}>{client.address}</div>
                     </td>
                     <td style={{ border:"none", padding:"4px 6px", overflow:"hidden" }}>
-                      <div style={{ fontSize:"10px", color:"#555" }}>Tel:</div>
+                      <div style={{ fontSize:"12px", color:"#555" }}>Tel:</div>
                       <div style={{ whiteSpace:"nowrap", overflow:"hidden", fontSize:"12px" }}>{client.phone}</div>
                     </td>
                   </tr></tbody>
@@ -273,8 +273,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 <td style={{ border:"none", width:"55%", verticalAlign:"bottom", paddingRight:"10px" }}>
                   {words && (
                     <div style={{ marginBottom:"10px" }}>
-                      <div style={{ fontSize:"11px", color:"#555" }}>Arrêté La Présente {typeLabel} À La Somme de (on T.T.C):</div>
-                      <div style={{ fontStyle:"italic", fontWeight:"bold", fontSize:"13px", marginTop:"3px" }}>{words}</div>
+                      <div style={{ fontSize:"13px", color:"#555" }}>Arrêté La Présente {typeLabel} À La Somme de (on T.T.C):</div>
+                      <div style={{ fontStyle:"italic", fontWeight:"bold", fontSize:"14px", marginTop:"3px" }}>{words}</div>
                     </div>
                   )}
                   {qrDataUrl && (
