@@ -1,61 +1,61 @@
-﻿import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Printer, ZoomIn, ZoomOut, Settings2, Move, Lock, RotateCcw } from "lucide-react";
 import type { Contract } from "../../types";
 
-// â”€â”€â”€ Default field positions (from field_positions.json) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Default field positions (from field_positions.json) ─────────────────────
 const DEFAULT_POSITIONS: Record<string, [number, number]> = {
-  "Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯":            [1123, 710],
+  "رقم العقد":            [1123, 710],
   "Marque":               [1076, 963],
-  "ModÃ¨l":                [1060, 1050],
-  "ØµÙ†Ù Ø§Ù„Ø³ÙŠØ§Ø±Ø©":          [1096, 1136],
+  "Modèl":                [1060, 1050],
+  "صنف السيارة":          [1096, 1136],
   "Immatricule":          [1106, 1213],
-  "ÙŠÙˆÙ… Ø§Ù„Ø±Ø¬ÙˆØ¹":           [1703, 953],
-  "Ø³Ø§Ø¹Ø© Ø§Ù„Ø±Ø¬ÙˆØ¹":          [1720, 1046],
-  "Ù…ÙƒØ§Ù† Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":        [1720, 1140],
-  "ÙŠÙˆÙ… Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":         [1693, 1226],
-  "Ø³Ø§Ø¹Ø© Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":        [1733, 1320],
-  "ÙƒÙ„Ù… Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":         [180,  1266],
-  "ÙƒÙ„Ù… Ø§Ù„Ø±Ø¬ÙˆØ¹":           [533,  1260],
-  "Ø§Ù„Ø§Ø³Ù… Ùˆ Ø§Ù„Ù„Ù‚Ø¨":        [586,  1440],
-  "ØªØ§Ø±ÙŠØ® Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©":        [253,  1536],
-  "Ù…ÙƒØ§Ù† Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©":         [746,  1533],
-  "Ø§Ù„Ø¹Ù†ÙˆØ§Ù†":              [336,  1626],
-  "Ø§Ù„Ù‡Ø§ØªÙ":               [963,  1710],
-  "Ø±Ù‚Ù… Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ":    [563,  1793],
-  "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø·Ø§Ù‚Ø©":        [360,  1890],
-  "Ù…ÙƒØ§Ù† Ø§Ù„Ø¨Ø·Ø§Ù‚Ø©":         [886,  1883],
-  "Ø±Ø®ØµØ© Ø§Ù„Ø³ÙŠØ§Ù‚Ø© Ø¹Ø¯Ø¯":     [563,  1980],
-  "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø±Ø®ØµØ©":         [360,  2066],
-  "Ù…ÙƒØ§Ù† Ø§Ù„Ø±Ø®ØµØ©":          [886,  2076],
+  "يوم الرجوع":           [1703, 953],
+  "ساعة الرجوع":          [1720, 1046],
+  "مكان الانطلاق":        [1720, 1140],
+  "يوم الانطلاق":         [1693, 1226],
+  "ساعة الانطلاق":        [1733, 1320],
+  "كلم الانطلاق":         [180,  1266],
+  "كلم الرجوع":           [533,  1260],
+  "الاسم و اللقب":        [586,  1440],
+  "تاريخ الولادة":        [253,  1536],
+  "مكان الولادة":         [746,  1533],
+  "العنوان":              [336,  1626],
+  "الهاتف":               [963,  1710],
+  "رقم بطاقة التعريف":    [563,  1793],
+  "تاريخ البطاقة":        [360,  1890],
+  "مكان البطاقة":         [886,  1883],
+  "رخصة السياقة عدد":     [563,  1980],
+  "تاريخ الرخصة":         [360,  2066],
+  "مكان الرخصة":          [886,  2076],
   "TOTAL PARTIEL":        [1563, 1550],
   "Divers":               [1606, 1866],
   "TOTAL HT":             [1603, 2176],
-  "Ø§Ù„Ø§Ø³Ù… Ùˆ Ø§Ø§Ù„Ù‚Ø¨ 2":      [506,  2240],
-  "ØªØ§Ø±ÙŠØ® ÙˆÙ„Ø§Ø¯Ø© 2":        [233,  2326],
-  "Ù…ÙƒØ§Ù† Ø§Ù„ÙˆÙ„Ø§Ø¯Ø© 2":       [706,  2326],
-  "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† 2":            [313,  2416],
-  "Ø§Ù„Ù‡Ø§ØªÙ 2":             [923,  2506],
-  "Ø±Ù‚Ù… Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ 2":  [566,  2590],
-  "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø·Ø§Ù‚Ø© 2":      [323,  2680],
-  "Ù…ÙƒØ§Ù† Ø§Ù„Ø¨Ø·Ø§Ù‚Ø© 2":       [866,  2686],
-  "Ø±Ø®ØµØ© Ø§Ù„Ø³ÙŠØ§Ù‚Ø© Ø¹Ø¯Ø¯ 2":   [530,  2770],
-  "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø±Ø®ØµØ© 2":       [316,  2856],
-  "Ù…ÙƒØ§Ù† Ø§Ù„Ø±Ø®ØµØ© 2":        [833,  2863],
+  "الاسم و االقب 2":      [506,  2240],
+  "تاريخ ولادة 2":        [233,  2326],
+  "مكان الولادة 2":       [706,  2326],
+  "العنوان 2":            [313,  2416],
+  "الهاتف 2":             [923,  2506],
+  "رقم بطاقة التعريف 2":  [566,  2590],
+  "تاريخ البطاقة 2":      [323,  2680],
+  "مكان البطاقة 2":       [866,  2686],
+  "رخصة السياقة عدد 2":   [530,  2770],
+  "تاريخ الرخصة 2":       [316,  2856],
+  "مكان الرخصة 2":        [833,  2863],
   "TVA":                  [1620, 2290],
   "TOTAL FACTURE":        [1620, 2500],
   "Plus ou moins divers": [1680, 2693],
-  "Ø¶Ù…Ø§Ù† Ø§Ù„Ø§ÙŠØ¯Ø§Ø¹":         [2190, 2640],
+  "ضمان الايداع":         [2190, 2640],
   "prep":                 [2226, 2696],
-  "Ø§Ù„Ø¬Ù…Ù„Ø©":               [2096, 2746],
-  "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹":              [1773, 2870],
+  "الجملة":               [2096, 2746],
+  "المجموع":              [1773, 2870],
   "Remise au retour":     [843,  3060],
-  "Ù…Ø¯ÙŠÙ†Ø© Ø§Ù„Ø®Ø±ÙˆØ¬":         [1706, 2990],
-  "Ø§Ù„ØªØ§Ø±ÙŠØ®":              [2020, 2993],
+  "مدينة الخروج":         [1706, 2990],
+  "التاريخ":              [2020, 2993],
   "Essence":              [646,  2980],
   "Gasoil":               [976,  2983],
   "Taxe2dt":              [1620, 2060], // Taxe Services Location 2dt/j (2026+)
-  "Timbre":               [1900, 2150], // Timbre fiscal 1.000 dt â€” positioned after the text
+  "Timbre":               [1900, 2150], // Timbre fiscal 1.000 dt — positioned after the text
 };
 
 const POSITIONS_STORAGE_KEY = "palma_field_positions";
@@ -70,7 +70,7 @@ async function persistToFirebase(path: string, data: any) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-  } catch { /* silent â€” localStorage is the fallback */ }
+  } catch { /* silent — localStorage is the fallback */ }
 }
 
 async function loadFromFirebase(path: string): Promise<any> {
@@ -119,43 +119,43 @@ function saveSettings(s: PrintSettings) {
 
 function contractToLegacy(c: Contract): Record<string, string> {
   return {
-    "Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯":            c.contractNumber,
+    "رقم العقد":            c.contractNumber,
     "Marque":               c.brand,
-    "ModÃ¨l":                c.model,
-    "ØµÙ†Ù Ø§Ù„Ø³ÙŠØ§Ø±Ø©":          c.category,
+    "Modèl":                c.model,
+    "صنف السيارة":          c.category,
     "Immatricule":          c.registration,
-    "ÙŠÙˆÙ… Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":         c.departureDate,
-    "Ø³Ø§Ø¹Ø© Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":        c.departureTime,
-    "Ù…ÙƒØ§Ù† Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":        c.departurePlace,
-    "ÙŠÙˆÙ… Ø§Ù„Ø±Ø¬ÙˆØ¹":           c.returnDate,
-    "Ø³Ø§Ø¹Ø© Ø§Ù„Ø±Ø¬ÙˆØ¹":          c.returnTime,
-    "ÙƒÙ„Ù… Ø§Ù„Ø§Ù†Ø·Ù„Ø§Ù‚":         c.departureKm,
-    "ÙƒÙ„Ù… Ø§Ù„Ø±Ø¬ÙˆØ¹":           c.returnKm,
+    "يوم الانطلاق":         c.departureDate,
+    "ساعة الانطلاق":        c.departureTime,
+    "مكان الانطلاق":        c.departurePlace,
+    "يوم الرجوع":           c.returnDate,
+    "ساعة الرجوع":          c.returnTime,
+    "كلم الانطلاق":         c.departureKm,
+    "كلم الرجوع":           c.returnKm,
     "Essence":              c.fuelType === "Essence" ? "X" : "",
     "Gasoil":               c.fuelType === "Gasoil"  ? "X" : "",
     "Remise au retour":     c.remiseRetour,
-    "Ø§Ù„Ø§Ø³Ù… Ùˆ Ø§Ù„Ù„Ù‚Ø¨":        c.driverName,
-    "ØªØ§Ø±ÙŠØ® Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©":        c.driverDob,
-    "Ù…ÙƒØ§Ù† Ø§Ù„ÙˆÙ„Ø§Ø¯Ø©":         c.driverBirthPlace,
-    "Ø§Ù„Ø¹Ù†ÙˆØ§Ù†":              c.driverAddress,
-    "Ø§Ù„Ù‡Ø§ØªÙ":               c.driverPhone,
-    "Ø±Ù‚Ù… Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ":    c.driverCin,
-    "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø·Ø§Ù‚Ø©":        c.driverCinDate,
-    "Ù…ÙƒØ§Ù† Ø§Ù„Ø¨Ø·Ø§Ù‚Ø©":         c.driverCinPlace,
-    "Ø±Ø®ØµØ© Ø§Ù„Ø³ÙŠØ§Ù‚Ø© Ø¹Ø¯Ø¯":     c.driverLicense,
-    "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø±Ø®ØµØ©":         c.driverLicenseDate,
-    "Ù…ÙƒØ§Ù† Ø§Ù„Ø±Ø®ØµØ©":          c.driverLicensePlace,
-    "Ø§Ù„Ø§Ø³Ù… Ùˆ Ø§Ø§Ù„Ù‚Ø¨ 2":      c.hasDriver2 ? c.driver2Name        : "",
-    "ØªØ§Ø±ÙŠØ® ÙˆÙ„Ø§Ø¯Ø© 2":        c.hasDriver2 ? c.driver2Dob         : "",
-    "Ù…ÙƒØ§Ù† Ø§Ù„ÙˆÙ„Ø§Ø¯Ø© 2":       c.hasDriver2 ? c.driver2BirthPlace  : "",
-    "Ø§Ù„Ø¹Ù†ÙˆØ§Ù† 2":            c.hasDriver2 ? c.driver2Address      : "",
-    "Ø§Ù„Ù‡Ø§ØªÙ 2":             c.hasDriver2 ? c.driver2Phone        : "",
-    "Ø±Ù‚Ù… Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„ØªØ¹Ø±ÙŠÙ 2":  c.hasDriver2 ? c.driver2Cin         : "",
-    "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¨Ø·Ø§Ù‚Ø© 2":      c.hasDriver2 ? c.driver2CinDate      : "",
-    "Ù…ÙƒØ§Ù† Ø§Ù„Ø¨Ø·Ø§Ù‚Ø© 2":       c.hasDriver2 ? c.driver2CinPlace     : "",
-    "Ø±Ø®ØµØ© Ø§Ù„Ø³ÙŠØ§Ù‚Ø© Ø¹Ø¯Ø¯ 2":   c.hasDriver2 ? c.driver2License      : "",
-    "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø±Ø®ØµØ© 2":       c.hasDriver2 ? c.driver2LicenseDate  : "",
-    "Ù…ÙƒØ§Ù† Ø§Ù„Ø±Ø®ØµØ© 2":        c.hasDriver2 ? c.driver2LicensePlace : "",
+    "الاسم و اللقب":        c.driverName,
+    "تاريخ الولادة":        c.driverDob,
+    "مكان الولادة":         c.driverBirthPlace,
+    "العنوان":              c.driverAddress,
+    "الهاتف":               c.driverPhone,
+    "رقم بطاقة التعريف":    c.driverCin,
+    "تاريخ البطاقة":        c.driverCinDate,
+    "مكان البطاقة":         c.driverCinPlace,
+    "رخصة السياقة عدد":     c.driverLicense,
+    "تاريخ الرخصة":         c.driverLicenseDate,
+    "مكان الرخصة":          c.driverLicensePlace,
+    "الاسم و االقب 2":      c.hasDriver2 ? c.driver2Name        : "",
+    "تاريخ ولادة 2":        c.hasDriver2 ? c.driver2Dob         : "",
+    "مكان الولادة 2":       c.hasDriver2 ? c.driver2BirthPlace  : "",
+    "العنوان 2":            c.hasDriver2 ? c.driver2Address      : "",
+    "الهاتف 2":             c.hasDriver2 ? c.driver2Phone        : "",
+    "رقم بطاقة التعريف 2":  c.hasDriver2 ? c.driver2Cin         : "",
+    "تاريخ البطاقة 2":      c.hasDriver2 ? c.driver2CinDate      : "",
+    "مكان البطاقة 2":       c.hasDriver2 ? c.driver2CinPlace     : "",
+    "رخصة السياقة عدد 2":   c.hasDriver2 ? c.driver2License      : "",
+    "تاريخ الرخصة 2":       c.hasDriver2 ? c.driver2LicenseDate  : "",
+    "مكان الرخصة 2":        c.hasDriver2 ? c.driver2LicensePlace : "",
     // TOTAL PARTIEL = totalFacture (for 2026+ contracts where user enters totalFacture directly)
     // For old contracts, use stored totalPartiel
     "TOTAL PARTIEL": (() => {
@@ -177,13 +177,13 @@ function contractToLegacy(c: Contract): Record<string, string> {
       if (year >= 2026) return "";
       return c.plusMoinsDivers;
     })(),
-    "Ø¶Ù…Ø§Ù† Ø§Ù„Ø§ÙŠØ¯Ø§Ø¹":         c.depot,
+    "ضمان الايداع":         c.depot,
     "prep":                 c.prep,
-    "Ø§Ù„Ø¬Ù…Ù„Ø©":               c.total,
-    "Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹":              c.somme,
-    "Ù…Ø¯ÙŠÙ†Ø© Ø§Ù„Ø®Ø±ÙˆØ¬":         c.city,
-    "Ø§Ù„ØªØ§Ø±ÙŠØ®":              c.date,
-    // Taxe 2dt/j â€” only for 2026+ contracts
+    "الجملة":               c.total,
+    "المجموع":              c.somme,
+    "مدينة الخروج":         c.city,
+    "التاريخ":              c.date,
+    // Taxe 2dt/j — only for 2026+ contracts
     "Taxe2dt": (() => {
       const year = parseInt((c.departureDate || c.date || "2025").slice(0, 4), 10);
       if (year < 2026) return "";
@@ -193,7 +193,7 @@ function contractToLegacy(c: Contract): Record<string, string> {
       const nj = Math.max(1, Math.ceil((ret.getTime() - dep.getTime()) / 86400000));
       return (nj * 2).toFixed(3);
     })(),
-    // Timbre fiscal â€” only for 2026+ (old contracts have it embedded in Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹)
+    // Timbre fiscal — only for 2026+ (old contracts have it embedded in المجموع)
     "Timbre": (() => {
       const year = parseInt((c.departureDate || c.date || "2025").slice(0, 4), 10);
       return year >= 2026 ? "1.000" : "";
@@ -220,10 +220,6 @@ const DEFAULT_SETTINGS: PrintSettings = {
 const ORIG_W = 2480;
 const ORIG_H = 3508;
 const HIT_RADIUS = 60;
-
-// Offsets to adjust image positions
-const TEMPLATE_OFFSET_Y = -150;  // Move template UP (negative = up) to hide white space
-const BG_OFFSET_Y = 80;          // Move background DOWN (positive = down) to avoid text cutoff
 
 /** Choose template based on contract year: 2026+ uses new template with 2dt tax */
 function getTemplate(contract: Contract): string {
@@ -298,7 +294,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     }
   }, []);
 
-  // â”€â”€â”€ Draw â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Draw ─────────────────────────────────────────────────────────────────
   const draw = useCallback((highlightField?: string | null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -309,10 +305,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     loadImage(getTemplate(contract)).then((tmpl) => {
       canvas.width  = ORIG_W;
       canvas.height = ORIG_H;
-      // White background first
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, ORIG_W, ORIG_H);
-      ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
+      ctx.drawImage(tmpl, 0, 0, ORIG_W, ORIG_H);
 
       // Helper: draw text with correct direction (numbers/latin = ltr, arabic = rtl)
       function drawText(val: string, x: number, y: number) {
@@ -341,7 +334,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         const val = data[field];
         if (!val) continue;
 
-        const isContractNum = field === "Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯";
+        const isContractNum = field === "رقم العقد";
         const fontSize = isContractNum ? settings.contractNumFontSize : settings.fontSize;
         const color    = isContractNum ? settings.contractNumColor    : settings.textColor;
 
@@ -375,32 +368,11 @@ export default function ContractPreview({ contract, onClose }: Props) {
           drawText(val, x, y);
         }
       }
-
-      // Draw "لا شيء" diagonally if no second driver
-      if (!contract.hasDriver2) {
-        ctx.save();
-        // Draw from top-right to bottom-left (following arrow direction)
-        const x1 = 1150, y1 = 2100;
-        const x2 = 150, y2 = 2760;
-        const cx = (x1 + x2) / 2;
-        const cy = (y1 + y2) / 2;
-        const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI;
-        ctx.translate(cx, cy);
-        ctx.rotate(angle);
-        ctx.font = `bold 220px 'Tahoma','Arial',sans-serif`;
-        ctx.fillStyle = "rgba(0,0,0,0.55)";
-        ctx.textAlign = "center";
-        ctx.direction = "rtl";
-        ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
-        ctx.restore();
-        ctx.textAlign = "right";
-        ctx.direction = "rtl";
-      }
     }).catch(() => {});
   }, [positions, data, settings, dragMode, dragging, contract]);
   useEffect(() => { draw(hoveredField); }, [draw, hoveredField]);
 
-  // â”€â”€â”€ Canvas â†’ original coords â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Canvas → original coords ─────────────────────────────────────────────
   function canvasCoords(e: React.MouseEvent<HTMLCanvasElement>): [number, number] {
     const rect = e.currentTarget.getBoundingClientRect();
     const scaleX = ORIG_W / rect.width;
@@ -428,7 +400,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     return closest;
   }
 
-  // â”€â”€â”€ Mouse events â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Mouse events ─────────────────────────────────────────────────────────
   function onMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
     if (!dragMode) return;
     const [cx, cy] = canvasCoords(e);
@@ -469,7 +441,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     }
   }
 
-  // â”€â”€â”€ Print data only (no background, no contract number â€” for pre-printed forms) â”€â”€
+  // ─── Print data only (no background, no contract number — for pre-printed forms) ──
   function handlePrintDataOnly() {
     const canvas = document.createElement("canvas");
     canvas.width  = ORIG_W;
@@ -484,8 +456,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
     ctx.fillStyle = settings.textColor;
 
     for (const [field, [x, y]] of Object.entries(positions)) {
-      // Skip contract number â€” already printed on the pre-printed form
-      if (field === "Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯") continue;
+      // Skip contract number — already printed on the pre-printed form
+      if (field === "رقم العقد") continue;
 
       const val = data[field];
       if (!val) continue;
@@ -502,27 +474,11 @@ export default function ContractPreview({ contract, onClose }: Props) {
       }
     }
 
-    // Draw "لا شيء" if no second driver
-    if (!contract.hasDriver2) {
-      ctx.save();
-      const x1=1150, y1=2100, x2=150, y2=2760;
-      const cx=(x1+x2)/2, cy=(y1+y2)/2;
-      const angle=Math.atan2(y2-y1, x2-x1) + Math.PI;
-      ctx.translate(cx, cy);
-      ctx.rotate(angle);
-      ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
-      ctx.fillStyle="rgba(0,0,0,0.7)";
-      ctx.textAlign="center";
-      ctx.direction="rtl";
-      ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
-      ctx.restore();
-    }
-
     const dataUrl = canvas.toDataURL("image/png");
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`<!DOCTYPE html><html><head>
-      <title>Ø¹Ù‚Ø¯ â€” Ø¨ÙŠØ§Ù†Ø§Øª ÙÙ‚Ø·</title>
+      <title>عقد — بيانات فقط</title>
       <style>
         * { margin: 0; padding: 0; }
         html, body { margin: 0; background: white; }
@@ -536,7 +492,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     win.document.close();
   }
 
-  // â”€â”€â”€ Print with background â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Print with background ────────────────────────────────────────────────
   function handlePrint() {
     const template = getTemplate(contract);
 
@@ -552,9 +508,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const ctx = merged.getContext("2d")!;
 
       // Page 1: template with data
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, ORIG_W, ORIG_H);
-      if (tmpl) ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
+      if (tmpl) ctx.drawImage(tmpl, 0, 0, ORIG_W, ORIG_H);
       else { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, ORIG_W, ORIG_H); }
 
       ctx.textAlign = "right";
@@ -562,7 +516,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
       for (const [field, [x, y]] of Object.entries(positions)) {
         const val = data[field];
         if (!val) continue;
-        const isContractNum = field === "Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯";
+        const isContractNum = field === "رقم العقد";
         ctx.font = `${settings.fontWeight} ${isContractNum ? settings.contractNumFontSize : settings.fontSize}px 'Tahoma','Arial',sans-serif`;
         ctx.fillStyle = isContractNum ? settings.contractNumColor : settings.textColor;
         if (val === "X") {
@@ -574,27 +528,9 @@ export default function ContractPreview({ contract, onClose }: Props) {
         }
       }
 
-      // Draw "لا شيء" if no second driver
-      if (!contract.hasDriver2) {
-        ctx.save();
-        const x1=1150, y1=2100, x2=150, y2=2760;
-        const cx=(x1+x2)/2, cy=(y1+y2)/2;
-        const angle=Math.atan2(y2-y1, x2-x1) + Math.PI;
-        ctx.translate(cx, cy);
-        ctx.rotate(angle);
-        ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
-        ctx.fillStyle="rgba(0,0,0,0.7)";
-        ctx.textAlign="center";
-        ctx.direction="rtl";
-        ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
-        ctx.restore();
-      }
-
       // Page 2: background below page 1
       if (bg) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, ORIG_H, ORIG_W, ORIG_H);
-        ctx.drawImage(bg, 0, ORIG_H + BG_OFFSET_Y, ORIG_W, ORIG_H);
+        ctx.drawImage(bg, 0, ORIG_H, ORIG_W, ORIG_H);
       }
 
       const win = window.open("", "_blank");
@@ -615,7 +551,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
       }
 
       win.document.write(`<!DOCTYPE html><html><head>
-        <title>Ø¹Ù‚Ø¯ ${contract.contractNumber}</title>
+        <title>عقد ${contract.contractNumber}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           html, body { width: 100%; background: #fff; }
@@ -664,12 +600,12 @@ export default function ContractPreview({ contract, onClose }: Props) {
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl flex flex-col max-h-[95vh] min-w-[600px] w-auto">
 
-        {/* â”€â”€ Toolbar â”€â”€ */}
+        {/* ── Toolbar ── */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 gap-3 flex-wrap">
           <span className="font-semibold text-slate-700 text-sm">
-            {t("preview")} â€” #{contract.contractNumber}
+            {t("preview")} — #{contract.contractNumber}
             <span className="ms-2 text-xs text-slate-400">
-              {hasTaxe2dt(contract) ? "ðŸ“‹ 2026+ (taxe 2dt)" : "ðŸ“‹ 2025"}
+              {hasTaxe2dt(contract) ? "📋 2026+ (taxe 2dt)" : "📋 2025"}
             </span>
           </span>
           <div className="flex items-center gap-2 flex-wrap">
@@ -690,12 +626,12 @@ export default function ContractPreview({ contract, onClose }: Props) {
                   ? "bg-amber-500 text-white border-amber-500"
                   : "text-slate-600 border-slate-200 hover:bg-slate-100"
               }`}
-              title={isRTL ? "ØªØ­Ø±ÙŠÙƒ Ø§Ù„Ø­Ù‚ÙˆÙ„" : "DÃ©placer les champs"}
+              title={isRTL ? "تحريك الحقول" : "Déplacer les champs"}
             >
               {dragMode ? <Move size={14}/> : <Lock size={14}/>}
               {dragMode
-                ? (isRTL ? "ÙˆØ¶Ø¹ Ø§Ù„ØªØ­Ø±ÙŠÙƒ" : "Mode dÃ©placement")
-                : (isRTL ? "ØªØ­Ø±ÙŠÙƒ Ø§Ù„Ø­Ù‚ÙˆÙ„" : "DÃ©placer")}
+                ? (isRTL ? "وضع التحريك" : "Mode déplacement")
+                : (isRTL ? "تحريك الحقول" : "Déplacer")}
             </button>
 
             {/* Reset positions */}
@@ -703,7 +639,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
               <button onClick={resetPositions}
                 className="flex items-center gap-1 px-2 py-1.5 text-xs text-red-500 hover:bg-red-50 rounded-lg border border-red-200 transition-colors">
                 <RotateCcw size={12}/>
-                {isRTL ? "Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ†" : "RÃ©initialiser"}
+                {isRTL ? "إعادة تعيين" : "Réinitialiser"}
               </button>
             )}
 
@@ -715,20 +651,20 @@ export default function ContractPreview({ contract, onClose }: Props) {
                 showSettings ? "bg-slate-200 text-slate-700" : "text-slate-500 hover:bg-slate-100"
               }`}>
               <Settings2 size={15}/>
-              {isRTL ? "Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª" : "ParamÃ¨tres"}
+              {isRTL ? "إعدادات" : "Paramètres"}
             </button>
 
             {/* Print with background */}
             <button onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm rounded-lg transition-colors">
-              <Printer size={15}/>{isRTL ? "Ø·Ø¨Ø§Ø¹Ø© Ù…Ø¹ Ø§Ù„Ø®Ù„ÙÙŠØ©" : "Imprimer avec fond"}
+              <Printer size={15}/>{isRTL ? "طباعة مع الخلفية" : "Imprimer avec fond"}
             </button>
 
-            {/* Print data only â€” for pre-printed forms */}
+            {/* Print data only — for pre-printed forms */}
             <button onClick={handlePrintDataOnly}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-sm rounded-lg transition-colors"
-              title={isRTL ? "Ø·Ø¨Ø§Ø¹Ø© Ø¹Ù„Ù‰ Ø¹Ù‚Ø¯ Ø¬Ø§Ù‡Ø² (Ø¨Ø¯ÙˆÙ† Ø®Ù„ÙÙŠØ©)" : "Imprimer sur formulaire prÃ©-imprimÃ©"}>
-              <Printer size={15}/>{isRTL ? "Ø¨ÙŠØ§Ù†Ø§Øª ÙÙ‚Ø·" : "DonnÃ©es seules"}
+              title={isRTL ? "طباعة على عقد جاهز (بدون خلفية)" : "Imprimer sur formulaire pré-imprimé"}>
+              <Printer size={15}/>{isRTL ? "بيانات فقط" : "Données seules"}
             </button>
 
             <button onClick={onClose} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg">
@@ -737,23 +673,23 @@ export default function ContractPreview({ contract, onClose }: Props) {
           </div>
         </div>
 
-        {/* â”€â”€ Drag mode hint â”€â”€ */}
+        {/* ── Drag mode hint ── */}
         {dragMode && (
           <div className="px-5 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700 flex items-center gap-2">
             <Move size={13}/>
             {isRTL
-              ? "Ø§Ø¶ØºØ· Ø¹Ù„Ù‰ Ø£ÙŠ Ù†Øµ ÙˆØ§Ø³Ø­Ø¨Ù‡ Ù„ØªØºÙŠÙŠØ± Ù…ÙˆØ¶Ø¹Ù‡ â€” ÙŠÙØ­ÙØ¸ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹"
-              : "Cliquez sur un texte et faites-le glisser pour changer sa position â€” sauvegarde automatique"}
+              ? "اضغط على أي نص واسحبه لتغيير موضعه — يُحفظ تلقائياً"
+              : "Cliquez sur un texte et faites-le glisser pour changer sa position — sauvegarde automatique"}
           </div>
         )}
 
-        {/* â”€â”€ Print Settings â”€â”€ */}
+        {/* ── Print Settings ── */}
         {showSettings && (
           <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4"
             dir={isRTL ? "rtl" : "ltr"}>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-600">
-                {isRTL ? "Ù„ÙˆÙ† Ø§Ù„Ù†Øµ" : "Couleur du texte"}
+                {isRTL ? "لون النص" : "Couleur du texte"}
               </label>
               <div className="flex items-center gap-2">
                 <input type="color" value={settings.textColor}
@@ -764,7 +700,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-600">
-                {isRTL ? "Ù„ÙˆÙ† Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯" : "Couleur NÂ° contrat"}
+                {isRTL ? "لون رقم العقد" : "Couleur N° contrat"}
               </label>
               <div className="flex items-center gap-2">
                 <input type="color" value={settings.contractNumColor}
@@ -775,7 +711,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-600">
-                {isRTL ? "Ø­Ø¬Ù… Ø§Ù„Ø®Ø·" : "Taille police"}
+                {isRTL ? "حجم الخط" : "Taille police"}
                 <span className="text-amber-600 ms-1">{settings.fontSize}px</span>
               </label>
               <input type="range" min={16} max={48} step={1} value={settings.fontSize}
@@ -784,7 +720,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-600">
-                {isRTL ? "Ø­Ø¬Ù… Ø®Ø· Ø±Ù‚Ù… Ø§Ù„Ø¹Ù‚Ø¯" : "Taille NÂ° contrat"}
+                {isRTL ? "حجم خط رقم العقد" : "Taille N° contrat"}
                 <span className="text-amber-600 ms-1">{settings.contractNumFontSize}px</span>
               </label>
               <input type="range" min={16} max={60} step={1} value={settings.contractNumFontSize}
@@ -793,7 +729,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-slate-600">
-                {isRTL ? "Ø³Ù…Ø§ÙƒØ© Ø§Ù„Ø®Ø·" : "Style police"}
+                {isRTL ? "سماكة الخط" : "Style police"}
               </label>
               <div className="flex gap-2">
                 {(["bold", "normal"] as const).map(w => (
@@ -813,13 +749,13 @@ export default function ContractPreview({ contract, onClose }: Props) {
                   saveSettings(DEFAULT_SETTINGS);
                 }}
                 className="text-xs text-slate-500 hover:text-slate-700 underline">
-                {isRTL ? "Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ†" : "RÃ©initialiser"}
+                {isRTL ? "إعادة تعيين" : "Réinitialiser"}
               </button>
             </div>
           </div>
         )}
 
-        {/* â”€â”€ Canvas â”€â”€ */}
+        {/* ── Canvas ── */}
         <div className="overflow-auto flex-1 p-3 bg-slate-100">
           <canvas
             ref={canvasRef}
@@ -842,7 +778,3 @@ export default function ContractPreview({ contract, onClose }: Props) {
     </div>
   );
 }
-
-
-
-
