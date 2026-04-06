@@ -162,10 +162,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             {/* ── Client ── */}
             <table style={{ width:"100%", borderCollapse:"collapse", borderTop:"1px solid #bbb", borderBottom:"1px solid #bbb", marginBottom:"10px" }}>
               <tbody><tr>
-                {cell(<><span style={{ fontSize:"10px", color:"#555", display:"block" }}>Nom de client:</span><strong style={{ fontSize:"14px" }}>{client.name}</strong></>, { width:"28%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
-                {cell(<><span style={{ fontSize:"10px", color:"#555", display:"block" }}>MF:</span><span style={{ fontSize:"13px" }}>{client.mf}</span></>, { width:"18%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
-                {cell(<><span style={{ fontSize:"10px", color:"#555", display:"block" }}>Adresse:</span><span style={{ fontSize:"13px" }}>{client.address}</span></>, { width:"34%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
-                {cell(<><span style={{ fontSize:"10px", color:"#555", display:"block" }}>Tel:</span><span style={{ fontSize:"13px" }}>{client.phone}</span></>, { width:"20%", border:"none", padding:"6px 8px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Nom de client:</span><strong style={{ fontSize:"15px" }}>{client.name}</strong></>, { width:"28%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>MF:</span><span style={{ fontSize:"14px" }}>{client.mf}</span></>, { width:"18%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Adresse:</span><span style={{ fontSize:"14px" }}>{client.address}</span></>, { width:"34%", border:"none", borderRight:"1px solid #ddd", padding:"6px 8px" })}
+                {cell(<><span style={{ fontSize:"11px", color:"#555", display:"block" }}>Tel:</span><span style={{ fontSize:"14px" }}>{client.phone}</span></>, { width:"20%", border:"none", padding:"6px 8px" })}
               </tr></tbody>
             </table>
 
@@ -221,7 +221,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                         borderBottom: "none",
                         borderLeft: j === 0 ? "none" : "1px solid #bbb",
                         borderRight: "none",
-                        padding: "8px 6px"
+                        padding: "4px 6px"
                       }}></td>
                     ))}
                   </tr>
@@ -242,16 +242,13 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 <td style={{ border:"none", width:"55%", verticalAlign:"bottom", paddingRight:"10px" }}>
                   {words && (
                     <div style={{ marginBottom:"10px" }}>
-                      <div style={{ fontSize:"9px", color:"#555" }}>Arrêté La Présente {typeLabel} À La Somme de (on T.T.C):</div>
-                      <div style={{ fontStyle:"italic", fontWeight:"bold", marginTop:"3px" }}>{words}</div>
+                      <div style={{ fontSize:"11px", color:"#555" }}>Arrêté La Présente {typeLabel} À La Somme de (on T.T.C):</div>
+                      <div style={{ fontStyle:"italic", fontWeight:"bold", fontSize:"13px", marginTop:"3px" }}>{words}</div>
                     </div>
                   )}
                   {qrDataUrl && (
                     <img src={qrDataUrl} alt="QR" style={{ width:"80px", height:"80px" }}/>
                   )}
-                  <div style={{ marginTop:"6px", fontSize:"11px", color:"#555", textAlign:"center" }}>
-                    MF:{CO.mf} &nbsp;|&nbsp; RIP: {CO.rib} &nbsp;|&nbsp; Mail:{CO.email} &nbsp;|&nbsp; Instagram:{CO.ig}
-                  </div>
                 </td>
                 {/* Right: totals */}
                 <td style={{ border:"none", width:"45%", verticalAlign:"top" }}>
@@ -259,25 +256,30 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <tbody>
                       {!isDevis && (
                         <>
-                          <tr><td style={{ border:B, padding:"3px 8px" }}>MONTANT HT</td><td style={{ border:B, padding:"3px 8px", textAlign:"right", background:THEAD }}>{fmt(montantHT)}</td></tr>
-                          <tr><td style={{ border:B, padding:"3px 8px" }}>TVA %</td><td style={{ border:B, padding:"3px 8px", textAlign:"right", background:THEAD }}>{fmt(tva)}</td></tr>
+                          <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>MONTANT HT</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(montantHT)}</td></tr>
+                          <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>TVA %</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(tva)}</td></tr>
                         </>
                       )}
                       {tsl2dj > 0 && (
-                        <tr><td style={{ border:B, padding:"3px 8px" }}>TSL 2 D/J</td><td style={{ border:B, padding:"3px 8px", textAlign:"right", background:THEAD }}>{fmt(tsl2dj)}</td></tr>
+                        <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>TSL 2 D/J</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(tsl2dj)}</td></tr>
                       )}
                       {isFacture && timbre > 0 && (
-                        <tr><td style={{ border:B, padding:"3px 8px" }}>Timbre</td><td style={{ border:B, padding:"3px 8px", textAlign:"right", background:THEAD }}>{fmt(timbre)}</td></tr>
+                        <tr><td style={{ border:B, padding:"5px 8px", fontSize:"13px" }}>Timbre</td><td style={{ border:B, padding:"5px 8px", textAlign:"right", background:"#e8f0fe", color:"#1a56db", fontWeight:"bold" }}>{fmt(timbre)}</td></tr>
                       )}
                       <tr>
-                        <td style={{ border:BG, padding:"4px 8px", fontWeight:"bold", background:THEAD }}>TOTAL TTC</td>
-                        <td style={{ border:BG, padding:"4px 8px", textAlign:"right", fontWeight:"bold", background:THEAD }}>{fmt(totalTTC)}</td>
+                        <td style={{ border:BG, padding:"6px 8px", fontWeight:"bold", fontSize:"14px", background:"#1a56db", color:"white" }}>TOTAL TTC</td>
+                        <td style={{ border:BG, padding:"6px 8px", textAlign:"right", fontWeight:"bold", fontSize:"16px", background:"#1a56db", color:"white" }}>{fmt(totalTTC)}</td>
                       </tr>
                     </tbody>
                   </table>
                 </td>
               </tr></tbody>
             </table>
+
+            {/* ── Company footer — single line centered ── */}
+            <div style={{ marginTop:"12px", textAlign:"center", fontSize:"13px", fontWeight:"bold", color:"#2d7a2d", borderTop:"2px solid #2d7a2d", paddingTop:"8px" }}>
+              MF: {CO.mf} &nbsp;|&nbsp; RIB: {CO.rib} &nbsp;|&nbsp; {CO.email} &nbsp;|&nbsp; Tél: {CO.tel} &nbsp;|&nbsp; Instagram: {CO.ig}
+            </div>
 
           </div>
         </div>
