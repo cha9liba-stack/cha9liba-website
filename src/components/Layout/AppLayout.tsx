@@ -5,6 +5,9 @@ import { RefreshCw } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { getAllContracts, subscribeToContracts, isRealContract } from "../../services/contractService";
 import { useContractStore } from "../../store/useContractStore";
+import { useFleetStats } from "../../hooks/useFleetStats";
+import { useAuthStore } from "../../store/useAuthStore";
+import BranchSelectModal from "../BranchSelectModal";
 
 export default function AppLayout() {
   const { i18n } = useTranslation();
@@ -12,6 +15,15 @@ export default function AppLayout() {
   const setContracts = useContractStore((s) => s.setContracts);
   const contracts = useContractStore((s) => s.contracts);
   const [loading, setLoading] = useState(contracts.length === 0);
+  const user = useAuthStore(s => s.user);
+  const selectedBranch = useAuthStore(s => s.selectedBranch);
+  const setSelectedBranch = useAuthStore(s => s.setSelectedBranch);
+
+  // Show branch selector for non-admin users who haven't selected a branch yet
+  const needsBranchSelect = user && user.role !== "admin" && !selectedBranch;
+
+  // Compute fleet stats globally
+  useFleetStats();
 
   useEffect(() => {
     // Load contracts once on mount
@@ -38,6 +50,7 @@ export default function AppLayout() {
       className={`flex min-h-screen bg-slate-50 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
       dir={isRTL ? "rtl" : "ltr"}
     >
+      {needsBranchSelect && <BranchSelectModal onSelect={setSelectedBranch} />}
       <Sidebar />
       <main className="flex-1 overflow-auto relative">
         {loading && (

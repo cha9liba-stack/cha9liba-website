@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import type { Contract } from "../types";
 
+export interface FleetStats {
+  rented: number;
+  late: number;
+  available: number;
+  maintenance: number;
+  lateContracts: Contract[];
+}
+
 interface ContractState {
   contracts: Contract[];
   setContracts: (contracts: Contract[]) => void;
@@ -8,6 +16,8 @@ interface ContractState {
   removeContract: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  fleetStats: FleetStats;
+  setFleetStats: (stats: FleetStats) => void;
 }
 
 export const useContractStore = create<ContractState>((set) => ({
@@ -27,4 +37,6 @@ export const useContractStore = create<ContractState>((set) => ({
     set((state) => ({ contracts: state.contracts.filter((c) => c.id !== id) })),
   searchQuery: "",
   setSearchQuery: (searchQuery) => set({ searchQuery }),
+  fleetStats: { rented: 0, late: 0, available: 0, maintenance: 0, lateContracts: [] },
+  setFleetStats: (fleetStats) => set({ fleetStats }),
 }));

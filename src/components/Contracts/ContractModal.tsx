@@ -91,6 +91,7 @@ export default function ContractModal({ contract, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const user = useAuthStore((s) => s.user);
+  const selectedBranch = useAuthStore((s) => s.selectedBranch);
   const { upsertContract } = useContractStore();
   const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -168,12 +169,14 @@ export default function ContractModal({ contract, onClose }: Props) {
       }
 
       if (contract?.id) {
-        await updateContract(contract.id, data as Partial<Contract>);
-        upsertContract({ ...data, id: contract.id } as Contract);
+        // Keep original branchId — don't change it on edit
+        const originalBranchId = (contract as any).branchId;
+        await updateContract(contract.id, { ...data, branchId: originalBranchId } as Partial<Contract>);
+        upsertContract({ ...data, id: contract.id, branchId: originalBranchId } as Contract);
         syncDebt(contract.id);
         await logAction(user, "update_contract", contract.id);
       } else {
-        const id = await insertContract(data as Omit<Contract, "id">);
+        const id = await insertContract({ ...data, _createdBy: user?.username || user?.email || "unknown", _createdAt: Date.now(), branchId: (user as any)?.selectedBranch?.id || selectedBranch?.id || "main" } as Omit<Contract, "id">);
         upsertContract({ ...data, id } as Contract);
         syncDebt(id);
         await logAction(user, "create_contract", id);
@@ -183,23 +186,33 @@ export default function ContractModal({ contract, onClose }: Props) {
           const depDate = String((data as any).departureDate || new Date().toISOString().split("T")[0]);
           if (reg) {
             const history = JSON.parse(localStorage.getItem("palma_state_overrides") || "{}");
-            const entries: any[] = history[reg] || [];
             const prev = new Date(depDate);
             prev.setDate(prev.getDate() - 1);
             const prevStr = prev.toISOString().split("T")[0];
-            history[reg] = entries.map((e: any) => {
-              if (e.to === null || e.to === undefined || e.to >= depDate) {
-                return { ...e, to: prevStr };
-              }
-              return e;
-            });
+
+            const raw = history[reg];
+            if (Array.isArray(raw)) {
+              // New format: array of {state, from, to}
+              history[reg] = raw.map((e: any) => {
+                if (e.to === null || e.to === undefined || e.to >= depDate) {
+                  return { ...e, to: prevStr };
+                }
+                return e;
+              });
+            } else if (raw && typeof raw === "object") {
+              // Old format: single object {state, from} — close it
+              history[reg] = [{ ...raw, to: prevStr }];
+            } else {
+              // No override — nothing to do
+              delete history[reg];
+            }
+
             localStorage.setItem("palma_state_overrides", JSON.stringify(history));
-            // Sync to Firebase
             const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
-            fetch(`${DB}/app_settings/overrides/${reg}.json`, {
+            await fetch(`${DB}/app_settings/overrides.json`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(history[reg]),
+              body: JSON.stringify(history),
             }).catch(() => {});
           }
         } catch {}
@@ -234,7 +247,7 @@ export default function ContractModal({ contract, onClose }: Props) {
   }
 
   const tabComponents = [
-    <VehicleTab register={register} errors={errors} watch={watch} setValue={setValue} isNew={!contract} />,
+    <VehicleTab register={register} errors={errors} watch={watch} setValue={setValue} isNew={!contract} contractId={contract?.id} />,
     <Driver1Tab register={register} errors={errors} prefix="" setValue={setValue} watch={watch} />,
     <Driver2Tab register={register} errors={errors} watch={watch} setValue={setValue} />,
     <FinancialTab register={register} watch={watch} setValue={setValue} />,

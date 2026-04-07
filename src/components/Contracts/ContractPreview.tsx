@@ -177,7 +177,7 @@ function contractToLegacy(c: Contract): Record<string, string> {
       if (year >= 2026) return "";
       return c.plusMoinsDivers;
     })(),
-    "ضمان الايداع":         c.depot,
+    "ضمان الايداع":         c.depotGarantie,
     "prep":                 c.prep,
     "الجملة":               c.total,
     "المجموع":              c.somme,
@@ -318,18 +318,21 @@ export default function ContractPreview({ contract, onClose }: Props) {
       function drawText(val: string, x: number, y: number) {
         const ctx2 = ctx!;
         const hasArabic = /[\u0600-\u06FF]/.test(val);
-        const isNumericOrLatin = /^[\d\s\+\-\.\/\\:]+$/.test(val);
-        if (isNumericOrLatin || !hasArabic) {
+
+        if (!hasArabic) {
+          // Pure latin/numeric — draw LTR aligned to the right anchor
           ctx2.save();
           ctx2.direction = "ltr";
-          ctx2.textAlign = "left";
-          const metrics = ctx2.measureText(val);
-          ctx2.fillText(val, x - metrics.width, y);
+          ctx2.textAlign = "right";
+          ctx2.fillText(val, x, y);
           ctx2.restore();
+        } else {
+          // Arabic or mixed — always RTL, anchor right
+          ctx2.save();
           ctx2.direction = "rtl";
           ctx2.textAlign = "right";
-        } else {
           ctx2.fillText(val, x, y);
+          ctx2.restore();
         }
       }
 

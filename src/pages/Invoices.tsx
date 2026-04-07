@@ -7,9 +7,10 @@ import type { Invoice } from "../types/invoice";
 type SortKey = "number" | "date" | "type" | "client";
 type SortDir = "asc" | "desc";
 
-function SortBtn({ col, sortKey, sortDir, onClick }: { col: SortKey; sortKey: SortKey; sortDir: SortDir; onClick: () => void }) {
+function SortBtn({ col, sortKey, sortDir, onClick, children }: { col: SortKey; sortKey: SortKey; sortDir: SortDir; onClick: () => void; children?: React.ReactNode }) {
   return (
     <button onClick={onClick} className="flex items-center gap-1 hover:text-slate-700 transition-colors">
+      {children}
       {col === sortKey
         ? sortDir === "asc" ? <ChevronUp size={12} className="text-amber-500"/> : <ChevronDown size={12} className="text-amber-500"/>
         : <ChevronsUpDown size={12} className="opacity-30"/>
@@ -125,10 +126,10 @@ export default function Invoices() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-500 text-xs uppercase bg-slate-50 border-b border-slate-100">
-                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("number")} className="flex items-center gap-1 hover:text-slate-700">N° <SortBtn col="number" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("number")}/></button></th>
-                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("date")} className="flex items-center gap-1 hover:text-slate-700">{isRTL ? "التاريخ" : "Date"} <SortBtn col="date" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("date")}/></button></th>
-                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("type")} className="flex items-center gap-1 hover:text-slate-700">{isRTL ? "النوع" : "Type"} <SortBtn col="type" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("type")}/></button></th>
-                  <th className="px-5 py-3 text-start"><button onClick={() => toggleSort("client")} className="flex items-center gap-1 hover:text-slate-700">{isRTL ? "العميل" : "Client"} <SortBtn col="client" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("client")}/></button></th>
+                  <th className="px-5 py-3 text-start"><SortBtn col="number" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("number")}>N°</SortBtn></th>
+                  <th className="px-5 py-3 text-start"><SortBtn col="date" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("date")}>{isRTL ? "التاريخ" : "Date"}</SortBtn></th>
+                  <th className="px-5 py-3 text-start"><SortBtn col="type" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("type")}>{isRTL ? "النوع" : "Type"}</SortBtn></th>
+                  <th className="px-5 py-3 text-start"><SortBtn col="client" sortKey={sortKey} sortDir={sortDir} onClick={() => toggleSort("client")}>{isRTL ? "العميل" : "Client"}</SortBtn></th>
                   <th className="px-5 py-3 text-start">Total TTC</th>
                   <th className="px-5 py-3"></th>
                 </tr>

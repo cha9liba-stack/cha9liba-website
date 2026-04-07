@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronRight,
   Gauge,
+  MapPin,
+  BarChart2,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
@@ -20,23 +22,25 @@ import { isSousTraitant } from "../../lib/permissions";
 
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
-  const { user, logout } = useAuthStore();
+  const { user, logout, selectedBranch, setSelectedBranch } = useAuthStore();
   const isOnline = useOnlineStatus();
   const isRTL = i18n.language === "ar";
   const [gestionOpen, setGestionOpen] = useState(true);
   const isST = isSousTraitant(user);
 
   const mainItems = [
-    { to: "/",          icon: LayoutDashboard, label: isRTL ? "لوحة القيادة" : "Tableau de bord", hidden: isST },
-    { to: "/contracts", icon: FileText,         label: isRTL ? "العقود" : "Contrats", hidden: false },
-    { to: "/invoices",  icon: Receipt,          label: isRTL ? "الفواتير" : "Factures", hidden: isST },
-    { to: "/settings",  icon: Settings,         label: isRTL ? "الإعدادات" : "Paramètres", hidden: isST },
+    { to: "/",             icon: LayoutDashboard, label: isRTL ? "لوحة القيادة" : "Tableau de bord", hidden: isST },
+    { to: "/contracts",    icon: FileText,         label: isRTL ? "العقود" : "Contrats", hidden: false },
+    { to: "/invoices",     icon: Receipt,          label: isRTL ? "الفواتير" : "Factures", hidden: isST },
+    { to: "/statistics",   icon: BarChart2,        label: isRTL ? "الإحصائيات" : "Statistiques", hidden: isST || user?.role !== "admin" },
+    { to: "/settings",     icon: Settings,         label: isRTL ? "الإعدادات" : "Paramètres", hidden: isST },
   ].filter(i => !i.hidden);
 
   const gestionItems = [
-    { to: "/fleet",    icon: Gauge, label: isRTL ? "الأسطول اليومي" : "Flotte", hidden: false },
-    { to: "/vehicles", icon: Car,   label: isRTL ? "السيارات"       : "Véhicules", hidden: isST },
-    { to: "/clients",  icon: Users, label: isRTL ? "العملاء"        : "Clients", hidden: isST },
+    { to: "/fleet",          icon: Gauge,    label: isRTL ? "الأسطول اليومي" : "Flotte",           hidden: false },
+    { to: "/vehicles",       icon: Car,      label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
+    { to: "/clients",        icon: Users,    label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
+    { to: "/sous-traitants", icon: Gauge,    label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
   ].filter(i => !i.hidden);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -120,6 +124,16 @@ export default function Sidebar() {
           <div>
             <p className="text-sm font-medium">{user?.username}</p>
             <p className="text-xs text-slate-400 capitalize">{user?.role}</p>
+            {selectedBranch && (
+              <button
+                onClick={() => setSelectedBranch(null)}
+                className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 mt-0.5 transition-colors"
+                title="Changer d'agence"
+              >
+                <MapPin size={10} />
+                {selectedBranch.name}
+              </button>
+            )}
           </div>
           <button
             onClick={logout}

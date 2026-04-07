@@ -59,6 +59,9 @@ export interface Contract {
   _createdAt?: number;
   _updatedAt?: number;
   _deleted?: boolean;
+  _createdBy?: string;
+  branchId?: string;
+  ownerId?: string; // sous-traitant owner id (if car belongs to a sous-traitant)
 }
 
 export interface User {
@@ -66,6 +69,7 @@ export interface User {
   username: string;
   role: "admin" | "user" | "sous-traitant";
   permissions: string[];
+  branchId?: string; // assigned branch (null = all branches for admin)
 }
 
 export interface AuditLog {
@@ -187,7 +191,15 @@ export interface Client {
   _updatedAt: number;
 }
 
-export interface FleetSnapshot {
+export interface SousTraitant {
+  id: string;
+  name: string;
+  phone?: string;
+  notes?: string;
+  cars: { registration: string; brand: string; model: string }[];
+  _createdAt: number;
+  _updatedAt: number;
+}
   date: string; // YYYY-MM-DD
   rentedContracts: Contract[];
   maintenance: MaintenanceCar[];

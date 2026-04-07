@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
+import { subscribeToContracts, isRealContract } from "../services/contractService";
 import type { Contract } from "../types";
 import {
   FileText, TrendingUp, Clock, AlertTriangle,
-  CheckCircle, ArrowUpRight, DollarSign
+  CheckCircle, ArrowUpRight, DollarSign, Building2
 } from "lucide-react";
 
 function today() { return new Date().toISOString().split("T")[0]; }
@@ -107,10 +110,58 @@ function DetailModal({ title, contracts, color, onClose }: {
 
 export default function Dashboard() {
   const contracts = useContractStore(s => s.contracts);
+  const { setContracts } = useContractStore();
+  const fleetStats = useContractStore(s => s.fleetStats);
   const navigate = useNavigate();
-  const [modal, setModal] = useState<"active" | "late" | "total" | null>(null);
+  const [modal, setModal] = useState<"active" | "late" | "total" | "revenue" | null>(null);
+  const user = useAuthStore(s => s.user);
+  const selectedBranch = useAuthStore(s => s.selectedBranch);
+  const isAdmin = user?.role === "admin";
+
+  // Admin can filter by branch; non-admin uses their selected branch
+  const [adminBranchFilter, setAdminBranchFilter] = useState<string>("all");
+  const [branches, setBranches] = useState<{id: string; name: string}[]>([]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/branches.json")
+      .then(r => r.json())
+      .then(data => {
+        if (data) setBranches(Object.entries(data).map(([id, v]: any) => ({ id, name: v.name })));
+      }).catch(() => {});
+  }, [isAdmin]);
+
+  // Effective branch filter
+  const effectiveBranch = isAdmin ? adminBranchFilter : (selectedBranch?.id || "all");
+  const stRegs = useSousTraitantCars();
+
+  function isSTContract(c: any) {
+    return !!(c as any).ownerId ||
+      stRegs.has((c.registration || "").replace(/\s+/g, "").toUpperCase());
+  }
+
+  // branchContracts = for revenue only (excludes ST cars)
+  const branchContracts = useMemo(() => {
+    const base = contracts.filter(c => !isSTContract(c));
+    if (effectiveBranch === "all") return base;
+    return base.filter(c => (c as any).branchId === effectiveBranch);
+  }, [contracts, effectiveBranch, stRegs]);
+
+  // For counts (active, total) — show all contracts including old ones without branchId
+  const allVisibleContracts = useMemo(() => {
+    if (effectiveBranch === "all") return contracts;
+    return contracts.filter(c => !(c as any).branchId || (c as any).branchId === effectiveBranch);
+  }, [contracts, effectiveBranch]);
 
   const t = today();
+
+  // Subscribe to real-time contract updates
+  useEffect(() => {
+    const unsub = subscribeToContracts(data => {
+      setContracts(data.filter(isRealContract));
+    });
+    return unsub;
+  }, []);
 
   // Load vehicle override history to exclude cars manually set to "available" (returned)
   const overrides = useMemo<Record<string, string>>(() => {
@@ -127,65 +178,58 @@ export default function Dashboard() {
 
   function norm(s: string) { return String(s || "").replace(/\s+/g, "").toUpperCase(); }
 
-  const activeContracts = useMemo(() =>
-    contracts.filter(c => c.departureDate <= t && c.returnDate >= t && !c._deleted),
-    [contracts]
-  );
+  // ── Use same logic as Fleet to compute late/active counts ──
+  const fleetCars = useMemo(() => {
+    try {
+      const saved = localStorage.getItem("palma_fleet_cars");
+      if (saved) { const p = JSON.parse(saved); if (p.length > 0) return p; }
+    } catch {}
+    return [] as { registration: string; brand: string; model: string }[];
+  }, []);
 
-  // A contract is "en retard" only if:
-  // 1. Its return date has passed
-  // 2. The car has NOT been manually set to "available" (meaning it was returned)
-  // 3. The car has NO newer contract that started after this one
-  const lateContracts = useMemo(() => {
-    // Build a map: registration → latest contract departure date
-    const latestDep: Record<string, string> = {};
-    for (const c of contracts) {
-      if (!c.registration || c._deleted) continue;
-      const key = norm(c.registration);
-      if (!latestDep[key] || c.departureDate > latestDep[key]) {
-        latestDep[key] = c.departureDate;
-      }
+  const fleetStatus = useMemo(() => {
+    const nowDT = t + " " + String(new Date().getHours()).padStart(2,"0") + ":" + String(new Date().getMinutes()).padStart(2,"0");
+
+    // Active contracts today
+    const active = contracts.filter(c => c.departureDate && c.returnDate && c.departureDate <= t && c.returnDate >= t && !c._deleted);
+    const activeMap = new Map<string, Contract>();
+    for (const c of active) {
+      const key = norm(c.registration || "");
+      const ex = activeMap.get(key);
+      if (!ex || c.departureDate > ex.departureDate) activeMap.set(key, c);
     }
 
-    const nowDT = nowDateTime();
-
-    return contracts.filter(c => {
-      if (c._deleted) return false;
-      // Only contracts whose return date is today
-      if (c.returnDate !== t) return false;
-      if (c.departureDate > t) return false;
-
-      // If return time exists and hasn't passed yet → not late
-      const returnDT = c.returnDate + " " + (c.returnTime || "23:59");
-      if (returnDT > nowDT) return false;
-
-      const key = norm(c.registration || "");
-
-      // If user manually marked this car as available/dispo → it was returned, not late
+    return fleetCars.map(car => {
+      const key = norm(car.registration);
       const override = overrides[key];
-      if (override === "available") return false;
+      if (override === "available" || override === "maintenance") return { state: override };
 
-      // If there's a newer contract for this car → the old one was completed
-      const latest = latestDep[key];
-      if (latest && latest > c.departureDate) return false;
-
-      return true;
+      const contract = activeMap.get(key);
+      if (contract) {
+        const retDT = contract.returnDate + " " + (contract.returnTime || "23:59");
+        const isLate = retDT < nowDT || contract.returnDate < t;
+        return { state: isLate ? "late" : "rented" };
+      }
+      return { state: "available" };
     });
-  }, [contracts, overrides]);
+  }, [fleetCars, contracts, overrides, t]);
+
+  const lateCount   = fleetStats.late;
+  const activeCount = allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t).length;
 
   const stats = useMemo(() => {
     const now = new Date();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
 
-    const monthlyRevenue = contracts
+    const monthlyRevenue = branchContracts
       .filter(c => {
         const d = new Date(c.departureDate || "");
         return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !c._deleted;
       })
       .reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0);
 
-    const yearRevenue = contracts
+    const yearRevenue = branchContracts
       .filter(c => {
         const d = new Date(c.departureDate || "");
         return d.getFullYear() === thisYear && !c._deleted;
@@ -197,7 +241,7 @@ export default function Dashboard() {
       const d = new Date(); d.setMonth(d.getMonth() - i);
       const m = d.getMonth(); const y = d.getFullYear();
       const label = d.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
-      const cc = contracts.filter(c => {
+      const cc = branchContracts.filter(c => {
         const cd = new Date(c.departureDate || "");
         return cd.getMonth() === m && cd.getFullYear() === y && !c._deleted;
       });
@@ -217,12 +261,58 @@ export default function Dashboard() {
     }
 
     return { monthlyRevenue, yearRevenue, monthly, urgentDocs };
-  }, [contracts]);
+  }, [branchContracts]);
+
+  // Revenue detail for modal
+  const revenueDetail = useMemo(() => {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+
+    // Monthly income from contracts
+    const monthContracts = branchContracts.filter(c => {
+      const d = new Date(c.departureDate || "");
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !c._deleted;
+    });
+
+    // Expenses from car profiles
+    const profiles: Record<string, any> = (() => {
+      try { return JSON.parse(localStorage.getItem("palma_car_profiles") || "{}"); } catch { return {}; }
+    })();
+    const monthKey = `${thisYear}-${String(thisMonth + 1).padStart(2, "0")}`;
+    const expenses: { car: string; category: string; amount: number; description: string; date: string }[] = [];
+    for (const [reg, p] of Object.entries(profiles) as any) {
+      for (const e of (p.expenses || [])) {
+        if (e.date?.startsWith(monthKey)) {
+          expenses.push({ car: reg, category: e.category, amount: e.amount, description: e.description, date: e.date });
+        }
+      }
+    }
+    // Mensualités
+    const mensualites: { car: string; amount: number }[] = [];
+    for (const [reg, p] of Object.entries(profiles) as any) {
+      if (p.priceTrait && p.dateFirstTrait && p.nombreMoisFix) {
+        const start = new Date(p.dateFirstTrait);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + p.nombreMoisFix);
+        if (now >= start && now < end) {
+          mensualites.push({ car: reg, amount: p.priceTrait });
+        }
+      }
+    }
+
+    const totalRevenue = monthContracts.reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0);
+    const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+    const totalMensualites = mensualites.reduce((s, m) => s + m.amount, 0);
+    const netProfit = totalRevenue - totalExpenses - totalMensualites;
+
+    return { monthContracts, expenses, mensualites, totalRevenue, totalExpenses, totalMensualites, netProfit };
+  }, [branchContracts]);
 
   const recent = useMemo(() =>
-    [...contracts].filter(c => !c._deleted)
+    [...allVisibleContracts].filter(c => !c._deleted)
       .sort((a, b) => (b._createdAt ?? 0) - (a._createdAt ?? 0)).slice(0, 6),
-    [contracts]
+    [allVisibleContracts]
   );
 
   const maxRevenue = Math.max(...stats.monthly.map(m => m.revenue), 1);
@@ -230,36 +320,62 @@ export default function Dashboard() {
   const kpiCards = [
     {
       key: "active" as const,
-      label: "Contrats actifs", value: activeContracts.length,
+      label: "Contrats actifs", value: activeCount,
       color: "bg-green-500", icon: CheckCircle, sub: "en cours aujourd'hui",
     },
     {
       key: "late" as const,
-      label: "En retard", value: lateContracts.length,
+      label: "En retard", value: lateCount,
       color: "bg-red-500", icon: AlertTriangle, sub: "retour dépassé",
     },
     {
-      key: null,
+      key: "revenue" as const,
       label: "Revenus du mois", value: `${stats.monthlyRevenue.toFixed(0)} TND`,
       color: "bg-amber-500", icon: TrendingUp, sub: "mois en cours",
+      adminOnly: true,
     },
     {
       key: "total" as const,
-      label: "Total contrats", value: contracts.filter(c => !c._deleted).length,
+      label: "Total contrats", value: allVisibleContracts.filter(c => !c._deleted).length,
       color: "bg-blue-500", icon: FileText, sub: "tous les contrats",
     },
   ];
 
   return (
     <div className="p-5 space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">Tableau de bord</h1>
-        <p className="text-xs text-slate-400">{new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800">Tableau de bord</h1>
+          {!isAdmin && selectedBranch && (
+            <p className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
+              <Building2 size={11} /> {selectedBranch.name}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Admin branch filter */}
+          {isAdmin && (
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+              <Building2 size={14} className="text-slate-400" />
+              <select
+                value={adminBranchFilter}
+                onChange={e => setAdminBranchFilter(e.target.value)}
+                className="text-sm text-slate-700 border-none outline-none bg-transparent font-medium"
+              >
+                <option value="all">Toutes les agences</option>
+                {branches.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <p className="text-xs text-slate-400">{new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+        </div>
       </div>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpiCards.map(({ key, label, value, color, icon: Icon, sub }) => (
+        {kpiCards.filter(c => !c.adminOnly || isAdmin).map(({ key, label, value, color, icon: Icon, sub }) => (
           <div
             key={label}
             onClick={() => key && setModal(key)}
@@ -350,6 +466,7 @@ export default function Dashboard() {
                     <th className="px-5 py-2.5 text-start">Départ</th>
                     <th className="px-5 py-2.5 text-start">Retour</th>
                     <th className="px-5 py-2.5 text-start">Montant</th>
+                    <th className="px-5 py-2.5 text-start">Créé par</th>
                     <th className="px-5 py-2.5 text-start">État</th>
                   </tr>
                 </thead>
@@ -365,6 +482,10 @@ export default function Dashboard() {
                         <td className="px-5 py-2.5 text-slate-400 text-xs">{fmtDate(c.departureDate)}</td>
                         <td className="px-5 py-2.5 text-xs font-medium" style={{ color: isLate ? "#ef4444" : "#64748b" }}>{fmtDate(c.returnDate)}</td>
                         <td className="px-5 py-2.5 font-semibold text-green-600 text-xs">{parseFloat(c.totalFacture || "0").toFixed(3)} TND</td>
+                        <td className="px-5 py-2.5 text-xs text-slate-500">
+                          <p className="font-medium text-slate-700">{(c as any)._createdBy || "—"}</p>
+                          <p className="text-slate-400">{(c as any)._createdAt ? new Date((c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—"}</p>
+                        </td>
                         <td className="px-5 py-2.5">
                           {isLate   && <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded-full text-[10px] font-medium">Retard</span>}
                           {isActive && !isLate && <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded-full text-[10px] font-medium">Actif</span>}
@@ -381,13 +502,106 @@ export default function Dashboard() {
 
       {/* ── Detail Modals ── */}
       {modal === "active" && (
-        <DetailModal title="Contrats actifs" contracts={activeContracts} color="bg-green-500" onClose={() => setModal(null)} />
+        <DetailModal title="Contrats actifs" contracts={allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t)} color="bg-green-500" onClose={() => setModal(null)} />
       )}
       {modal === "late" && (
-        <DetailModal title="Contrats en retard" contracts={lateContracts} color="bg-red-500" onClose={() => setModal(null)} />
+        <DetailModal title="Contrats en retard" contracts={fleetStats.lateContracts} color="bg-red-500" onClose={() => setModal(null)} />
       )}
       {modal === "total" && (
-        <DetailModal title="Tous les contrats" contracts={contracts.filter(c => !c._deleted)} color="bg-blue-500" onClose={() => setModal(null)} />
+        <DetailModal title="Tous les contrats" contracts={allVisibleContracts.filter(c => !c._deleted)} color="bg-blue-500" onClose={() => setModal(null)} />
+      )}
+
+      {/* Revenue detail modal */}
+      {modal === "revenue" && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 bg-amber-500 rounded-t-2xl">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <TrendingUp size={16} /> Analyse financière — {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+              </h3>
+              <button onClick={() => setModal(null)} className="text-white/70 hover:text-white text-xl">×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
+
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Revenus location", value: revenueDetail.totalRevenue, color: "text-green-600", bg: "bg-green-50" },
+                  { label: "Dépenses", value: revenueDetail.totalExpenses + (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0), color: "text-red-600", bg: "bg-red-50" },
+                  { label: "Bénéfice net", value: revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0), color: (revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0)) >= 0 ? "text-green-700" : "text-red-700", bg: (revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0)) >= 0 ? "bg-green-100" : "bg-red-100" },
+                ].map(({ label, value, color, bg }) => (
+                  <div key={label} className={`${bg} rounded-xl p-3 text-center`}>
+                    <p className={`text-xl font-bold ${color}`}>{value.toFixed(3)}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Income from contracts */}
+              <div>
+                <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"/> Mداخيل — Contrats ({revenueDetail.monthContracts.length})
+                </h4>
+                {revenueDetail.monthContracts.length === 0
+                  ? <p className="text-xs text-slate-400 py-2">Aucun contrat ce mois</p>
+                  : <div className="space-y-1.5">
+                    {revenueDetail.monthContracts.map(c => (
+                      <div key={c.id} className="flex items-center justify-between bg-green-50 rounded-lg px-3 py-2">
+                        <div>
+                          <span className="text-xs font-mono text-amber-600">#{c.contractNumber}</span>
+                          <span className="text-sm text-slate-700 ms-2">{c.driverName}</span>
+                          <span className="text-xs text-slate-400 ms-2">{c.brand} {c.registration}</span>
+                        </div>
+                        <span className="font-bold text-green-600 text-sm">+{parseFloat(c.totalFacture||"0").toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                }
+              </div>
+
+              {/* Mensualités — admin all branches only */}
+              {effectiveBranch === "all" && revenueDetail.mensualites.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-red-400 rounded-full"/> Mensualités ({revenueDetail.mensualites.length})
+                  </h4>
+                  <div className="space-y-1.5">
+                    {revenueDetail.mensualites.map((m, i) => (
+                      <div key={i} className="flex items-center justify-between bg-red-50 rounded-lg px-3 py-2">
+                        <span className="text-sm text-slate-700 font-mono">{m.car}</span>
+                        <span className="font-bold text-red-500 text-sm">-{m.amount.toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Expenses */}
+              {revenueDetail.expenses.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"/> Dépenses ({revenueDetail.expenses.length})
+                  </h4>
+                  <div className="space-y-1.5">
+                    {revenueDetail.expenses.map((e, i) => (
+                      <div key={i} className="flex items-center justify-between bg-purple-50 rounded-lg px-3 py-2">
+                        <div>
+                          <span className="text-xs font-mono text-slate-500">{e.car}</span>
+                          <span className="text-sm text-slate-700 ms-2">{e.description || e.category}</span>
+                          <span className="text-xs text-slate-400 ms-2">{e.date}</span>
+                        </div>
+                        <span className="font-bold text-purple-600 text-sm">-{e.amount.toFixed(3)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 flex justify-end">
+              <button onClick={() => setModal(null)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Fermer</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

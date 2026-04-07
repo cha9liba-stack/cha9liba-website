@@ -7,14 +7,33 @@ import {
   Mail, Hash, AlertCircle, GitMerge, DollarSign, ShieldOff, ShieldCheck, Bell
 } from "lucide-react";
 
-// ─── localStorage ─────────────────────────────────────────────────────────────
+// ─── localStorage + Firebase sync ────────────────────────────────────────────
 const CLIENTS_KEY = "palma_clients";
-const DEBTS_KEY   = "palma_contract_debts"; // { [contractId]: { paid: number, reste: number } }
+const DEBTS_KEY   = "palma_contract_debts";
+const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
 
 function loadClients(): Client[] {
   try { return JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]"); } catch { return []; }
 }
-function saveClients(c: Client[]) { localStorage.setItem(CLIENTS_KEY, JSON.stringify(c)); }
+function saveClients(c: Client[]) {
+  localStorage.setItem(CLIENTS_KEY, JSON.stringify(c));
+  // Sync to Firebase
+  fetch(`${DB}/clients.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(c),
+  }).catch(() => {});
+}
+
+async function loadClientsFromFirebase(): Promise<Client[] | null> {
+  try {
+    const res = await fetch(`${DB}/clients.json`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) return data;
+    return null;
+  } catch { return null; }
+}
 
 function loadDebts(): Record<string, { paid: number; reste: number }> {
   try { return JSON.parse(localStorage.getItem(DEBTS_KEY) || "{}"); } catch { return {}; }
@@ -49,6 +68,16 @@ function F({ label, value, onChange, type = "text", placeholder = "" }: {
 export default function Clients() {
   const contracts = useContractStore(s => s.contracts);
   const [clients, setClients] = useState<Client[]>(loadClients);
+
+  // Load from Firebase on mount — overrides localStorage if Firebase has data
+  useEffect(() => {
+    loadClientsFromFirebase().then(data => {
+      if (data && data.length > 0) {
+        setClients(data);
+        localStorage.setItem(CLIENTS_KEY, JSON.stringify(data));
+      }
+    });
+  }, []);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "individual" | "company">("all");
   const [selected, setSelected] = useState<Client | null>(null);

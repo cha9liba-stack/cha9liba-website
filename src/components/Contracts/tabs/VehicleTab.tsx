@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import Field from "../../ui/Field";
 import { getNextContractNumber } from "../../../services/lookupService";
 import RegistrationInput from "../RegistrationInput";
+import { useContractStore } from "../../../store/useContractStore";
 
 interface Props {
   register: UseFormRegister<any>;
@@ -11,12 +12,26 @@ interface Props {
   watch: UseFormWatch<any>;
   setValue: UseFormSetValue<any>;
   isNew?: boolean;
+  contractId?: string;
 }
 
-export default function VehicleTab({ register, errors, watch, setValue, isNew }: Props) {
-  const { t } = useTranslation();
+export default function VehicleTab({ register, errors, watch, setValue, isNew, contractId }: Props) {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+  const contracts = useContractStore((s) => s.contracts);
   const fuelType = watch("fuelType");
   const currentReg = watch("registration");
+  const contractNumber = watch("contractNumber");
+
+  // Check duplicate contract number in real-time
+  const [dupWarning, setDupWarning] = useState(false);
+  useEffect(() => {
+    if (!contractNumber) { setDupWarning(false); return; }
+    const isDup = contracts.some(
+      (c) => !c._deleted && c.contractNumber === contractNumber && c.id !== contractId
+    );
+    setDupWarning(isDup);
+  }, [contractNumber, contracts, contractId]);
 
   // Auto-fill contract number for new contracts
   useEffect(() => {
@@ -40,12 +55,17 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew }:
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Field label={t("contract_number")} error={errors.contractNumber?.message as string}>
-        <input {...register("contractNumber")} className="input" />
+        <input {...register("contractNumber")} className={`input ${dupWarning ? "border-red-400 focus:ring-red-400" : ""}`} />
+        {dupWarning && (
+          <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+            ⚠️ {isRTL ? "رقم العقد مستخدم مسبقاً" : "Ce numéro de contrat existe déjà"}
+          </p>
+        )}
       </Field>
 
       {/* Registration with TU format + auto-fill */}
       <div className="sm:col-span-2">
-        <RegistrationInput setValue={setValue} defaultValue={currentReg || ""} />
+        <RegistrationInput setValue={setValue} defaultValue={currentReg || ""} currentContractId={contractId} />
         {/* Hidden input to keep react-hook-form in sync */}
         <input type="hidden" {...register("registration")} />
       </div>

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { CheckCircle, Search } from "lucide-react";
+import { CheckCircle, Search, AlertTriangle } from "lucide-react";
 import type { UseFormSetValue } from "react-hook-form";
+import { useContractStore } from "../../store/useContractStore";
 
 // Default fleet for auto-fill
 const FLEET: Record<string, { brand: string; model: string; category: string }> = {
@@ -44,11 +45,13 @@ function normReg(s: string) {
 interface Props {
   setValue: UseFormSetValue<any>;
   defaultValue?: string;
+  currentContractId?: string; // exclude current contract from check (edit mode)
 }
 
-export default function RegistrationInput({ setValue, defaultValue = "" }: Props) {
+export default function RegistrationInput({ setValue, defaultValue = "", currentContractId }: Props) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const contracts = useContractStore((s) => s.contracts);
 
   // Split into left (before TU) and right (after TU)
   const parseReg = (val: string) => {
@@ -62,6 +65,7 @@ export default function RegistrationInput({ setValue, defaultValue = "" }: Props
   const [left, setLeft]   = useState(parsed.left);
   const [right, setRight] = useState(parsed.right);
   const [matched, setMatched] = useState<{ brand: string; model: string; category: string } | null>(null);
+  const [conflict, setConflict] = useState<{ contractNumber: string; driverName: string; returnDate: string } | null>(null);
   const rightRef = useRef<HTMLInputElement>(null);
 
   function buildReg(l: string, r: string) {
@@ -80,6 +84,45 @@ export default function RegistrationInput({ setValue, defaultValue = "" }: Props
     }
   }, [defaultValue]);
 
+  function checkAvailability(reg: string) {
+    if (!reg || reg.length < 5) { setConflict(null); return; }
+    const now = new Date();
+    const nowDT = now.toISOString().split("T")[0] + " " +
+      String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+    const normReg_ = normReg(reg);
+
+    // Check if car belongs to a sous-traitant
+    try {
+      fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/sous_traitants.json")
+        .then(r => r.json())
+        .then(data => {
+          if (!data) return;
+          for (const [id, st] of Object.entries(data) as any) {
+            const found = (st.cars || []).find((c: any) =>
+              normReg(c.registration || "") === normReg_
+            );
+            if (found) {
+              setValue("ownerId", id);
+              return;
+            }
+          }
+          setValue("ownerId", "");
+        }).catch(() => {});
+    } catch {}
+
+    const active = contracts.find((c) => {
+      if (c._deleted) return false;
+      if (currentContractId && c.id === currentContractId) return false;
+      if (normReg(c.registration || "") !== normReg_) return false;
+      if (!c.departureDate || !c.returnDate) return false;
+      if (c.departureDate > nowDT.slice(0, 10)) return false;
+      const retDT = c.returnDate + " " + (c.returnTime || "23:59");
+      if (retDT < nowDT) return false;
+      return true;
+    });
+    setConflict(active ? { contractNumber: active.contractNumber, driverName: active.driverName, returnDate: active.returnDate } : null);
+  }
+
   function tryAutoFill(l: string, r: string) {
     const full = normReg(buildReg(l, r));
     const car = FLEET[full];
@@ -93,6 +136,7 @@ export default function RegistrationInput({ setValue, defaultValue = "" }: Props
       setMatched(null);
       setValue("registration", buildReg(l, r));
     }
+    checkAvailability(buildReg(l, r));
   }
 
   function handleLeft(val: string) {
@@ -154,6 +198,23 @@ export default function RegistrationInput({ setValue, defaultValue = "" }: Props
           <span className="text-green-400 ms-1">
             {isRTL ? "✓ تم ملء البيانات تلقائياً" : "✓ Données remplies automatiquement"}
           </span>
+        </div>
+      )}
+
+      {/* Availability warning */}
+      {conflict && (
+        <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-1">
+          <AlertTriangle size={13} className="shrink-0 mt-0.5 text-red-500" />
+          <div>
+            <p className="font-bold">
+              {isRTL ? "⚠️ السيارة محجوزة حالياً" : "⚠️ Véhicule déjà en location"}
+            </p>
+            <p>
+              {isRTL
+                ? `عقد رقم ${conflict.contractNumber} — ${conflict.driverName} — حتى ${conflict.returnDate}`
+                : `Contrat N° ${conflict.contractNumber} — ${conflict.driverName} — jusqu'au ${conflict.returnDate}`}
+            </p>
+          </div>
         </div>
       )}
     </div>

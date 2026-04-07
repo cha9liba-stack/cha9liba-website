@@ -4,7 +4,7 @@ import { useContractStore } from "../store/useContractStore";
 import {
   ArrowLeft, Camera, Plus, Trash2, FileText, TrendingUp, TrendingDown,
   Shield, Tag, Droplets, CheckCircle, MoreHorizontal,
-  Calendar, DollarSign, Car, Wrench, ChevronDown, ChevronUp, X, Tag as SellIcon
+  Calendar, DollarSign, Car, Wrench, ChevronDown, ChevronUp, X, Tag as SellIcon, Edit2
 } from "lucide-react";
 import type { CarProfile, CarDocument, CarExpense } from "../types";
 
@@ -133,6 +133,8 @@ export default function VehicleDetail() {
   // Sell car
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellPrice, setSellPrice] = useState("");
+  const [showEditVehicleData, setShowEditVehicleData] = useState(false);
+  const [vehicleDataForm, setVehicleDataForm] = useState<Partial<CarProfile>>({});
 
   // Photo upload — compress before saving to avoid localStorage quota
   const photoRef = useRef<HTMLInputElement>(null);
@@ -385,12 +387,32 @@ export default function VehicleDetail() {
             {/* Imported financial data */}
             {profile.priceAchat && (
               <div className="border-t border-slate-100 pt-3 space-y-1.5">
-                <p className="text-[10px] font-semibold text-slate-400 uppercase">Données véhicule</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase">Données véhicule</p>
+                  <button onClick={() => setShowEditVehicleData(true)}
+                    className="flex items-center gap-1 text-[10px] text-amber-600 hover:text-amber-700 transition-colors">
+                    <Edit2 size={10} /> Modifier
+                  </button>
+                </div>
                 {[
                   { label: "Prix d'achat",   value: profile.priceAchat?.toFixed(3) + " TND" },
                   { label: "Avance",         value: profile.avance?.toFixed(3) + " TND" },
                   { label: "Mensualité",     value: profile.priceTrait?.toFixed(3) + " TND" },
-                  { label: "Durée",          value: profile.nombreMoisFix + " mois" },
+                  { label: "Durée",          value: (() => {
+                    const total = profile.nombreMoisFix;
+                    if (!total || !profile.dateFirstTrait) return total + " mois";
+                    const start = new Date(profile.dateFirstTrait);
+                    const end = new Date(start);
+                    end.setMonth(end.getMonth() + total);
+                    const now = new Date();
+                    if (now >= end) return `${total} mois (✓ Terminé)`;
+                    const diffMs = end.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffMs / 86400000);
+                    const months = Math.floor(diffDays / 30);
+                    const days = diffDays % 30;
+                    const remaining = months > 0 ? `${months}m ${days}j` : `${days}j`;
+                    return `${total} mois — reste ${remaining}`;
+                  })() },
                   { label: "Kilométrage",    value: currentKm?.toLocaleString() + " km" },
                   { label: "Couleur",        value: profile.color },
                   { label: "Année",          value: String(profile.year) },
@@ -841,6 +863,56 @@ export default function VehicleDetail() {
           </div>
         );
       })()}
+
+      {/* ── Edit Vehicle Data Modal ── */}
+      {showEditVehicleData && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <Edit2 size={15} className="text-amber-500" /> Modifier les données véhicule
+              </h3>
+              <button onClick={() => setShowEditVehicleData(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+              {[
+                { key: "priceAchat",          label: "Prix d'achat (TND)",       type: "number", val: profile.priceAchat },
+                { key: "avance",              label: "Avance (TND)",             type: "number", val: profile.avance },
+                { key: "priceTrait",          label: "Mensualité (TND)",         type: "number", val: profile.priceTrait },
+                { key: "nombreMoisFix",       label: "Durée (mois)",             type: "number", val: profile.nombreMoisFix },
+                { key: "dateFirstTrait",      label: "1er versement",            type: "date",   val: profile.dateFirstTrait },
+                { key: "dateFirstCirculation",label: "1ère mise en service",     type: "date",   val: profile.dateFirstCirculation },
+                { key: "color",               label: "Couleur",                  type: "text",   val: profile.color },
+                { key: "year",                label: "Année",                    type: "number", val: profile.year },
+              ].map(({ key, label, type, val }) => (
+                <div key={key}>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">{label}</label>
+                  <input
+                    type={type}
+                    step={type === "number" ? "0.001" : undefined}
+                    defaultValue={val ?? ""}
+                    onChange={e => setVehicleDataForm(f => ({
+                      ...f,
+                      [key]: type === "number" ? parseFloat(e.target.value) || 0 : e.target.value
+                    }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100">
+              <button onClick={() => setShowEditVehicleData(false)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Annuler</button>
+              <button onClick={() => {
+                updateProfile({ ...profile, ...vehicleDataForm });
+                setShowEditVehicleData(false);
+                setVehicleDataForm({});
+              }} className="px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium">
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

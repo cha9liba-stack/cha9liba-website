@@ -11,6 +11,9 @@ import VehicleDetail from "./pages/VehicleDetail";
 import Clients from "./pages/Clients";
 import InvoicePublic from "./pages/InvoicePublic";
 import { lazy, Suspense } from "react";
+import SMSTest from "./pages/SMSTest";
+import Statistics from "./pages/Statistics";
+import SousTraitants from "./pages/SousTraitants";
 import { isSousTraitant } from "./lib/permissions";
 
 const Invoices = lazy(() => import("./pages/Invoices"));
@@ -55,6 +58,9 @@ export default function App() {
             </STProtectedRoute>
           } />
           <Route path="settings" element={<STProtectedRoute><Settings /></STProtectedRoute>} />
+          <Route path="statistics" element={<STProtectedRoute><Statistics /></STProtectedRoute>} />
+          <Route path="sous-traitants" element={<STProtectedRoute><SousTraitants /></STProtectedRoute>} />
+          <Route path="sms-test" element={<SMSTest />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

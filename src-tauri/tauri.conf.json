@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "car-rental-app",
-  "version": "0.1.0",
-  "identifier": "com.pc-travaille.car-rental-app",
+  "productName": "Palma Rent",
+  "version": "1.0.0",
+  "identifier": "com.palmarent.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,9 +12,13 @@
   "app": {
     "windows": [
       {
-        "title": "car-rental-app",
-        "width": 800,
-        "height": 600
+        "title": "Palma Rent",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true
       }
     ],
     "security": {
