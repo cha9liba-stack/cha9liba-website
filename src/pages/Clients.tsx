@@ -40,6 +40,22 @@ function loadDebts(): Record<string, { paid: number; reste: number }> {
 }
 function saveDebts(d: Record<string, { paid: number; reste: number }>) {
   localStorage.setItem(DEBTS_KEY, JSON.stringify(d));
+  // Sync to Firebase
+  fetch(`${DB}/contract_debts.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(d),
+  }).catch(() => {});
+}
+
+async function loadDebtsFromFirebase(): Promise<Record<string, { paid: number; reste: number }> | null> {
+  try {
+    const res = await fetch(`${DB}/contract_debts.json`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && typeof data === "object") return data;
+    return null;
+  } catch { return null; }
 }
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
@@ -77,6 +93,24 @@ export default function Clients() {
         localStorage.setItem(CLIENTS_KEY, JSON.stringify(data));
       }
     });
+    // Load debts from Firebase
+    loadDebtsFromFirebase().then(data => {
+      if (data && Object.keys(data).length > 0) {
+        setDebts(data);
+        localStorage.setItem(DEBTS_KEY, JSON.stringify(data));
+      }
+    });
+
+    // Auto-refresh debts every 30 seconds
+    const interval = setInterval(() => {
+      loadDebtsFromFirebase().then(data => {
+        if (data && Object.keys(data).length > 0) {
+          setDebts(data);
+          localStorage.setItem(DEBTS_KEY, JSON.stringify(data));
+        }
+      });
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<"all" | "individual" | "company">("all");
@@ -93,9 +127,17 @@ export default function Clients() {
     setDebts(d); saveDebts(d);
   }
 
-  // Get debt for a contract — defaults to 0 (soldé) if not set
+  // Get debt for a contract — reads directly from contract fields
   function getDebt(contractId: string) {
-    return debts[contractId] ?? { paid: 0, reste: 0 };
+    // First check manual override in debts store
+    if (debts[contractId]) return debts[contractId];
+    // Otherwise compute from contract
+    const c = contracts.find(ct => ct.id === contractId);
+    if (!c) return { paid: 0, reste: 0 };
+    const paid = parseFloat(c.depot || "0");
+    const total = parseFloat(c.somme || c.totalFacture || "0");
+    const reste = Math.max(0, total - paid);
+    return { paid, reste };
   }
 
   // Detect duplicates: same CIN, different data
