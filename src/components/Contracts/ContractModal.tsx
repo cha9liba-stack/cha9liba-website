@@ -105,7 +105,16 @@ export default function ContractModal({ contract, onClose }: Props) {
       resolver: zodResolver(schema) as any,
       defaultValues: contract
         ? { ...contract }
-        : { date: new Date().toISOString().split("T")[0] },
+        : (() => {
+            const now = new Date();
+            const today = now.toISOString().split("T")[0];
+            const time = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+            return {
+              date: today,
+              departureDate: today,
+              departureTime: time,
+            };
+          })(),
     });
 
   // Check if client is banned when CIN or name changes

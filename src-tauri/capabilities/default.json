@@ -7,6 +7,8 @@
     "core:default",
     "opener:default",
     "http:default",
-    "http:allow-fetch"
+    "http:allow-fetch",
+    "core:window:allow-create",
+    "core:webview:allow-create-webview-window"
   ]
 }

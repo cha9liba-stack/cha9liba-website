@@ -19,6 +19,7 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const contracts = useContractStore((s) => s.contracts);
+  const lockReturnTime = useContractStore((s) => s.contractSettings.lockReturnTime);
   const fuelType = watch("fuelType");
   const currentReg = watch("registration");
   const contractNumber = watch("contractNumber");
@@ -51,6 +52,14 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
       setValue("city", departurePlace, { shouldDirty: true });
     }
   }, [departurePlace]);
+
+  // Lock return time = departure time if setting enabled
+  const departureTime = watch("departureTime");
+  useEffect(() => {
+    if (lockReturnTime && departureTime) {
+      setValue("returnTime", departureTime, { shouldDirty: true });
+    }
+  }, [departureTime, lockReturnTime]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -111,7 +120,7 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
         <input type="date" {...register("returnDate")} className="input" />
       </Field>
       <Field label={t("return_time")}>
-        <input type="time" {...register("returnTime")} className="input" />
+        <input type="time" {...register("returnTime")} className="input" readOnly={lockReturnTime} disabled={lockReturnTime} />
       </Field>
       <Field label={t("return_km")}>
         <input {...register("returnKm")} className="input" />

@@ -302,6 +302,16 @@ export default function Settings() {
         </div>
       )}
 
+      {/* GPS Settings — admin only */}
+      {user?.role === "admin" && (
+        <GPSSettings DB_URL={DB_URL} />
+      )}
+
+      {/* Contract Settings — admin only */}
+      {user?.role === "admin" && (
+        <ContractSettings DB_URL={DB_URL} />
+      )}
+
       {/* User info */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <h2 className="font-semibold text-slate-700 mb-3">
@@ -314,6 +324,97 @@ export default function Settings() {
           Role: <span className="font-medium capitalize">{user?.role}</span>
         </p>
       </div>
+    </div>
+  );
+}
+
+function ContractSettings({ DB_URL }: { DB_URL: string }) {
+  const [lockReturnTime, setLockReturnTime] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch(`${DB_URL}/app_settings/contract_settings.json`)
+      .then(r => r.json())
+      .then(data => { if (data) setLockReturnTime(!!data.lockReturnTime); })
+      .catch(() => {});
+  }, []);
+
+  async function save(val: boolean) {
+    setLockReturnTime(val);
+    await fetch(`${DB_URL}/app_settings/contract_settings.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lockReturnTime: val }),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+      <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+        ⚙️ Paramètres des contrats
+      </h2>
+      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+        <div>
+          <p className="text-sm font-medium text-slate-700">Heure de retour = Heure de départ</p>
+          <p className="text-xs text-slate-400 mt-0.5">L'heure de retour est automatiquement fixée à l'heure de départ et ne peut pas être modifiée</p>
+        </div>
+        <button onClick={() => save(!lockReturnTime)}
+          className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${lockReturnTime ? "bg-amber-500" : "bg-slate-300"}`}>
+          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${lockReturnTime ? "translate-x-7" : "translate-x-1"}`} />
+        </button>
+      </div>
+      {saved && <p className="text-xs text-green-600">✓ Enregistré</p>}
+    </div>
+  );
+}
+
+function GPSSettings({ DB_URL }: { DB_URL: string }) {
+  const [gpsUser, setGpsUser] = useState("");
+  const [gpsPass, setGpsPass] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch(`${DB_URL}/app_settings/gps_credentials.json`)
+      .then(r => r.json())
+      .then(data => {
+        if (data) { setGpsUser(data.username || ""); setGpsPass(data.password || ""); }
+      }).catch(() => {});
+  }, []);
+
+  async function save() {
+    await fetch(`${DB_URL}/app_settings/gps_credentials.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: gpsUser, password: gpsPass }),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+      <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+        🛰 Identifiants WiniGPS
+      </h2>
+      <p className="text-xs text-slate-400">Ces identifiants seront utilisés pour la connexion automatique à WiniGPS.</p>
+      <div className="grid grid-cols-2 gap-3 max-w-sm">
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">Nom d'utilisateur</label>
+          <input value={gpsUser} onChange={e => setGpsUser(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-slate-500 block mb-1">Mot de passe</label>
+          <input type="password" value={gpsPass} onChange={e => setGpsPass(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+        </div>
+      </div>
+      <button onClick={save}
+        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+        {saved ? "✓ Enregistré" : "Enregistrer"}
+      </button>
     </div>
   );
 }

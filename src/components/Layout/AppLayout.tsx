@@ -14,7 +14,16 @@ export default function AppLayout() {
   const isRTL = i18n.language === "ar";
   const setContracts = useContractStore((s) => s.setContracts);
   const contracts = useContractStore((s) => s.contracts);
+  const setContractSettings = useContractStore((s) => s.setContractSettings);
   const [loading, setLoading] = useState(contracts.length === 0);
+
+  // Load contract settings from Firebase
+  useEffect(() => {
+    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/app_settings/contract_settings.json")
+      .then(r => r.json())
+      .then(data => { if (data) setContractSettings(data); })
+      .catch(() => {});
+  }, []);
   const user = useAuthStore(s => s.user);
   const selectedBranch = useAuthStore(s => s.selectedBranch);
   const setSelectedBranch = useAuthStore(s => s.setSelectedBranch);

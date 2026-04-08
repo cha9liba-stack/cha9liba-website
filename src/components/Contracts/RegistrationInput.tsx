@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { CheckCircle, Search, AlertTriangle } from "lucide-react";
+import { CheckCircle, Search, AlertTriangle, Gauge } from "lucide-react";
 import type { UseFormSetValue } from "react-hook-form";
 import { useContractStore } from "../../store/useContractStore";
+import { getOdometerForReg } from "../../services/gpsService";
 
 // Default fleet for auto-fill
 const FLEET: Record<string, { brand: string; model: string; category: string }> = {
@@ -66,6 +67,7 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
   const [right, setRight] = useState(parsed.right);
   const [matched, setMatched] = useState<{ brand: string; model: string; category: string } | null>(null);
   const [conflict, setConflict] = useState<{ contractNumber: string; driverName: string; returnDate: string } | null>(null);
+  const [loadingKm, setLoadingKm] = useState(false);
   const rightRef = useRef<HTMLInputElement>(null);
 
   function buildReg(l: string, r: string) {
@@ -137,6 +139,17 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
       setValue("registration", buildReg(l, r));
     }
     checkAvailability(buildReg(l, r));
+
+    // Fetch odometer from GPS if registration is complete
+    if (l.length >= 3 && r.length >= 3) {
+      setLoadingKm(true);
+      getOdometerForReg(buildReg(l, r)).then(km => {
+        setLoadingKm(false);
+        if (km && km > 0) {
+          setValue("departureKm", String(km), { shouldDirty: true });
+        }
+      }).catch(() => setLoadingKm(false));
+    }
   }
 
   function handleLeft(val: string) {
@@ -186,6 +199,9 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
         />
         {matched && (
           <CheckCircle size={16} className="text-green-500 ms-1 shrink-0" />
+        )}
+        {loadingKm && (
+          <Gauge size={16} className="text-amber-400 ms-1 shrink-0 animate-pulse" />
         )}
       </div>
 

@@ -18,6 +18,8 @@ interface ContractState {
   setSearchQuery: (q: string) => void;
   fleetStats: FleetStats;
   setFleetStats: (stats: FleetStats) => void;
+  contractSettings: { lockReturnTime: boolean };
+  setContractSettings: (s: { lockReturnTime: boolean }) => void;
 }
 
 export const useContractStore = create<ContractState>((set) => ({
@@ -39,4 +41,6 @@ export const useContractStore = create<ContractState>((set) => ({
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   fleetStats: { rented: 0, late: 0, available: 0, maintenance: 0, lateContracts: [] },
   setFleetStats: (fleetStats) => set({ fleetStats }),
+  contractSettings: { lockReturnTime: false },
+  setContractSettings: (contractSettings) => set({ contractSettings }),
 }));
