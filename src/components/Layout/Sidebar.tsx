@@ -14,6 +14,7 @@ import {
   Gauge,
   MapPin,
   BarChart2,
+  Navigation,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
@@ -37,10 +38,11 @@ export default function Sidebar() {
   ].filter(i => !i.hidden);
 
   const gestionItems = [
-    { to: "/fleet",          icon: Gauge,    label: isRTL ? "الأسطول اليومي" : "Flotte",           hidden: false },
-    { to: "/vehicles",       icon: Car,      label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
-    { to: "/clients",        icon: Users,    label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
-    { to: "/sous-traitants", icon: Gauge,    label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
+    { to: "/fleet",          icon: Gauge,      label: isRTL ? "الأسطول اليومي" : "Flotte",           hidden: false },
+    { to: "/vehicles",       icon: Car,        label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
+    { to: "/clients",        icon: Users,      label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
+    { to: "/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
+    { to: "/gps",            icon: Navigation, label: "GPS",                                           hidden: isST },
   ].filter(i => !i.hidden);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
