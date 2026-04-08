@@ -48,6 +48,7 @@ export interface Contract {
   totalFacture: string;
   plusMoinsDivers: string;
   depot: string;
+  depotGarantie: string;
   prep: string;
   total: string;
   somme: string;
@@ -60,6 +61,7 @@ export interface Contract {
   _updatedAt?: number;
   _deleted?: boolean;
   _createdBy?: string;
+  _updatedBy?: string;
   branchId?: string;
   ownerId?: string; // sous-traitant owner id (if car belongs to a sous-traitant)
 }

@@ -483,8 +483,17 @@ export default function Dashboard() {
                         <td className="px-5 py-2.5 text-xs font-medium" style={{ color: isLate ? "#ef4444" : "#64748b" }}>{fmtDate(c.returnDate)}</td>
                         <td className="px-5 py-2.5 font-semibold text-green-600 text-xs">{parseFloat(c.totalFacture || "0").toFixed(3)} TND</td>
                         <td className="px-5 py-2.5 text-xs text-slate-500">
-                          <p className="font-medium text-slate-700">{(c as any)._createdBy || "—"}</p>
-                          <p className="text-slate-400">{(c as any)._createdAt ? new Date((c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—"}</p>
+                          <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "—"}</p>
+                          <p className="text-slate-400">{
+                            (c as any)._updatedAt
+                              ? new Date((c as any)._updatedAt < 1e12 ? (c as any)._updatedAt * 1000 : (c as any)._updatedAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
+                              : (c as any)._createdAt
+                              ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
+                              : "—"
+                          }</p>
+                          {(c as any)._updatedBy && (c as any)._updatedBy !== (c as any)._createdBy && (
+                            <p className="text-[10px] text-amber-500">✎ {(c as any)._updatedBy}</p>
+                          )}
                         </td>
                         <td className="px-5 py-2.5">
                           {isLate   && <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded-full text-[10px] font-medium">Retard</span>}

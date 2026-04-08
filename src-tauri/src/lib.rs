@@ -1,25 +1,58 @@
 mod sheets;
 
 use sheets::{SheetRow, append_row, read_sheet, update_row_by_contract, delete_row_by_contract};
+use std::io::Write;
 
 #[tauri::command]
 async fn send_sms(phone: String, message: String, gateway_url: Option<String>) -> Result<String, String> {
     let url = gateway_url.unwrap_or_else(|| "http://192.168.100.35:8080/send-sms".to_string());
-    println!("[SMS] Sending to {} via {}", phone, url);
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|e| e.to_string())?;
     let body = serde_json::json!({ "phone": phone, "message": message });
-    let res = client
-        .post(&url)
-        .json(&body)
-        .send()
-        .await
-        .map_err(|e| { println!("[SMS] Error: {}", e); e.to_string() })?;
+    let res = client.post(&url).json(&body).send().await
+        .map_err(|e| e.to_string())?;
     let text = res.text().await.map_err(|e| e.to_string())?;
-    println!("[SMS] Response: {}", text);
     Ok(text)
+}
+
+#[tauri::command]
+async fn save_and_open_pdf(base64_data: String, filename: String) -> Result<(), String> {
+    use base64::{Engine as _, engine::general_purpose};
+    
+    // Decode base64
+    let pdf_bytes = general_purpose::STANDARD
+        .decode(&base64_data)
+        .map_err(|e| e.to_string())?;
+    
+    // Save to temp directory
+    let temp_dir = std::env::temp_dir();
+    let path = temp_dir.join(&filename);
+    
+    let mut file = std::fs::File::create(&path).map_err(|e| e.to_string())?;
+    file.write_all(&pdf_bytes).map_err(|e| e.to_string())?;
+    
+    // Open with system default PDF viewer
+    #[cfg(target_os = "windows")]
+    std::process::Command::new("cmd")
+        .args(["/C", "start", "", path.to_str().unwrap()])
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    
+    #[cfg(target_os = "macos")]
+    std::process::Command::new("open")
+        .arg(path.to_str().unwrap())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    
+    #[cfg(target_os = "linux")]
+    std::process::Command::new("xdg-open")
+        .arg(path.to_str().unwrap())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    
+    Ok(())
 }
 
 #[tauri::command]
@@ -65,6 +98,7 @@ pub fn run() {
             sheets_update,
             sheets_delete,
             send_sms,
+            save_and_open_pdf,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

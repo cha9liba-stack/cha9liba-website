@@ -58,21 +58,9 @@ interface OverrideEntry {
 type OverrideHistory = Record<string, OverrideEntry[]>;
 
 function loadOverrideHistory(): OverrideHistory {
-  try {
-    const raw = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}");
-    const migrated: OverrideHistory = {};
-    for (const [key, val] of Object.entries(raw)) {
-      if (typeof val === "string") {
-        migrated[key] = [{ state: val as CarOverride, from: "2020-01-01", to: null }];
-      } else if (Array.isArray(val)) {
-        migrated[key] = val as OverrideEntry[];
-      } else if (val && typeof val === "object") {
-        // Old single-object format: {state, from, to?}
-        migrated[key] = [val as OverrideEntry];
-      }
-    }
-    return migrated;
-  } catch { return {}; }
+  // Don't load from localStorage — always wait for Firebase sync
+  // This prevents stale overrides from blocking active contracts
+  return {};
 }
 function saveOverrideHistory(d: OverrideHistory) {
   localStorage.setItem(OVERRIDES_KEY, JSON.stringify(d));
@@ -264,10 +252,10 @@ export default function Fleet() {
           } else if (Array.isArray(val)) {
             migrated[key] = val as OverrideEntry[];
           } else if (val && typeof val === "object") {
-            // Old single-object format
             migrated[key] = [val as OverrideEntry];
           }
         }
+        // Firebase always wins — overwrite localStorage
         localStorage.setItem(OVERRIDES_KEY, JSON.stringify(migrated));
         setOverrideHistory(migrated);
       });
@@ -401,19 +389,36 @@ export default function Fleet() {
       const contract = rentedCars.find(c => norm(c.registration || "") === key) || null;
       const lastC = lastContractsOnDate[key] || null;
 
-      // User override has ABSOLUTE priority — only cleared by new contract or Réinitialiser
+      // User override — contract wins ONLY if override was set BEFORE contract started
       const override = overrides[key];
-      if (override === "available")   return { ...car, state: "available"   as CarState, contract: contract || lastC };
-      if (override === "maintenance") return { ...car, state: "maintenance" as CarState, contract: contract || lastC };
-      if (override)                   return { ...car, state: "custom"      as CarState, contract: contract || lastC, customStateId: override };
 
-      // No override — calculate from contract
       if (contract) {
+        // If override was set AFTER contract departure → user manually returned car early → override wins
+        const overrideEntry = [...(overrideHistory[key] || [])].reverse()
+          .find(e => e.from <= date && (e.to === null || e.to === undefined || e.to >= date));
+        const overrideSetAfterDeparture = overrideEntry && overrideEntry.from >= contract.departureDate;
+
+        if (override === "available" && overrideSetAfterDeparture) {
+          return { ...car, state: "available" as CarState, contract };
+        }
+        if (override === "maintenance" && overrideSetAfterDeparture) {
+          return { ...car, state: "maintenance" as CarState, contract };
+        }
+        if (override && overrideSetAfterDeparture) {
+          return { ...car, state: "custom" as CarState, contract, customStateId: override };
+        }
+
+        // Override was set before contract → contract wins
         const returnDateTime = contract.returnDate + (contract.returnTime ? " " + contract.returnTime : " 23:59");
         const nowDateTime = date + " " + String(new Date().getHours()).padStart(2,"0") + ":" + String(new Date().getMinutes()).padStart(2,"0");
         const isLate = returnDateTime < nowDateTime || contract.returnDate < date;
         return { ...car, state: (isLate ? "late" : "rented") as CarState, contract };
       }
+
+      // No active contract — apply override
+      if (override === "available")   return { ...car, state: "available"   as CarState, contract: lastC };
+      if (override === "maintenance") return { ...car, state: "maintenance" as CarState, contract: lastC };
+      if (override)                   return { ...car, state: "custom"      as CarState, contract: lastC, customStateId: override };
 
       // Maintenance from maint list
       if (maintRegs.has(key)) return { ...car, state: "maintenance" as CarState, contract: lastC };
@@ -783,7 +788,12 @@ export default function Fleet() {
                             { state: "available"   as const, label: "✓ Rendue / Dispo", cls: "text-green-700 hover:bg-green-50" },
                             { state: "maintenance" as const, label: "🔧 En panne",       cls: "text-purple-700 hover:bg-purple-50" },
                           ].map(opt => (
-                            <button key={opt.state} onClick={() => setCarOverride(car.registration, opt.state)}
+                            <button key={opt.state} onClick={() => {
+                              if (opt.state === "available" && car.contract && car.state === "rented") {
+                                if (!confirm("La voiture a-t-elle été rendue avant la date prévue ?")) return;
+                              }
+                              setCarOverride(car.registration, opt.state);
+                            }}
                               className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${opt.cls}`}>
                               {opt.label}
                             </button>

@@ -64,10 +64,21 @@ export function mapFirebaseToContract(id: string, raw: Record<string, any>): Con
     // Other
     city: str(raw["مدينة الخروج"] ?? raw["Ville"]),
     date: str(raw["التاريخ"] ?? raw["Date"]),
-    // Metadata
-    _createdAt: raw["_created_at"] ?? raw["_createdAt"],
-    _updatedAt: raw["_updated_at"] ?? raw["_updatedAt"],
+    // Metadata — normalize timestamp: old Python app saves in seconds, new app in milliseconds
+    _createdAt: (() => {
+      const ts = raw["_created_at"] ?? raw["_createdAt"];
+      if (!ts) return undefined;
+      // If timestamp < 1e12 it's in seconds → convert to ms
+      return ts < 1e12 ? Math.round(ts * 1000) : ts;
+    })(),
+    _updatedAt: (() => {
+      const ts = raw["_updated_at"] ?? raw["_updatedAt"];
+      if (!ts) return undefined;
+      return ts < 1e12 ? Math.round(ts * 1000) : ts;
+    })(),
     _deleted:   raw["_deleted"] ?? false,
+    _createdBy: raw["_createdBy"] ?? raw["created_by"],
+    _updatedBy: raw["_updatedBy"] ?? raw["updated_by"],
   };
 }
 

@@ -48,13 +48,24 @@ export function useFleetStats() {
 
     for (const car of fleetCars) {
       const key = norm(car.registration);
-      const override = overrides[key];
-      if (override === "available")   { available++;   continue; }
-      if (override === "maintenance") { maintenance++; continue; }
-      if (override) continue;
-
       const contract = activeMap.get(key);
       if (contract) {
+        // Check if override was set AFTER contract departure (early return)
+        let overrideAfterDep = false;
+        try {
+          const raw = JSON.parse(localStorage.getItem("palma_state_overrides") || "{}");
+          const entries = Array.isArray(raw[key]) ? raw[key] : raw[key] ? [raw[key]] : [];
+          const activeEntry = [...entries].reverse().find((e: any) => e.from <= t && (e.to === null || e.to === undefined || e.to >= t));
+          if (activeEntry && activeEntry.from >= contract.departureDate) overrideAfterDep = true;
+        } catch {}
+
+        const ov = overrides[key];
+        if (overrideAfterDep && (ov === "available" || ov === "maintenance" || ov)) {
+          if (ov === "available") available++;
+          else if (ov === "maintenance") maintenance++;
+          continue;
+        }
+
         const retDT = contract.returnDate + " " + (contract.returnTime || "23:59");
         if (retDT < nowDT || contract.returnDate < t) {
           late++;
@@ -64,6 +75,12 @@ export function useFleetStats() {
         }
         continue;
       }
+
+      // No active contract — apply override
+      const override = overrides[key];
+      if (override === "available")   { available++;   continue; }
+      if (override === "maintenance") { maintenance++; continue; }
+      if (override) continue;
       available++;
     }
 

@@ -171,8 +171,8 @@ export default function ContractModal({ contract, onClose }: Props) {
       if (contract?.id) {
         // Keep original branchId — don't change it on edit
         const originalBranchId = (contract as any).branchId;
-        await updateContract(contract.id, { ...data, branchId: originalBranchId } as Partial<Contract>);
-        upsertContract({ ...data, id: contract.id, branchId: originalBranchId } as Contract);
+        await updateContract(contract.id, { ...data, branchId: originalBranchId, _updatedBy: user?.username || "unknown", _updatedAt: Date.now() } as Partial<Contract>);
+        upsertContract({ ...data, id: contract.id, branchId: originalBranchId, _updatedBy: user?.username || "unknown", _updatedAt: Date.now() } as Contract);
         syncDebt(contract.id);
         await logAction(user, "update_contract", contract.id);
       } else {

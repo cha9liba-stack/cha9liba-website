@@ -308,8 +308,17 @@ export default function Contracts() {
                     <td className="px-5 py-3 text-slate-500">{c.returnDate}</td>
                     <td className="px-5 py-3 font-medium text-green-600">{c.totalFacture || "—"} TND</td>
                     <td className="px-5 py-3 text-xs">
-                      <p className="font-medium text-slate-700">{(c as any)._createdBy || "—"}</p>
-                      <p className="text-slate-400">{(c as any)._createdAt ? new Date((c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : "—"}</p>
+                      <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "—"}</p>
+                      <p className="text-slate-400">{
+                        (c as any)._updatedAt
+                          ? new Date((c as any)._updatedAt < 1e12 ? (c as any)._updatedAt * 1000 : (c as any)._updatedAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
+                          : (c as any)._createdAt
+                          ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
+                          : "—"
+                      }</p>
+                      {(c as any)._updatedBy && (c as any)._updatedBy !== (c as any)._createdBy && (
+                        <p className="text-[10px] text-amber-500">✎ {(c as any)._updatedBy}</p>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-xs">
                       {(() => {

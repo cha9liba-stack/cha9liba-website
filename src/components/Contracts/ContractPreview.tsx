@@ -250,6 +250,46 @@ interface Props {
   onClose: () => void;
 }
 
+// Helper: open print window — works in browser and Tauri
+async function openPrintWindow(title: string, bodyContent: string) {
+  const html = `<!DOCTYPE html><html><head>
+    <title>${title}</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; background: white; }
+      img { width: 100%; display: block; }
+      @media print {
+        @page { margin: 0; size: A4 portrait; }
+        html, body { width: 210mm; height: 297mm; }
+      }
+    </style></head>
+    <body>${bodyContent}</body></html>`;
+
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+    return;
+  }
+  // Tauri fallback: use blob URL with opener
+  try {
+    const blob = new Blob([html], { type: "text/html" });
+    const blobUrl = URL.createObjectURL(blob);
+    const { openUrl } = await import("@tauri-apps/plugin-opener");
+    await openUrl(blobUrl);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+  } catch {
+    // Last resort: download as blob
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }
+}
+
 export default function ContractPreview({ contract, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
@@ -466,7 +506,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
   }
 
   // ─── Print data only (no background, no contract number — for pre-printed forms) ──
-  function handlePrintDataOnly() {
+  async function handlePrintDataOnly() {
     const canvas = document.createElement("canvas");
     canvas.width  = ORIG_W;
     canvas.height = ORIG_H;
@@ -513,126 +553,98 @@ export default function ContractPreview({ contract, onClose }: Props) {
     }
 
     const dataUrl = canvas.toDataURL("image/png");
-    const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(`<!DOCTYPE html><html><head>
-      <title>عقد — بيانات فقط</title>
-      <style>
-        * { margin: 0; padding: 0; }
-        html, body { margin: 0; background: white; }
-        img { width: 100%; display: block; }
-        @media print {
-          @page { margin: 0; size: A4 portrait; }
-          html, body { width: 210mm; height: 297mm; }
-        }
-      </style></head>
-      <body><img src="${dataUrl}" onload="window.print();window.close()"/></body></html>`);
-    win.document.close();
+    await openPrintWindow(`عقد — بيانات فقط`, `<img src="${dataUrl}" onload="window.print();window.close()"/>`);
   }
 
   // ─── Print with background ────────────────────────────────────────────────
-  function handlePrint() {
+  async function handlePrint() {
     const template = getTemplate(contract);
+    const { jsPDF } = await import("jspdf");
 
     Promise.all([
       loadImage(template).catch(() => null),
       loadImage("/contrat_bg.png").catch(() => null),
-    ]).then(([tmpl, bg]) => {
-      // Merge both pages into one tall canvas
-      const totalH = bg ? ORIG_H * 2 : ORIG_H;
-      const merged = document.createElement("canvas");
-      merged.width  = ORIG_W;
-      merged.height = totalH;
-      const ctx = merged.getContext("2d")!;
+    ]).then(async ([tmpl, bg]) => {
+      // ── Page 1 canvas ──
+      const p1 = document.createElement("canvas");
+      p1.width = ORIG_W; p1.height = ORIG_H;
+      const ctx1 = p1.getContext("2d")!;
+      ctx1.fillStyle = "#ffffff";
+      ctx1.fillRect(0, 0, ORIG_W, ORIG_H);
+      if (tmpl) ctx1.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
 
-      // Page 1: template with data
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, ORIG_W, ORIG_H);
-      if (tmpl) ctx.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
-      else { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, ORIG_W, ORIG_H); }
-
-      ctx.textAlign = "right";
-      ctx.direction = "rtl";
+      ctx1.textAlign = "right";
+      ctx1.direction = "rtl";
       for (const [field, [x, y]] of Object.entries(positions)) {
         const val = data[field];
         if (!val) continue;
         const isContractNum = field === "رقم العقد";
-        ctx.font = `${settings.fontWeight} ${isContractNum ? settings.contractNumFontSize : settings.fontSize}px 'Tahoma','Arial',sans-serif`;
-        ctx.fillStyle = isContractNum ? settings.contractNumColor : settings.textColor;
+        ctx1.font = `${settings.fontWeight} ${isContractNum ? settings.contractNumFontSize : settings.fontSize}px 'Tahoma','Arial',sans-serif`;
+        ctx1.fillStyle = isContractNum ? settings.contractNumColor : settings.textColor;
         if (val === "X") {
-          ctx.textAlign = "center";
-          ctx.fillText("X", x, y);
-          ctx.textAlign = "right";
+          ctx1.textAlign = "center";
+          ctx1.fillText("X", x, y);
+          ctx1.textAlign = "right";
         } else {
-          ctx.fillText(val, x, y);
+          ctx1.fillText(val, x, y);
         }
       }
-
-      // Draw diagonal text if no second driver
       if (!contract.hasDriver2) {
-        ctx.save();
+        ctx1.save();
         const x1=1150, y1=2100, x2=150, y2=2760;
         const cx=(x1+x2)/2, cy=(y1+y2)/2;
         const angle=Math.atan2(y2-y1,x2-x1)+Math.PI;
-        ctx.translate(cx,cy); ctx.rotate(angle);
-        ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
-        ctx.fillStyle="rgba(0,0,0,0.7)";
-        ctx.textAlign="center"; ctx.direction="rtl";
-        ctx.fillText("\u0644\u0627 \u0634\u064a\u0621",0,0);
-        ctx.restore();
+        ctx1.translate(cx,cy); ctx1.rotate(angle);
+        ctx1.font=`bold 220px 'Tahoma','Arial',sans-serif`;
+        ctx1.fillStyle="rgba(0,0,0,0.7)";
+        ctx1.textAlign="center"; ctx1.direction="rtl";
+        ctx1.fillText("\u0644\u0627 \u0634\u064a\u0621",0,0);
+        ctx1.restore();
       }
 
-      // Page 2: background below page 1
+      // ── Page 2 canvas ──
+      let p2DataUrl = "";
       if (bg) {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, ORIG_H, ORIG_W, ORIG_H);
-        ctx.drawImage(bg, 0, ORIG_H + BG_OFFSET_Y, ORIG_W, ORIG_H);
+        const p2 = document.createElement("canvas");
+        p2.width = ORIG_W; p2.height = ORIG_H;
+        const ctx2 = p2.getContext("2d")!;
+        ctx2.fillStyle = "#ffffff";
+        ctx2.fillRect(0, 0, ORIG_W, ORIG_H);
+        ctx2.drawImage(bg, 0, BG_OFFSET_Y, ORIG_W, ORIG_H);
+        p2DataUrl = p2.toDataURL("image/jpeg", 0.92);
       }
 
-      const win = window.open("", "_blank");
-      if (!win) return;
-
-      // Split back into 2 separate pages for clean printing
-      const p1Canvas = document.createElement("canvas");
-      p1Canvas.width = ORIG_W; p1Canvas.height = ORIG_H;
-      p1Canvas.getContext("2d")!.drawImage(merged, 0, 0, ORIG_W, ORIG_H, 0, 0, ORIG_W, ORIG_H);
-      const p1Url = p1Canvas.toDataURL("image/jpeg", 0.95);
-
-      let p2Url = "";
-      if (bg) {
-        const p2Canvas = document.createElement("canvas");
-        p2Canvas.width = ORIG_W; p2Canvas.height = ORIG_H;
-        p2Canvas.getContext("2d")!.drawImage(merged, 0, ORIG_H, ORIG_W, ORIG_H, 0, 0, ORIG_W, ORIG_H);
-        p2Url = p2Canvas.toDataURL("image/jpeg", 0.95);
+      // ── Build PDF ──
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const W = 210, H = 297;
+      pdf.addImage(p1.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, W, H);
+      if (p2DataUrl) {
+        pdf.addPage();
+        pdf.addImage(p2DataUrl, "JPEG", 0, 0, W, H);
       }
 
-      win.document.write(`<!DOCTYPE html><html><head>
-        <title>عقد ${contract.contractNumber}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          html, body { width: 100%; background: #fff; }
-          .page {
-            width: 210mm;
-            height: 297mm;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .page img { width: 100%; height: 100%; object-fit: fill; display: block; }
-          @media print {
-            @page { margin: 0; size: A4 portrait; }
-            .page { page-break-after: always; page-break-inside: avoid; }
-            .page:last-child { page-break-after: avoid; }
-          }
-        </style>
-      </head><body>
-        <div class="page"><img src="${p1Url}"/></div>
-        ${p2Url ? `<div class="page"><img src="${p2Url}"/></div>` : ""}
-      </body></html>`);
-      win.document.close();
-      setTimeout(() => { win.focus(); win.print(); }, 1000);
+      const pdfBlob = pdf.output("blob");
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      // Try Tauri invoke first (desktop app)
+      try {
+        const { invoke } = await import("@tauri-apps/api/core");
+        const base64 = pdf.output("datauristring").split(",")[1];
+        await invoke("save_and_open_pdf", {
+          base64Data: base64,
+          filename: `contrat_${contract.contractNumber}.pdf`
+        });
+        return;
+      } catch {
+        // Not in Tauri — try browser
+      }
+
+      // Browser fallback
+      const win = window.open(pdfUrl, "_blank");
+      if (!win) {
+        pdf.save(`contrat_${contract.contractNumber}.pdf`);
+      }
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 30000);
     }).catch(() => {});
   }
 

@@ -77,6 +77,7 @@ export async function fbInsertContract(contract: Omit<Contract, "id">): Promise<
     ...mapContractToFirebase(contract),
     _created_at: now,
     _updated_at: now,
+    _createdBy: (contract as any)._createdBy || undefined,
     _deleted: false,
   };
   return restPost(CONTRACTS_PATH, payload);
@@ -86,6 +87,7 @@ export async function fbUpdateContract(id: string, data: Partial<Contract>): Pro
   await restPatch(`${CONTRACTS_PATH}/${id}`, {
     ...mapContractToFirebase(data),
     _updated_at: Date.now(),
+    _updatedBy: (data as any)._updatedBy || undefined,
     _deleted: false,
   });
 }
