@@ -25,35 +25,27 @@ async fn get_gps_odometer(registration: String, username: String, password: Stri
         .build()
         .map_err(|e| e.to_string())?;
 
-    // Login
     client.post("https://www.winigps.tn/func/fn_connect.php")
         .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(format!("cmd=login&login={}&password={}", 
-            urlencoding::encode(&username), 
+        .body(format!("cmd=login&login={}&password={}",
+            urlencoding::encode(&username),
             urlencoding::encode(&password)))
         .send().await.map_err(|e| e.to_string())?;
 
-    // Fetch objects
     let res = client.post("https://www.winigps.tn/func/fn_settings.objects.php")
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body("cmd=load_object_data")
         .send().await.map_err(|e| e.to_string())?;
 
     let data: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
-
-    // Normalize registration for comparison
     let norm_target = registration.replace(" ", "").to_uppercase();
 
     if let Some(obj) = data.as_object() {
         for (_, arr) in obj {
             if let Some(arr) = arr.as_array() {
-                // arr[4] = name like "245tu7468 kia stonic gris"
                 if let Some(name) = arr.get(4).and_then(|v| v.as_str()) {
-                    // Extract registration from name
-                    let name_lower = name.to_lowercase();
-                    if let Some(caps) = regex_extract_reg(&name_lower) {
-                        if caps == norm_target {
-                            // arr[16] = odometer
+                    if let Some(reg) = extract_reg(name) {
+                        if reg == norm_target {
                             if let Some(odo) = arr.get(16).and_then(|v| v.as_u64()) {
                                 return Ok(Some(odo));
                             }
@@ -66,21 +58,23 @@ async fn get_gps_odometer(registration: String, username: String, password: Stri
     Ok(None)
 }
 
-fn regex_extract_reg(name: &str) -> Option<String> {
+fn extract_reg(name: &str) -> Option<String> {
+    let name_lower = name.to_lowercase();
+    let chars: Vec<char> = name_lower.chars().collect();
     let mut digits1 = String::new();
     let mut digits2 = String::new();
     let mut found_tu = false;
-    let chars: Vec<char> = name.chars().collect();
     let mut i = 0;
     while i < chars.len() {
         if !found_tu {
             if chars[i].is_ascii_digit() {
                 digits1.push(chars[i]);
             } else if i + 1 < chars.len() && chars[i] == 't' && chars[i+1] == 'u' {
-                found_tu = true;
-                i += 1;
-            } else if !digits1.is_empty() && chars[i] == ' ' {
-                // skip spaces
+                if !digits1.is_empty() { found_tu = true; i += 1; }
+            } else if chars[i] == ' ' && !digits1.is_empty() {
+                // skip
+            } else if !digits1.is_empty() {
+                digits1.clear();
             }
         } else {
             if chars[i].is_ascii_digit() {
@@ -97,30 +91,31 @@ fn regex_extract_reg(name: &str) -> Option<String> {
         None
     }
 }
+
+#[tauri::command]
+async fn open_gps_window(app: tauri::AppHandle) -> Result<(), String> {
     use tauri::{Manager, WebviewWindowBuilder, WebviewUrl};
-    
+
     if let Some(win) = app.get_webview_window("gps") {
         win.show().map_err(|e: tauri::Error| e.to_string())?;
         win.set_focus().map_err(|e: tauri::Error| e.to_string())?;
         return Ok(());
     }
 
-    // Fetch credentials from Firebase
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .build()
         .map_err(|e| e.to_string())?;
-    
+
     let creds_url = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/app_settings/gps_credentials.json";
     let creds: serde_json::Value = client.get(creds_url).send().await
         .map_err(|e| e.to_string())?
         .json().await
         .unwrap_or(serde_json::json!({}));
-    
+
     let username = creds["username"].as_str().unwrap_or("").to_string();
     let password = creds["password"].as_str().unwrap_or("").to_string();
 
-    // Auto-login JS injected after page load
     let autologin_js = format!(r#"
         (function tryLogin() {{
             var u = document.querySelector('input[type="text"], input[name*="user"], input[name*="login"], input[id*="user"]');
@@ -145,7 +140,7 @@ fn regex_extract_reg(name: &str) -> Option<String> {
         .initialization_script(&autologin_js)
         .build()
         .map_err(|e| e.to_string())?;
-    
+
     let _ = win;
     Ok(())
 }
@@ -153,38 +148,35 @@ fn regex_extract_reg(name: &str) -> Option<String> {
 #[tauri::command]
 async fn save_and_open_pdf(base64_data: String, filename: String) -> Result<(), String> {
     use base64::{Engine as _, engine::general_purpose};
-    
-    // Decode base64
+
     let pdf_bytes = general_purpose::STANDARD
         .decode(&base64_data)
         .map_err(|e| e.to_string())?;
-    
-    // Save to temp directory
+
     let temp_dir = std::env::temp_dir();
     let path = temp_dir.join(&filename);
-    
+
     let mut file = std::fs::File::create(&path).map_err(|e| e.to_string())?;
     file.write_all(&pdf_bytes).map_err(|e| e.to_string())?;
-    
-    // Open with system default PDF viewer
+
     #[cfg(target_os = "windows")]
     std::process::Command::new("cmd")
         .args(["/C", "start", "", path.to_str().unwrap()])
         .spawn()
         .map_err(|e| e.to_string())?;
-    
+
     #[cfg(target_os = "macos")]
     std::process::Command::new("open")
         .arg(path.to_str().unwrap())
         .spawn()
         .map_err(|e| e.to_string())?;
-    
+
     #[cfg(target_os = "linux")]
     std::process::Command::new("xdg-open")
         .arg(path.to_str().unwrap())
         .spawn()
         .map_err(|e| e.to_string())?;
-    
+
     Ok(())
 }
 
@@ -194,29 +186,17 @@ async fn sheets_read(client_email: String, private_key: String) -> Result<Vec<Sh
 }
 
 #[tauri::command]
-async fn sheets_append(
-    client_email: String,
-    private_key: String,
-    row: SheetRow,
-) -> Result<(), String> {
+async fn sheets_append(client_email: String, private_key: String, row: SheetRow) -> Result<(), String> {
     append_row(&client_email, &private_key, &row).await
 }
 
 #[tauri::command]
-async fn sheets_update(
-    client_email: String,
-    private_key: String,
-    row: SheetRow,
-) -> Result<(), String> {
+async fn sheets_update(client_email: String, private_key: String, row: SheetRow) -> Result<(), String> {
     update_row_by_contract(&client_email, &private_key, &row).await
 }
 
 #[tauri::command]
-async fn sheets_delete(
-    client_email: String,
-    private_key: String,
-    contract_number: String,
-) -> Result<(), String> {
+async fn sheets_delete(client_email: String, private_key: String, contract_number: String) -> Result<(), String> {
     delete_row_by_contract(&client_email, &private_key, &contract_number).await
 }
 
