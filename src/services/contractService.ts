@@ -78,6 +78,8 @@ export async function fbInsertContract(contract: Omit<Contract, "id">): Promise<
     _created_at: now,
     _updated_at: now,
     _createdBy: (contract as any)._createdBy || undefined,
+    branchId: (contract as any).branchId || undefined,
+    ownerId: (contract as any).ownerId || undefined,
     _deleted: false,
   };
   return restPost(CONTRACTS_PATH, payload);

@@ -227,14 +227,14 @@ export default function Dashboard() {
         const d = new Date(c.departureDate || "");
         return d.getMonth() === thisMonth && d.getFullYear() === thisYear && !c._deleted;
       })
-      .reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0);
+      .reduce((s, c) => s + parseFloat(c.depot || "0"), 0);
 
     const yearRevenue = branchContracts
       .filter(c => {
         const d = new Date(c.departureDate || "");
         return d.getFullYear() === thisYear && !c._deleted;
       })
-      .reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0);
+      .reduce((s, c) => s + parseFloat(c.depot || "0"), 0);
 
     const monthly: { label: string; revenue: number; count: number }[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -245,7 +245,7 @@ export default function Dashboard() {
         const cd = new Date(c.departureDate || "");
         return cd.getMonth() === m && cd.getFullYear() === y && !c._deleted;
       });
-      monthly.push({ label, revenue: cc.reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0), count: cc.length });
+      monthly.push({ label, revenue: cc.reduce((s, c) => s + parseFloat(c.depot || "0"), 0), count: cc.length });
     }
 
     const profiles: Record<string, any> = (() => {

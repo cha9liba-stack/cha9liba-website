@@ -79,6 +79,8 @@ export function mapFirebaseToContract(id: string, raw: Record<string, any>): Con
     _deleted:   raw["_deleted"] ?? false,
     _createdBy: raw["_createdBy"] ?? raw["created_by"],
     _updatedBy: raw["_updatedBy"] ?? raw["updated_by"],
+    branchId:   raw["branchId"],
+    ownerId:    raw["ownerId"],
   };
 }
 
@@ -144,6 +146,12 @@ export function mapContractToFirebase(contract: Partial<Contract>): Record<strin
 
   if (contract.city !== undefined) out["مدينة الخروج"] = contract.city;
   if (contract.date !== undefined) out["التاريخ"] = contract.date;
+
+  // Metadata fields — pass through directly
+  if ((contract as any).branchId !== undefined)   out["branchId"]   = (contract as any).branchId;
+  if ((contract as any)._createdBy !== undefined) out["_createdBy"] = (contract as any)._createdBy;
+  if ((contract as any)._updatedBy !== undefined) out["_updatedBy"] = (contract as any)._updatedBy;
+  if ((contract as any).ownerId !== undefined)    out["ownerId"]    = (contract as any).ownerId;
 
   return out;
 }

@@ -72,7 +72,7 @@ export default function Statistics() {
       const label = d.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" });
       let cc = contracts.filter(c => !c._deleted && !isSTContract(c) && c.departureDate?.startsWith(key));
       if (effectiveBranch !== "all") cc = cc.filter(c => (c as any).branchId === effectiveBranch);
-      months.push({ key, label, revenue: cc.reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0), count: cc.length });
+      months.push({ key, label, revenue: cc.reduce((s, c) => s + parseFloat(c.depot || "0"), 0), count: cc.length });
     }
     return months;
   }, [contracts, effectiveBranch]);
@@ -83,7 +83,7 @@ export default function Statistics() {
     for (const c of filtered) {
       const key = c.registration || "?";
       if (!map[key]) map[key] = { reg: key, brand: c.brand, model: c.model, revenue: 0, count: 0, days: 0 };
-      map[key].revenue += parseFloat(c.totalFacture || "0");
+      map[key].revenue += parseFloat(c.depot || "0");
       map[key].count++;
       if (c.departureDate && c.returnDate) {
         map[key].days += Math.max(1, Math.ceil((new Date(c.returnDate).getTime() - new Date(c.departureDate).getTime()) / 86400000));
@@ -92,7 +92,7 @@ export default function Statistics() {
     return Object.values(map).sort((a, b) => b.revenue - a.revenue);
   }, [filtered]);
 
-  const totalRevenue = filtered.reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0);
+  const totalRevenue = filtered.reduce((s, c) => s + parseFloat(c.depot || "0"), 0);
   const totalContracts = filtered.length;
   const avgPerContract = totalContracts > 0 ? totalRevenue / totalContracts : 0;
   const maxMonthly = Math.max(...monthly.map(m => m.revenue), 1);
