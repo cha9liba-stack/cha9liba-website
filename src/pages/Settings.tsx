@@ -30,6 +30,7 @@ interface AppUser {
   password: string;
   role: "admin" | "user" | "sous-traitant";
   permissions: string[];
+  branchId?: string;
 }
 
 export default function Settings() {
@@ -48,9 +49,15 @@ export default function Settings() {
   const [newUser, setNewUser] = useState({ username: "", password: "", role: "user" as "admin" | "user" | "sous-traitant" });
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [userMsg, setUserMsg] = useState("");
+  const [branches, setBranches] = useState<{id: string; name: string}[]>([]);
 
   useEffect(() => {
-    if (user?.role === "admin") loadUsers();
+    if (user?.role === "admin") {
+      loadUsers();
+      fetch(`${DB_URL}/branches.json`).then(r => r.json()).then(data => {
+        if (data) setBranches(Object.entries(data).map(([id, v]: any) => ({ id, name: v.name })));
+      }).catch(() => {});
+    }
   }, [user]);
 
   async function loadUsers() {
@@ -66,12 +73,18 @@ export default function Settings() {
   async function addUser() {
     if (!newUser.username.trim() || !newUser.password.trim()) return;
     try {
-      await fbPost("users", { username: newUser.username, password: newUser.password, role: newUser.role, permissions: [] });
+      await fbPost("users", { username: newUser.username, password: newUser.password, role: newUser.role, permissions: [], branchId: (newUser as any).branchId || null });
       setNewUser({ username: "", password: "", role: "user" });
       setShowAddUser(false);
       setUserMsg("✓ Utilisateur ajouté");
       loadUsers();
     } catch { setUserMsg("Erreur"); }
+  }
+
+  async function assignBranch(userId: string, branchId: string | null) {
+    await fbPut(`users/${userId}/branchId`, branchId);
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, branchId: branchId || undefined } : u));
+    setUserMsg("✓ Agence assignée");
   }
 
   async function deleteUser(id: string) {
@@ -254,12 +267,34 @@ export default function Settings() {
             ? <p className="text-xs text-slate-400 text-center py-4">Chargement...</p>
             : <div className="space-y-2">
               {users.map(u => (
-                <UserRow key={u.id} u={u} currentUserId={user.firebaseId}
-                  showPass={showPasswords[u.id]}
-                  onTogglePass={() => setShowPasswords(p => ({ ...p, [u.id]: !p[u.id] }))}
-                  onDelete={() => deleteUser(u.id)}
-                  onResetPass={(pwd) => resetUserPassword(u.id, pwd)}
-                  isRTL={isRTL} />
+                <div key={u.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl flex-wrap">
+                  <div className="flex items-center gap-2 flex-1 min-w-[150px]">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <User size={14} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{u.username}</p>
+                      <p className="text-xs text-slate-400 capitalize">{u.role}</p>
+                    </div>
+                  </div>
+                  {/* Branch assignment */}
+                  {u.role !== "admin" && (
+                    <select
+                      value={u.branchId || ""}
+                      onChange={e => assignBranch(u.id, e.target.value || null)}
+                      className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                    >
+                      <option value="">— Agence libre —</option>
+                      {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  )}
+                  <UserRow u={u} currentUserId={user.firebaseId}
+                    showPass={showPasswords[u.id]}
+                    onTogglePass={() => setShowPasswords(p => ({ ...p, [u.id]: !p[u.id] }))}
+                    onDelete={() => deleteUser(u.id)}
+                    onResetPass={(pwd) => resetUserPassword(u.id, pwd)}
+                    isRTL={isRTL} />
+                </div>
               ))}
             </div>
           }

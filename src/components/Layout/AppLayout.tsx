@@ -20,7 +20,19 @@ export default function AppLayout() {
   const setSelectedBranch = useAuthStore(s => s.setSelectedBranch);
 
   // Show branch selector for non-admin users who haven't selected a branch yet
-  const needsBranchSelect = user && user.role !== "admin" && !selectedBranch;
+  // If user has a pre-assigned branch, use it automatically
+  useEffect(() => {
+    if (user && user.role !== "admin" && !selectedBranch && (user as any).branchId) {
+      // Auto-assign from user profile
+      fetch(`https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/branches/${(user as any).branchId}.json`)
+        .then(r => r.json())
+        .then(data => {
+          if (data) setSelectedBranch({ id: (user as any).branchId, name: data.name });
+        }).catch(() => {});
+    }
+  }, [user]);
+
+  const needsBranchSelect = user && user.role !== "admin" && !selectedBranch && !(user as any).branchId;
 
   // Compute fleet stats globally
   useFleetStats();
