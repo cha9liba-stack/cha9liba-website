@@ -136,9 +136,13 @@ export default function Statistics() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Revenus", value: `${totalRevenue.toFixed(0)} TND`, color: "bg-green-500", icon: DollarSign },
+          ...(isAdmin ? [
+            { label: "Revenus", value: `${totalRevenue.toFixed(0)} TND`, color: "bg-green-500", icon: DollarSign },
+          ] : []),
           { label: "Contrats", value: totalContracts, color: "bg-blue-500", icon: FileText },
-          { label: "Moy. / contrat", value: `${avgPerContract.toFixed(0)} TND`, color: "bg-amber-500", icon: TrendingUp },
+          ...(isAdmin ? [
+            { label: "Moy. / contrat", value: `${avgPerContract.toFixed(0)} TND`, color: "bg-amber-500", icon: TrendingUp },
+          ] : []),
           { label: "Actifs maintenant", value: activeNow, color: "bg-slate-800", icon: Car },
         ].map(({ label, value, color, icon: Icon }) => (
           <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
@@ -149,64 +153,68 @@ export default function Statistics() {
         ))}
       </div>
 
-      {/* Monthly chart — 12 months */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-        <h2 className="font-semibold text-slate-700 text-sm mb-4 flex items-center gap-2">
-          <TrendingUp size={15} className="text-amber-500" /> Revenus — 12 derniers mois
-        </h2>
-        <div className="flex items-end gap-2 h-40">
-          {monthly.map(m => (
-            <div key={m.key} className="flex-1 flex flex-col items-center gap-1 group relative">
-              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] rounded-lg px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap pointer-events-none shadow-lg">
-                <p className="font-semibold">{m.label}</p>
-                <p className="text-amber-300">{m.revenue.toFixed(0)} TND</p>
-                <p className="text-slate-300">{m.count} contrats</p>
-              </div>
-              <div className="w-full rounded-t-lg bg-amber-400 hover:bg-amber-500 transition-colors"
-                style={{ height: `${Math.max(4, (m.revenue / maxMonthly) * 128)}px` }} />
-              <span className="text-[9px] text-slate-400">{m.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Per car stats */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-            <Car size={15} className="text-amber-500" /> Performance par véhicule
+      {/* Monthly chart — 12 months (admin only) */}
+      {isAdmin && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <h2 className="font-semibold text-slate-700 text-sm mb-4 flex items-center gap-2">
+            <TrendingUp size={15} className="text-amber-500" /> Revenus — 12 derniers mois
           </h2>
-        </div>
-        {carStats.length === 0
-          ? <p className="text-center text-slate-400 text-sm py-8">Aucune donnée</p>
-          : <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-slate-400 text-xs uppercase bg-slate-50 border-b border-slate-100">
-                  <th className="px-5 py-3 text-start">Véhicule</th>
-                  <th className="px-5 py-3 text-start">Série</th>
-                  <th className="px-5 py-3 text-end">Contrats</th>
-                  <th className="px-5 py-3 text-end">Jours loués</th>
-                  <th className="px-5 py-3 text-end">Revenus</th>
-                  <th className="px-5 py-3 text-end">Moy./jour</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {carStats.map(c => (
-                  <tr key={c.reg} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3 font-medium text-slate-800">{c.brand} {c.model}</td>
-                    <td className="px-5 py-3 font-mono text-slate-500 text-xs">{c.reg}</td>
-                    <td className="px-5 py-3 text-end text-slate-600">{c.count}</td>
-                    <td className="px-5 py-3 text-end text-slate-600">{c.days}</td>
-                    <td className="px-5 py-3 text-end font-bold text-green-600">{c.revenue.toFixed(3)}</td>
-                    <td className="px-5 py-3 text-end text-slate-500">{c.days > 0 ? (c.revenue / c.days).toFixed(1) : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex items-end gap-2 h-40">
+            {monthly.map(m => (
+              <div key={m.key} className="flex-1 flex flex-col items-center gap-1 group relative">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] rounded-lg px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap pointer-events-none shadow-lg">
+                  <p className="font-semibold">{m.label}</p>
+                  <p className="text-amber-300">{m.revenue.toFixed(0)} TND</p>
+                  <p className="text-slate-300">{m.count} contrats</p>
+                </div>
+                <div className="w-full rounded-t-lg bg-amber-400 hover:bg-amber-500 transition-colors"
+                  style={{ height: `${Math.max(4, (m.revenue / maxMonthly) * 128)}px` }} />
+                <span className="text-[9px] text-slate-400">{m.label}</span>
+              </div>
+            ))}
           </div>
-        }
-      </div>
+        </div>
+      )}
+
+      {/* Per car stats (admin only) */}
+      {isAdmin && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100">
+            <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
+              <Car size={15} className="text-amber-500" /> Performance par véhicule
+            </h2>
+          </div>
+          {carStats.length === 0
+            ? <p className="text-center text-slate-400 text-sm py-8">Aucune donnée</p>
+            : <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-slate-400 text-xs uppercase bg-slate-50 border-b border-slate-100">
+                    <th className="px-5 py-3 text-start">Véhicule</th>
+                    <th className="px-5 py-3 text-start">Série</th>
+                    <th className="px-5 py-3 text-end">Contrats</th>
+                    <th className="px-5 py-3 text-end">Jours loués</th>
+                    <th className="px-5 py-3 text-end">Revenus</th>
+                    <th className="px-5 py-3 text-end">Moy./jour</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {carStats.map(c => (
+                    <tr key={c.reg} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3 font-medium text-slate-800">{c.brand} {c.model}</td>
+                      <td className="px-5 py-3 font-mono text-slate-500 text-xs">{c.reg}</td>
+                      <td className="px-5 py-3 text-end text-slate-600">{c.count}</td>
+                      <td className="px-5 py-3 text-end text-slate-600">{c.days}</td>
+                      <td className="px-5 py-3 text-end font-bold text-green-600">{c.revenue.toFixed(3)}</td>
+                      <td className="px-5 py-3 text-end text-slate-500">{c.days > 0 ? (c.revenue / c.days).toFixed(1) : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      )}
     </div>
   );
 }
