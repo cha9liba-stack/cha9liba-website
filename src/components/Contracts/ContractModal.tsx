@@ -207,14 +207,25 @@ export default function ContractModal({ contract, onClose }: Props) {
     setError("");
     setSaving(true);
     try {
-      // Check if client has debt and show confirmation for new contracts
-      if (!contract && clientDebt && clientDebt.reste > 0) {
+      // Show confirmation for new contracts
+      if (!contract) {
         const confirmed = window.confirm(
-          `⚠️ Ce client a une dette de ${clientDebt.reste.toFixed(2)} TND.\n\nVoulez-vous vraiment continuer avec la création du contrat ?`
+          `⚠️ Voulez-vous vraiment créer ce contrat ?\n\nClient: ${data.driverName}\nVéhicule: ${data.brand} ${data.model} (${data.registration})`
         );
         if (!confirmed) {
           setSaving(false);
           return;
+        }
+
+        // Check if client has debt and show additional confirmation
+        if (clientDebt && clientDebt.reste > 0) {
+          const debtConfirmed = window.confirm(
+            `⚠️ Ce client a une dette de ${clientDebt.reste.toFixed(2)} TND.\n\nVoulez-vous quand même continuer avec la création du contrat ?`
+          );
+          if (!debtConfirmed) {
+            setSaving(false);
+            return;
+          }
         }
       }
 
