@@ -33,10 +33,12 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
     setFetchingKm(true);
     try {
       const km = await getOdometerForReg(reg);
+      console.log("GPS fetch result:", reg, km);
       if (km !== null) {
         setValue("departureKm", String(km), { shouldDirty: true });
       }
-    } catch {
+    } catch (error) {
+      console.error("GPS fetch error:", error);
       // Silent fail - GPS may not be available
     } finally {
       setFetchingKm(false);
