@@ -138,7 +138,7 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
             <div className="flex-1 h-9 bg-slate-200 rounded-lg animate-pulse" />
           ) : (
             <input
-              {...register("departureKm", { valueAsNumber: true })}
+              {...register("departureKm")}
               type="number"
               className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
               placeholder="0"
