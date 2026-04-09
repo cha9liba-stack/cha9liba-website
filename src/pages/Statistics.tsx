@@ -12,6 +12,9 @@ export default function Statistics() {
   const selectedBranch = useAuthStore(s => s.selectedBranch);
   const isAdmin = user?.role === "admin";
 
+  // Debug: log user role
+  console.log("Statistics - User:", user?.username, "Role:", user?.role, "isAdmin:", isAdmin);
+
   const [branches, setBranches] = useState<{id: string; name: string}[]>([]);
   const [branchFilter, setBranchFilter] = useState<string>("all");
   const [period, setPeriod] = useState<"month" | "year" | "all">("month");

@@ -173,7 +173,7 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
       setLoadingKm(true);
       getOdometerForReg(buildReg(l, r)).then(km => {
         setLoadingKm(false);
-        if (km && km > 0) {
+        if (km !== null && km !== undefined) {
           setValue("departureKm", String(km), { shouldDirty: true });
         }
       }).catch(() => setLoadingKm(false));
