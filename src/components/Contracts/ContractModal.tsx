@@ -205,7 +205,6 @@ export default function ContractModal({ contract, onClose }: Props) {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setError("");
-    setSaving(true);
     try {
       // Show confirmation for new contracts
       if (!contract) {
@@ -213,7 +212,6 @@ export default function ContractModal({ contract, onClose }: Props) {
           `⚠️ Voulez-vous vraiment créer ce contrat ?\n\nClient: ${data.driverName}\nVéhicule: ${data.brand} ${data.model} (${data.registration})`
         );
         if (!confirmed) {
-          setSaving(false);
           return;
         }
 
@@ -223,12 +221,12 @@ export default function ContractModal({ contract, onClose }: Props) {
             `⚠️ Ce client a une dette de ${clientDebt.reste.toFixed(2)} TND.\n\nVoulez-vous quand même continuer avec la création du contrat ?`
           );
           if (!debtConfirmed) {
-            setSaving(false);
             return;
           }
         }
       }
 
+      setSaving(true);
       const isDup = await isDuplicateContractNumber(data.contractNumber, contract?.id);
       if (isDup) { setError(t("duplicate_number")); setSaving(false); return; }
 
