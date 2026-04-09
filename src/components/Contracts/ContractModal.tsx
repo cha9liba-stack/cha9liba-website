@@ -204,9 +204,11 @@ export default function ContractModal({ contract, onClose }: Props) {
   }
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    setError("");
+    console.log("=== onSubmit called ===");
     console.log("onSubmit - contract:", contract);
     console.log("onSubmit - clientDebt:", clientDebt);
+    console.log("onSubmit - data:", data);
+    setError("");
     try {
       // Show confirmation for new contracts
       if (!contract) {
