@@ -77,12 +77,7 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
     }
   }, [ownerId, nj, userModifiedFacture]);
 
-  // Track manual modification of totalFacture
-  useEffect(() => {
-    if (totalFactureInput && !userModifiedFacture) {
-      setUserModifiedFacture(true);
-    }
-  }, [totalFactureInput]);
+
 
   const facture  = toNum(totalFactureInput);
   const avanceN  = toNum(avance);
@@ -105,6 +100,10 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
             {...register("totalFacture")}
             className="input text-end font-mono text-lg font-bold"
             placeholder="0.000"
+            onChange={(e) => {
+              setUserModifiedFacture(true);
+              register("totalFacture").onChange(e);
+            }}
           />
         </Field>
 

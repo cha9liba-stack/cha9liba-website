@@ -88,7 +88,7 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
 
   useEffect(() => {
     if (!isNew) return;
-    if (departureDate && !returnDate) {
+    if (departureDate) {
       setValue("returnDate", departureDate, { shouldDirty: false });
     }
   }, [departureDate, isNew]);
