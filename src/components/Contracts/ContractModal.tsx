@@ -65,7 +65,7 @@ const schema = z.object({
   tva: z.string().optional().default("0.000"),
   totalFacture: z.string().optional().default("0.000"),
   plusMoinsDivers: z.string().optional().default("0.000"),
-  depot: z.string().optional().default("0.000"),
+  depot: z.string().min(1),
   depotGarantie: z.string().optional().default("0.000"),
   prep: z.string().optional().default("0.000"),
   total: z.string().optional().default("0.000"),
