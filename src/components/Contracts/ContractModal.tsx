@@ -207,6 +207,17 @@ export default function ContractModal({ contract, onClose }: Props) {
     setError("");
     setSaving(true);
     try {
+      // Check if client has debt and show confirmation for new contracts
+      if (!contract && clientDebt && clientDebt.reste > 0) {
+        const confirmed = window.confirm(
+          `⚠️ Ce client a une dette de ${clientDebt.reste.toFixed(2)} TND.\n\nVoulez-vous vraiment continuer avec la création du contrat ?`
+        );
+        if (!confirmed) {
+          setSaving(false);
+          return;
+        }
+      }
+
       const isDup = await isDuplicateContractNumber(data.contractNumber, contract?.id);
       if (isDup) { setError(t("duplicate_number")); setSaving(false); return; }
 
@@ -379,11 +390,11 @@ export default function ContractModal({ contract, onClose }: Props) {
                   </div>
                 )}
                 {clientDebt && (
-                  <div className="flex items-center gap-2 bg-amber-100 border border-amber-300 rounded-lg px-3 py-2 mt-2">
-                    <span className="text-amber-600 text-lg">💰</span>
+                  <div className="flex items-center gap-2 bg-red-100 border border-red-300 rounded-lg px-3 py-2 mt-2">
+                    <span className="text-red-600 text-lg">💰</span>
                     <div>
-                      <p className="text-sm font-bold text-amber-700">Dette client</p>
-                      <p className="text-xs text-amber-600">Total: {clientDebt.total.toFixed(2)} TND | Payé: {clientDebt.paid.toFixed(2)} TND | Reste: {clientDebt.reste.toFixed(2)} TND</p>
+                      <p className="text-sm font-bold text-red-700">Dette client</p>
+                      <p className="text-xs text-red-600">Total: {clientDebt.total.toFixed(2)} TND | Payé: {clientDebt.paid.toFixed(2)} TND | Reste: {clientDebt.reste.toFixed(2)} TND</p>
                     </div>
                   </div>
                 )}
