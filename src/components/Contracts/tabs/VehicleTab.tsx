@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
 import type { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
@@ -85,19 +85,24 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
   // Sync departure and return dates for new contracts
   const departureDate = watch("departureDate");
   const returnDate = watch("returnDate");
-  const [isUpdatingDate, setIsUpdatingDate] = useState(false);
+  const isUpdatingDateRef = useRef(false);
 
   useEffect(() => {
     if (!isNew) return;
-    if (isUpdatingDate) return;
+    if (isUpdatingDateRef.current) return;
 
-    setIsUpdatingDate(true);
-    if (departureDate && !returnDate) {
+    isUpdatingDateRef.current = true;
+    if (departureDate && returnDate) {
+      // Both dates exist, ensure they are the same
+      if (departureDate !== returnDate) {
+        setValue("returnDate", departureDate, { shouldDirty: true });
+      }
+    } else if (departureDate && !returnDate) {
       setValue("returnDate", departureDate, { shouldDirty: true });
     } else if (returnDate && !departureDate) {
       setValue("departureDate", returnDate, { shouldDirty: true });
     }
-    setTimeout(() => setIsUpdatingDate(false), 0);
+    setTimeout(() => { isUpdatingDateRef.current = false; }, 0);
   }, [departureDate, returnDate, isNew]);
 
   return (
