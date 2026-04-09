@@ -205,25 +205,33 @@ export default function ContractModal({ contract, onClose }: Props) {
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setError("");
+    console.log("onSubmit - contract:", contract);
+    console.log("onSubmit - clientDebt:", clientDebt);
     try {
       // Show confirmation for new contracts
       if (!contract) {
+        console.log("Showing confirmation dialog for new contract");
         const confirmed = window.confirm(
           `⚠️ Voulez-vous vraiment créer ce contrat ?\n\nClient: ${data.driverName}\nVéhicule: ${data.brand} ${data.model} (${data.registration})`
         );
+        console.log("Confirmed:", confirmed);
         if (!confirmed) {
           return;
         }
 
         // Check if client has debt and show additional confirmation
         if (clientDebt && clientDebt.reste > 0) {
+          console.log("Showing debt confirmation dialog");
           const debtConfirmed = window.confirm(
             `⚠️ Ce client a une dette de ${clientDebt.reste.toFixed(2)} TND.\n\nVoulez-vous quand même continuer avec la création du contrat ?`
           );
+          console.log("Debt confirmed:", debtConfirmed);
           if (!debtConfirmed) {
             return;
           }
         }
+      } else {
+        console.log("Editing existing contract, skipping confirmation");
       }
 
       setSaving(true);
