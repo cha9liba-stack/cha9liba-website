@@ -99,6 +99,7 @@ export default function ContractModal({ contract, onClose }: Props) {
   const [bannedWarning, setBannedWarning] = useState<{ name: string; reason: string } | null>(null);
   const [previewData, setPreviewData] = useState<Contract | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
+  const [clientDebt, setClientDebt] = useState<{ total: number; paid: number; reste: number } | null>(null);
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } =
     useForm<FormData>({
@@ -145,8 +146,44 @@ export default function ContractModal({ contract, onClose }: Props) {
       if (found?.alerts?.length > 0) {
         setBannedWarning(prev => prev || { name: found.name, reason: `⚠️ ${found.alerts.length} alerte(s): ${found.alerts.map((a: any) => a.message).join(" | ")}` });
       }
+
+      // Calculate client debt from previous contracts
+      if (watchedCin) {
+        const contracts = useContractStore.getState().contracts;
+        const debtsKey = "palma_contract_debts";
+        const debts: Record<string, { paid: number; reste: number }> = JSON.parse(localStorage.getItem(debtsKey) || "{}");
+
+        let totalDebt = 0;
+        let totalPaid = 0;
+        let totalReste = 0;
+
+        const clientContracts = contracts.filter(c =>
+          c.driverCin?.trim().toUpperCase() === watchedCin.trim().toUpperCase() &&
+          !c._deleted &&
+          c.id !== contract?.id
+        );
+
+        for (const c of clientContracts) {
+          if (!c.id) continue;
+          const debt = debts[c.id] || {
+            paid: parseFloat(c.depot || "0"),
+            reste: Math.max(0, parseFloat(c.somme || c.totalFacture || "0") - parseFloat(c.depot || "0"))
+          };
+          totalPaid += debt.paid;
+          totalReste += debt.reste;
+        }
+        totalDebt = totalPaid + totalReste;
+
+        if (totalReste > 0) {
+          setClientDebt({ total: totalDebt, paid: totalPaid, reste: totalReste });
+        } else {
+          setClientDebt(null);
+        }
+      } else {
+        setClientDebt(null);
+      }
     } catch {}
-  }, [watchedCin, watchedName]);
+  }, [watchedCin, watchedName, contract?.id]);
 
   // Jump to first tab with errors
   const TAB_FIELDS: Record<number, string[]> = {
@@ -338,6 +375,15 @@ export default function ContractModal({ contract, onClose }: Props) {
                     <div>
                       <p className="text-sm font-bold text-red-700">Client bloqué: {bannedWarning.name}</p>
                       {bannedWarning.reason && <p className="text-xs text-red-600">Raison: {bannedWarning.reason}</p>}
+                    </div>
+                  </div>
+                )}
+                {clientDebt && (
+                  <div className="flex items-center gap-2 bg-amber-100 border border-amber-300 rounded-lg px-3 py-2 mt-2">
+                    <span className="text-amber-600 text-lg">💰</span>
+                    <div>
+                      <p className="text-sm font-bold text-amber-700">Dette client</p>
+                      <p className="text-xs text-amber-600">Total: {clientDebt.total.toFixed(2)} TND | Payé: {clientDebt.paid.toFixed(2)} TND | Reste: {clientDebt.reste.toFixed(2)} TND</p>
                     </div>
                   </div>
                 )}

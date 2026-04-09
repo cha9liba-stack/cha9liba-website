@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PalmaRentACar</string>
+    <string name="title_activity_main">PalmaRentACar</string>
+    <string name="package_name">palmarentacar.vercel.app</string>
+    <string name="custom_url_scheme">palmarentacar.vercel.app</string>
+</resources>
