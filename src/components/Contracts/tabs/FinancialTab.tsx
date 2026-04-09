@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import Field from "../../ui/Field";
+import { useVisibility } from "../../../hooks/useVisibility";
 
 interface Props {
   register: UseFormRegister<any>;
@@ -30,6 +31,7 @@ function daysBetween(dep: string, ret: string) {
 export default function FinancialTab({ register, watch, setValue }: Props) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const vis = useVisibility();
 
   // User inputs
   const totalFactureInput = watch("totalFacture");
@@ -137,6 +139,7 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
       <div className="border-t border-slate-100" />
 
       {/* ── Auto-calculated summary ── */}
+      {vis.showPrices ? (
       <div className="bg-slate-50 rounded-xl p-4 space-y-2">
         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
           {isRTL ? "الملخص التلقائي" : "Récapitulatif automatique"}
@@ -178,13 +181,18 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
         )}
 
         {/* Dépôt de garantie info */}
-        {toNum(depot) > 0 && (
+        {vis.showDepotGarantie && toNum(depot) > 0 && (
           <div className="flex items-center justify-between bg-amber-50 rounded-lg px-3 py-2 mt-2">
             <span className="text-xs text-amber-700">{isRTL ? "ضمان الإيداع" : "Dépôt de garantie"}</span>
             <span className="font-mono font-semibold text-amber-700 text-xs">{fmt(toNum(depot))} TND</span>
           </div>
         )}
       </div>
+      ) : (
+        <div className="bg-slate-50 rounded-xl p-4 text-center text-xs text-slate-400">
+          {isRTL ? "البيانات المالية مخفية" : "Données financières masquées"}
+        </div>
+      )}
 
       {/* Hidden fields */}
       <input type="hidden" {...register("totalPartiel")} />

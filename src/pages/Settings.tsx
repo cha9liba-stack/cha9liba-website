@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshCw, Users, Plus, Trash2, Eye, EyeOff, Shield, User } from "lucide-react";
+import { RefreshCw, Users, Plus, Trash2, Eye, EyeOff, Shield, User, ChevronDown } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { changePassword } from "../services/authService";
 import { syncFromSheets } from "../services/sheetsService";
@@ -97,6 +97,12 @@ export default function Settings() {
   async function resetUserPassword(id: string, newPassword: string) {
     await fbPut(`users/${id}/password`, newPassword);
     setUserMsg("✓ Mot de passe modifié");
+  }
+
+  async function changeUserRole(id: string, role: "admin" | "user" | "sous-traitant") {
+    await fbPut(`users/${id}/role`, role);
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
+    setUserMsg("✓ Rôle modifié");
   }
 
   async function handleSheetSync() {
@@ -293,6 +299,7 @@ export default function Settings() {
                     onTogglePass={() => setShowPasswords(p => ({ ...p, [u.id]: !p[u.id] }))}
                     onDelete={() => deleteUser(u.id)}
                     onResetPass={(pwd) => resetUserPassword(u.id, pwd)}
+                    onChangeRole={(role) => changeUserRole(u.id, role)}
                     isRTL={isRTL} />
                 </div>
               ))}
@@ -305,6 +312,11 @@ export default function Settings() {
       {/* GPS Settings — admin only */}
       {user?.role === "admin" && (
         <GPSSettings DB_URL={DB_URL} />
+      )}
+
+      {/* Visibility Settings — admin only */}
+      {user?.role === "admin" && (
+        <VisibilitySettings DB_URL={DB_URL} />
       )}
 
       {/* Contract Settings — admin only */}
@@ -324,6 +336,58 @@ export default function Settings() {
           Role: <span className="font-medium capitalize">{user?.role}</span>
         </p>
       </div>
+    </div>
+  );
+}
+
+function VisibilitySettings({ DB_URL }: { DB_URL: string }) {
+  const ITEMS = [
+    { key: "showPrices",      label: "Afficher les prix dans les contrats" },
+    { key: "showStatistics",  label: "Afficher les statistiques financières" },
+    { key: "showDebt",        label: "Afficher les dettes / reste à payer" },
+    { key: "showDriverCin",   label: "Afficher le CIN du conducteur" },
+    { key: "showDepotGarantie", label: "Afficher le dépôt de garantie" },
+  ];
+  const [vis, setVis] = useState<Record<string, boolean>>({});
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch(`${DB_URL}/app_settings/visibility.json`)
+      .then(r => r.json())
+      .then(data => { if (data) setVis(data); })
+      .catch(() => {});
+  }, []);
+
+  async function toggle(key: string) {
+    const updated = { ...vis, [key]: !vis[key] };
+    setVis(updated);
+    await fetch(`${DB_URL}/app_settings/visibility.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+      <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+        👁 Visibilité des données (Employés)
+      </h2>
+      <p className="text-xs text-slate-400">Ces paramètres s'appliquent aux utilisateurs avec le rôle Employé.</p>
+      <div className="space-y-2">
+        {ITEMS.map(item => (
+          <div key={item.key} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+            <span className="text-sm text-slate-700">{item.label}</span>
+            <button onClick={() => toggle(item.key)}
+              className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${vis[item.key] !== false ? "bg-amber-500" : "bg-slate-300"}`}>
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${vis[item.key] !== false ? "translate-x-7" : "translate-x-1"}`} />
+            </button>
+          </div>
+        ))}
+      </div>
+      {saved && <p className="text-xs text-green-600">✓ Enregistré</p>}
     </div>
   );
 }
@@ -419,13 +483,16 @@ function GPSSettings({ DB_URL }: { DB_URL: string }) {
   );
 }
 
-function UserRow({ u, currentUserId, showPass, onTogglePass, onDelete, onResetPass, isRTL }: {
+function UserRow({ u, currentUserId, showPass, onTogglePass, onDelete, onResetPass, onChangeRole, isRTL }: {
   u: AppUser; currentUserId?: string; showPass: boolean;
   onTogglePass: () => void; onDelete: () => void;
-  onResetPass: (pwd: string) => void; isRTL: boolean;
+  onResetPass: (pwd: string) => void;
+  onChangeRole: (role: "admin" | "user" | "sous-traitant") => void;
+  isRTL: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [newPwd, setNewPwd] = useState("");
+  const [showRoleMenu, setShowRoleMenu] = useState(false);
   const isCurrent = u.id === currentUserId;
 
   return (
@@ -434,12 +501,34 @@ function UserRow({ u, currentUserId, showPass, onTogglePass, onDelete, onResetPa
         {u.role === "admin" ? <Shield size={14} className="text-blue-600" /> : <User size={14} className="text-slate-500" />}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <p className="text-sm font-semibold text-slate-800">{u.username}</p>
           {isCurrent && <span className="text-[10px] bg-amber-200 text-amber-700 px-1.5 py-0.5 rounded-full">Vous</span>}
-          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${u.role === "admin" ? "bg-blue-100 text-blue-700" : u.role === "sous-traitant" ? "bg-purple-100 text-purple-700" : "bg-slate-200 text-slate-600"}`}>
-            {u.role === "admin" ? "Admin" : u.role === "sous-traitant" ? "Sous-traitant" : "Employé"}
-          </span>
+          {/* Role badge + dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => !isCurrent && setShowRoleMenu(p => !p)}
+              disabled={isCurrent}
+              className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full transition-colors ${
+                u.role === "admin" ? "bg-blue-100 text-blue-700" :
+                u.role === "sous-traitant" ? "bg-purple-100 text-purple-700" :
+                "bg-slate-200 text-slate-600"
+              } ${!isCurrent ? "hover:opacity-80 cursor-pointer" : ""}`}
+            >
+              {u.role === "admin" ? "Admin" : u.role === "sous-traitant" ? "Sous-traitant" : "Employé"}
+              {!isCurrent && <ChevronDown size={9} />}
+            </button>
+            {showRoleMenu && (
+              <div className="absolute top-6 start-0 z-10 bg-white border border-slate-200 rounded-xl shadow-lg py-1 min-w-[130px]">
+                {(["user", "admin", "sous-traitant"] as const).map(r => (
+                  <button key={r} onClick={() => { onChangeRole(r); setShowRoleMenu(false); }}
+                    className={`w-full text-start px-3 py-1.5 text-xs hover:bg-slate-50 transition-colors ${u.role === r ? "font-semibold text-amber-600" : "text-slate-700"}`}>
+                    {r === "admin" ? "Admin" : r === "sous-traitant" ? "Sous-traitant" : "Employé"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         {editing
           ? <div className="flex items-center gap-2 mt-1">
