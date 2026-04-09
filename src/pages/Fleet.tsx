@@ -393,25 +393,29 @@ export default function Fleet() {
       const override = overrides[key];
 
       if (contract) {
-        // If override was set AFTER contract departure → user manually returned car early → override wins
+        // If override exists and was set after departure, override wins (manual early return)
         const overrideEntry = [...(overrideHistory[key] || [])].reverse()
           .find(e => e.from <= date && (e.to === null || e.to === undefined || e.to >= date));
         const overrideSetAfterDeparture = overrideEntry && overrideEntry.from >= contract.departureDate;
 
-        if (override === "available" && overrideSetAfterDeparture) {
-          return { ...car, state: "available" as CarState, contract };
-        }
-        if (override === "maintenance" && overrideSetAfterDeparture) {
-          return { ...car, state: "maintenance" as CarState, contract };
-        }
+        // If override exists and was set after departure, it always wins
         if (override && overrideSetAfterDeparture) {
+          if (override === "available") return { ...car, state: "available" as CarState, contract };
+          if (override === "maintenance") return { ...car, state: "maintenance" as CarState, contract };
           return { ...car, state: "custom" as CarState, contract, customStateId: override };
         }
 
-        // Override was set before contract → contract wins
-        const returnDateTime = contract.returnDate + (contract.returnTime ? " " + contract.returnTime : " 23:59");
-        const nowDateTime = date + " " + String(new Date().getHours()).padStart(2,"0") + ":" + String(new Date().getMinutes()).padStart(2,"0");
-        const isLate = returnDateTime < nowDateTime || contract.returnDate < date;
+        // No override or override was set before contract → contract wins
+        // For today, check time; for historical dates, just check date
+        let isLate: boolean;
+        if (date === today()) {
+          const returnDateTime = contract.returnDate + (contract.returnTime ? " " + contract.returnTime : " 23:59");
+          const nowDateTime = date + " " + String(new Date().getHours()).padStart(2,"0") + ":" + String(new Date().getMinutes()).padStart(2,"0");
+          isLate = returnDateTime < nowDateTime;
+        } else {
+          // Historical date: check if return date is before selected date
+          isLate = contract.returnDate < date;
+        }
         return { ...car, state: (isLate ? "late" : "rented") as CarState, contract };
       }
 
