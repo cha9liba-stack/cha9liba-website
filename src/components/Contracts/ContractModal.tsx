@@ -32,7 +32,7 @@ const schema = z.object({
   departurePlace: z.string().min(1),
   returnDate: z.string().min(1),
   returnTime: z.string().min(1),
-  departureKm: z.string().min(1),
+  departureKm: z.string().optional().default("0"),
   returnKm: z.string().optional().default(""),
   fuelType: z.enum(["Essence", "Gasoil", ""]).default(""),
   remiseRetour: z.string().optional().default(""),
