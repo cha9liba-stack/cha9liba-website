@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";import { useNavigate } from
 import { useContractStore } from "../store/useContractStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
+import { useVisibility } from "../hooks/useVisibility";
 import { subscribeToContracts, isRealContract } from "../services/contractService";
 import type { Contract } from "../types";
 import {
@@ -29,11 +30,12 @@ function fmtDate(d: string) {
 }
 
 // ── Detail Modal ──────────────────────────────────────────────────────────────
-function DetailModal({ title, contracts, color, onClose }: {
+function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
   title: string;
   contracts: Contract[];
   color: string;
   onClose: () => void;
+  showPrices?: boolean;
 }) {
   const t = today();
   const displayed = useMemo(() => {
@@ -66,7 +68,7 @@ function DetailModal({ title, contracts, color, onClose }: {
                     <th className="px-4 py-2.5 text-start">Retour</th>
                     <th className="px-4 py-2.5 text-start">Durée</th>
                     <th className="px-4 py-2.5 text-start">Tél</th>
-                    <th className="px-4 py-2.5 text-start">Montant</th>
+                    {showPrices && <th className="px-4 py-2.5 text-start">Montant</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -92,7 +94,7 @@ function DetailModal({ title, contracts, color, onClose }: {
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-xs text-slate-500">{c.driverPhone || "—"}</td>
-                        <td className="px-4 py-2.5 text-xs font-semibold text-green-600">{parseFloat(c.totalFacture || "0").toFixed(3)}</td>
+                        {showPrices && <td className="px-4 py-2.5 text-xs font-semibold text-green-600">{parseFloat(c.totalFacture || "0").toFixed(3)}</td>}
                       </tr>
                     );
                   })}
@@ -216,6 +218,7 @@ export default function Dashboard() {
 
   const lateCount   = fleetStats.late;
   const activeCount = allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t).length;
+  const vis = useVisibility();
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -394,6 +397,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* ── Revenue chart ── */}
+        {(isAdmin || vis.showStatistics) && (
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
@@ -413,6 +417,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        )}
 
         {/* ── Alerts ── */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
@@ -465,7 +470,7 @@ export default function Dashboard() {
                     <th className="px-5 py-2.5 text-start">Véhicule</th>
                     <th className="px-5 py-2.5 text-start">Départ</th>
                     <th className="px-5 py-2.5 text-start">Retour</th>
-                    <th className="px-5 py-2.5 text-start">Montant</th>
+                    {(isAdmin || vis.showPrices) && <th className="px-5 py-2.5 text-start">Montant</th>}
                     <th className="px-5 py-2.5 text-start">Créé par</th>
                     <th className="px-5 py-2.5 text-start">État</th>
                   </tr>
@@ -481,7 +486,9 @@ export default function Dashboard() {
                         <td className="px-5 py-2.5 text-slate-500 text-xs">{c.brand} {c.model} · {c.registration}</td>
                         <td className="px-5 py-2.5 text-slate-400 text-xs">{fmtDate(c.departureDate)}</td>
                         <td className="px-5 py-2.5 text-xs font-medium" style={{ color: isLate ? "#ef4444" : "#64748b" }}>{fmtDate(c.returnDate)}</td>
-                        <td className="px-5 py-2.5 font-semibold text-green-600 text-xs">{parseFloat(c.totalFacture || "0").toFixed(3)} TND</td>
+                        {(isAdmin || vis.showPrices) && (
+                          <td className="px-5 py-2.5 font-semibold text-green-600 text-xs">{parseFloat(c.totalFacture || "0").toFixed(3)} TND</td>
+                        )}
                         <td className="px-5 py-2.5 text-xs text-slate-500">
                           <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "—"}</p>
                           <p className="text-slate-400">{
@@ -511,13 +518,13 @@ export default function Dashboard() {
 
       {/* ── Detail Modals ── */}
       {modal === "active" && (
-        <DetailModal title="Contrats actifs" contracts={allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t)} color="bg-green-500" onClose={() => setModal(null)} />
+        <DetailModal title="Contrats actifs" contracts={allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t)} color="bg-green-500" onClose={() => setModal(null)} showPrices={isAdmin || vis.showPrices} />
       )}
       {modal === "late" && (
-        <DetailModal title="Contrats en retard" contracts={fleetStats.lateContracts} color="bg-red-500" onClose={() => setModal(null)} />
+        <DetailModal title="Contrats en retard" contracts={fleetStats.lateContracts} color="bg-red-500" onClose={() => setModal(null)} showPrices={isAdmin || vis.showPrices} />
       )}
       {modal === "total" && (
-        <DetailModal title="Tous les contrats" contracts={allVisibleContracts.filter(c => !c._deleted)} color="bg-blue-500" onClose={() => setModal(null)} />
+        <DetailModal title="Tous les contrats" contracts={allVisibleContracts.filter(c => !c._deleted)} color="bg-blue-500" onClose={() => setModal(null)} showPrices={isAdmin || vis.showPrices} />
       )}
 
       {/* Revenue detail modal */}
