@@ -5,8 +5,8 @@ import type { UseFormSetValue } from "react-hook-form";
 import { useContractStore } from "../../store/useContractStore";
 import { getOdometerForReg } from "../../services/gpsService";
 
-// Default fleet for auto-fill
-const FLEET: Record<string, { brand: string; model: string; category: string }> = {
+// Default fleet for auto-fill (Palma cars)
+const PALMA_FLEET: Record<string, { brand: string; model: string; category: string }> = {
   "7468TU245": { brand: "Kia",        model: "Stonic D",      category: "SUV" },
   "9192TU234": { brand: "Renault",    model: "Clio Bleu",     category: "Citadine" },
   "5605TU236": { brand: "Hyundai",    model: "I20 Noir",      category: "Citadine" },
@@ -53,6 +53,34 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const contracts = useContractStore((s) => s.contracts);
+  const [stFleet, setStFleet] = useState<Record<string, { brand: string; model: string; category: string }>>({});
+
+  // Combine Palma fleet + sous-traitant fleet
+  const FLEET = { ...PALMA_FLEET, ...stFleet };
+
+  // Load sous-traitant cars from Firebase
+  useEffect(() => {
+    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/sous_traitants.json")
+      .then(r => r.json())
+      .then(data => {
+        if (!data) return;
+        const fleet: Record<string, { brand: string; model: string; category: string }> = {};
+        for (const st of Object.values(data) as any[]) {
+          const cars = st.cars || [];
+          for (const car of cars) {
+            if (car.registration && car.brand && car.model) {
+              const normReg = car.registration.replace(/\s+/g, "").toUpperCase();
+              fleet[normReg] = {
+                brand: car.brand,
+                model: car.model,
+                category: car.category || "Citadine"
+              };
+            }
+          }
+        }
+        setStFleet(fleet);
+      }).catch(() => {});
+  }, []);
 
   // Split into left (before TU) and right (after TU)
   const parseReg = (val: string) => {

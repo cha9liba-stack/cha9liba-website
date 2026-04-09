@@ -12,6 +12,7 @@ interface Props {
 const TVA_RATE  = 0.19;
 const TIMBRE    = 1.000;
 const TAXE_RATE = 2; // 2 TND/jour (2026+)
+const ST_DAILY_RATE = 2000; // 2000 TND/jour for sous-traitants
 
 function toNum(v: string | undefined) {
   const n = parseFloat((v ?? "").replace(",", "."));
@@ -36,6 +37,7 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
   const depot             = watch("depotGarantie");
   const departureDate     = watch("departureDate");
   const returnDate        = watch("returnDate");
+  const ownerId           = watch("ownerId");
 
   const is2026Plus = useMemo(() => {
     const y = parseInt((departureDate || "").slice(0, 4), 10);
@@ -62,6 +64,15 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
     setValue("somme",        fmt(somme),    { shouldDirty: false });
     setValue("total",        fmt(facture),  { shouldDirty: false });
   }, [totalFactureInput, taxe2dt]);
+
+  // Auto-calculate totalFacture for sous-traitants (2000 TND/day)
+  useEffect(() => {
+    if (ownerId && nj > 0) {
+      // Sous-traitant: calculate totalFacture = nj × 2000
+      const autoFacture = nj * ST_DAILY_RATE;
+      setValue("totalFacture", fmt(autoFacture), { shouldDirty: false });
+    }
+  }, [ownerId, nj]);
 
   const facture  = toNum(totalFactureInput);
   const avanceN  = toNum(avance);

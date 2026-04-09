@@ -207,14 +207,20 @@ interface PrintSettings {
   fontSize: number;
   contractNumFontSize: number;
   fontWeight: "bold" | "normal";
+  templateOpacity: number;
+  diagonalTextOpacity: number;
+  diagonalTextFontSize: number;
 }
 
 const DEFAULT_SETTINGS: PrintSettings = {
-  textColor: "#000000",
-  contractNumColor: "#000000",
+  textColor: "#ffffff",
+  contractNumColor: "#ffffff",
   fontSize: 28,
   contractNumFontSize: 32,
   fontWeight: "bold",
+  templateOpacity: 1,
+  diagonalTextOpacity: 0.7,
+  diagonalTextFontSize: 220,
 };
 
 const ORIG_W = 2480;
@@ -294,7 +300,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [zoom, setZoom] = useState(0.35);
+  const [zoom, setZoom] = useState(0.5);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<PrintSettings>(loadSettings);
   const [positions, setPositions] = useState<Record<string, [number, number]>>(loadPositions);
@@ -302,6 +308,11 @@ export default function ContractPreview({ contract, onClose }: Props) {
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<[number, number]>([0, 0]);
   const [hoveredField, setHoveredField] = useState<string | null>(null);
+  const [templateOffset, setTemplateOffset] = useState({ x: 0, y: -150 });
+  const [templateScale, setTemplateScale] = useState(1);
+  const [draggingTemplate, setDraggingTemplate] = useState(false);
+  const [templateDragOffset, setTemplateDragOffset] = useState({ x: 0, y: 0 });
+  const [settingsLocked, setSettingsLocked] = useState(false);
 
   const data = useMemo(() => contractToLegacy(contract), [contract]);
 
@@ -320,6 +331,31 @@ export default function ContractPreview({ contract, onClose }: Props) {
         setPositions({ ...DEFAULT_POSITIONS, ...data });
       }
     });
+
+    // Listen for real-time changes from Firebase
+    const settingsInterval = setInterval(() => {
+      loadFromFirebase("app_settings/print_settings").then(data => {
+        if (data) {
+          const merged = { ...DEFAULT_SETTINGS, ...data };
+          localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(merged));
+          setSettings(merged);
+        }
+      });
+    }, 5000); // Check every 5 seconds
+
+    const positionsInterval = setInterval(() => {
+      loadFromFirebase("app_settings/field_positions").then(data => {
+        if (data) {
+          localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(data));
+          setPositions({ ...DEFAULT_POSITIONS, ...data });
+        }
+      });
+    }, 5000); // Check every 5 seconds
+
+    return () => {
+      clearInterval(settingsInterval);
+      clearInterval(positionsInterval);
+    };
   }, []);
 
   // ─── Draw ─────────────────────────────────────────────────────────────────
@@ -335,7 +371,15 @@ export default function ContractPreview({ contract, onClose }: Props) {
       canvas.height = ORIG_H;
       ctx!.fillStyle = "#ffffff";
       ctx!.fillRect(0, 0, ORIG_W, ORIG_H);
-      ctx!.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
+
+      // Draw template with opacity, offset, and scale
+      ctx!.globalAlpha = settings.templateOpacity;
+      const scaledW = ORIG_W * templateScale;
+      const scaledH = ORIG_H * templateScale;
+      const offsetX = (ORIG_W - scaledW) / 2 + templateOffset.x;
+      const offsetY = templateOffset.y;
+      ctx!.drawImage(tmpl, offsetX, offsetY, scaledW, scaledH);
+      ctx!.globalAlpha = 1;
 
       // Helper: draw text with correct direction (numbers/latin = ltr, arabic = rtl)
       ctx!.textAlign = "right";
@@ -409,8 +453,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
         const angle = Math.atan2(y2 - y1, x2 - x1) + Math.PI;
         ctx.translate(cx, cy);
         ctx.rotate(angle);
-        ctx.font = `bold 220px 'Tahoma','Arial',sans-serif`;
-        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.font = `bold ${settings.diagonalTextFontSize}px 'Tahoma','Arial',sans-serif`;
+        ctx.fillStyle = `rgba(0,0,0,${settings.diagonalTextOpacity})`;
         ctx.textAlign = "center";
         ctx.direction = "rtl";
         ctx.fillText("\u0644\u0627 \u0634\u064a\u0621", 0, 0);
@@ -419,7 +463,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         ctx.direction = "rtl";
       }
     }).catch(() => {});
-  }, [positions, data, settings, dragMode, dragging, contract]);
+  }, [positions, data, settings, dragMode, dragging, contract, templateOffset, templateScale]);
   useEffect(() => { draw(hoveredField); }, [draw, hoveredField]);
 
   // ─── Canvas → original coords ─────────────────────────────────────────────
@@ -452,25 +496,51 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
   // ─── Mouse events ─────────────────────────────────────────────────────────
   function onMouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
-    if (!dragMode) return;
-    const [cx, cy] = canvasCoords(e);
-    const field = findFieldAt(cx, cy);
-    if (!field) return;
-    const [fx, fy] = positions[field];
-    setDragging(field);
-    setDragOffset([cx - fx, cy - fy]);
-    e.preventDefault();
+    if (dragMode) {
+      // Drag field
+      const [cx, cy] = canvasCoords(e);
+      const field = findFieldAt(cx, cy);
+      if (!field) return;
+      const [fx, fy] = positions[field];
+      setDragging(field);
+      setDragOffset([cx - fx, cy - fy]);
+      e.preventDefault();
+    } else {
+      // Drag template
+      setDraggingTemplate(true);
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTemplateDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    }
   }
 
   function onMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
-    if (!dragMode) return;
-    const [cx, cy] = canvasCoords(e);
-
-    if (dragging) {
+    if (dragMode && dragging) {
+      // Drag field
+      const [cx, cy] = canvasCoords(e);
       const newX = Math.round(cx - dragOffset[0]);
       const newY = Math.round(cy - dragOffset[1]);
       setPositions(prev => ({ ...prev, [dragging]: [newX, newY] }));
-    } else {
+    } else if (draggingTemplate) {
+      // Drag template
+      const rect = e.currentTarget.getBoundingClientRect();
+      const dx = e.clientX - rect.left - templateDragOffset.x;
+      const dy = e.clientY - rect.top - templateDragOffset.y;
+      const scaleX = ORIG_W / rect.width;
+      const scaleY = ORIG_H / rect.height;
+      setTemplateOffset(prev => ({
+        x: prev.x + dx * scaleX,
+        y: prev.y + dy * scaleY
+      }));
+      setTemplateDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+    } else if (dragMode) {
+      // Hover field
+      const [cx, cy] = canvasCoords(e);
       const field = findFieldAt(cx, cy);
       setHoveredField(field);
     }
@@ -481,6 +551,9 @@ export default function ContractPreview({ contract, onClose }: Props) {
       savePositions(positions);
       setDragging(null);
     }
+    if (draggingTemplate) {
+      setDraggingTemplate(false);
+    }
   }
 
   function onMouseLeave() {
@@ -488,6 +561,9 @@ export default function ContractPreview({ contract, onClose }: Props) {
     if (dragging) {
       savePositions(positions);
       setDragging(null);
+    }
+    if (draggingTemplate) {
+      setDraggingTemplate(false);
     }
   }
 
@@ -512,8 +588,12 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const val = data[field];
       if (!val) continue;
 
-      ctx.font = `${settings.fontWeight} ${settings.fontSize}px 'Tahoma','Arial',sans-serif`;
-      ctx.fillStyle = settings.textColor;
+      const isContractNum = field === "رقم العقد";
+      const fontSize = isContractNum ? settings.contractNumFontSize : settings.fontSize;
+      const color    = isContractNum ? settings.contractNumColor    : settings.textColor;
+
+      ctx.font = `${settings.fontWeight} ${fontSize}px 'Tahoma','Arial',sans-serif`;
+      ctx.fillStyle = color;
 
       if (val === "X") {
         ctx.textAlign = "center";
@@ -531,8 +611,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const cx=(x1+x2)/2, cy=(y1+y2)/2;
       const angle=Math.atan2(y2-y1,x2-x1)+Math.PI;
       ctx.translate(cx,cy); ctx.rotate(angle);
-      ctx.font=`bold 220px 'Tahoma','Arial',sans-serif`;
-      ctx.fillStyle="rgba(0,0,0,0.7)";
+      ctx.font=`bold ${settings.diagonalTextFontSize}px 'Tahoma','Arial',sans-serif`;
+      ctx.fillStyle=`rgba(0,0,0,${settings.diagonalTextOpacity})`;
       ctx.textAlign="center"; ctx.direction="rtl";
       ctx.fillText("\u0644\u0627 \u0634\u064a\u0621",0,0);
       ctx.restore();
@@ -557,7 +637,15 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const ctx1 = p1.getContext("2d")!;
       ctx1.fillStyle = "#ffffff";
       ctx1.fillRect(0, 0, ORIG_W, ORIG_H);
-      if (tmpl) ctx1.drawImage(tmpl, 0, TEMPLATE_OFFSET_Y, ORIG_W, ORIG_H);
+
+      // Draw template with opacity, offset, and scale
+      ctx1.globalAlpha = settings.templateOpacity;
+      const scaledW = ORIG_W * templateScale;
+      const scaledH = ORIG_H * templateScale;
+      const offsetX = (ORIG_W - scaledW) / 2 + templateOffset.x;
+      const offsetY = templateOffset.y;
+      if (tmpl) ctx1.drawImage(tmpl, offsetX, offsetY, scaledW, scaledH);
+      ctx1.globalAlpha = 1;
 
       ctx1.textAlign = "right";
       ctx1.direction = "rtl";
@@ -581,8 +669,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
         const cx=(x1+x2)/2, cy=(y1+y2)/2;
         const angle=Math.atan2(y2-y1,x2-x1)+Math.PI;
         ctx1.translate(cx,cy); ctx1.rotate(angle);
-        ctx1.font=`bold 220px 'Tahoma','Arial',sans-serif`;
-        ctx1.fillStyle="rgba(0,0,0,0.7)";
+        ctx1.font=`bold ${settings.diagonalTextFontSize}px 'Tahoma','Arial',sans-serif`;
+        ctx1.fillStyle=`rgba(0,0,0,${settings.diagonalTextOpacity})`;
         ctx1.textAlign="center"; ctx1.direction="rtl";
         ctx1.fillText("\u0644\u0627 \u0634\u064a\u0621",0,0);
         ctx1.restore();
@@ -672,6 +760,24 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
             <div className="w-px h-5 bg-slate-200"/>
 
+            {/* Settings lock toggle */}
+            <button
+              onClick={() => setSettingsLocked(l => !l)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors border ${
+                settingsLocked
+                  ? "bg-red-500 text-white border-red-500"
+                  : "text-slate-600 border-slate-200 hover:bg-slate-100"
+              }`}
+              title={isRTL ? "قفل الإعدادات" : "Verrouiller les paramètres"}
+            >
+              {settingsLocked ? <Lock size={14}/> : <Lock size={14}/>}
+              {settingsLocked
+                ? (isRTL ? "مقفل" : "Verrouillé")
+                : (isRTL ? "قفل" : "Verrouiller")}
+            </button>
+
+            <div className="w-px h-5 bg-slate-200"/>
+
             {/* Drag mode toggle */}
             <button
               onClick={() => setDragMode(d => !d)}
@@ -681,8 +787,9 @@ export default function ContractPreview({ contract, onClose }: Props) {
                   : "text-slate-600 border-slate-200 hover:bg-slate-100"
               }`}
               title={isRTL ? "تحريك الحقول" : "Déplacer les champs"}
+              disabled={settingsLocked}
             >
-              {dragMode ? <Move size={14}/> : <Lock size={14}/>}
+              {dragMode ? <Move size={14}/> : <Move size={14}/>}
               {dragMode
                 ? (isRTL ? "وضع التحريك" : "Mode déplacement")
                 : (isRTL ? "تحريك الحقول" : "Déplacer")}
@@ -795,6 +902,69 @@ export default function ContractPreview({ contract, onClose }: Props) {
                 ))}
               </div>
             </div>
+            {/* Template Opacity */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-600">
+                {isRTL ? "شفافية الخلفية" : "Opacité du fond"}
+                <span className="text-amber-600 ms-1">{Math.round(settings.templateOpacity * 100)}%</span>
+              </label>
+              <input type="range" min={0} max={1} step={0.1} value={settings.templateOpacity}
+                onChange={e => updateSetting("templateOpacity", Number(e.target.value))}
+                disabled={settingsLocked}
+                className={`accent-amber-500 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}/>
+            </div>
+            {/* Template Scale */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-600">
+                {isRTL ? "حجم الخلفية" : "Taille du fond"}
+                <span className="text-amber-600 ms-1">{Math.round(templateScale * 100)}%</span>
+              </label>
+              <div className="flex gap-2">
+                <button onClick={() => setTemplateScale(s => Math.max(0.5, s - 0.1))}
+                  disabled={settingsLocked}
+                  className={`px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}>-</button>
+                <button onClick={() => setTemplateScale(s => Math.min(2, s + 0.1))}
+                  disabled={settingsLocked}
+                  className={`px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}>+</button>
+              </div>
+            </div>
+            {/* Reset Template Position */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-600">
+                {isRTL ? "موقع الخلفية" : "Position du fond"}
+              </label>
+              <button onClick={() => setTemplateOffset({ x: 0, y: -150 })}
+                disabled={settingsLocked}
+                className={`px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}>
+                {isRTL ? "إعادة تعيين" : "Réinitialiser"}
+              </button>
+            </div>
+            {/* Diagonal Text Opacity */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-600">
+                {isRTL ? "شفافية 'لا شيء'" : "Opacité 'لا شيء'"}
+                <span className="text-amber-600 ms-1">{Math.round(settings.diagonalTextOpacity * 100)}%</span>
+              </label>
+              <input type="range" min={0} max={1} step={0.1} value={settings.diagonalTextOpacity}
+                onChange={e => updateSetting("diagonalTextOpacity", Number(e.target.value))}
+                disabled={settingsLocked}
+                className={`accent-amber-500 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}/>
+            </div>
+            {/* Diagonal Text Size */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-slate-600">
+                {isRTL ? "حجم 'لا شيء'" : "Taille 'لا شيء'"}
+                <span className="text-amber-600 ms-1">{settings.diagonalTextFontSize}px</span>
+              </label>
+              <div className="flex gap-2">
+                <button onClick={() => updateSetting("diagonalTextFontSize", Math.max(100, settings.diagonalTextFontSize - 20))}
+                  disabled={settingsLocked}
+                  className={`px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}>-</button>
+                <button onClick={() => updateSetting("diagonalTextFontSize", Math.min(400, settings.diagonalTextFontSize + 20))}
+                  disabled={settingsLocked}
+                  className={`px-2 py-1 text-xs rounded border border-slate-200 hover:bg-slate-100 ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}>+</button>
+              </div>
+            </div>
             {/* Reset */}
             <div className="sm:col-span-4 flex justify-end">
               <button
@@ -802,7 +972,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
                   setSettings(DEFAULT_SETTINGS);
                   saveSettings(DEFAULT_SETTINGS);
                 }}
-                className="text-xs text-slate-500 hover:text-slate-700 underline">
+                disabled={settingsLocked}
+                className={`text-xs text-slate-500 hover:text-slate-700 underline ${settingsLocked ? "opacity-50 cursor-not-allowed" : ""}`}>
                 {isRTL ? "إعادة تعيين" : "Réinitialiser"}
               </button>
             </div>

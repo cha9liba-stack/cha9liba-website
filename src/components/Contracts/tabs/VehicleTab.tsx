@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RefreshCw } from "lucide-react";
 import type { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import Field from "../../ui/Field";
 import { getNextContractNumber } from "../../../services/lookupService";
+import { getOdometerForReg } from "../../../services/gpsService";
 import RegistrationInput from "../RegistrationInput";
 import { useContractStore } from "../../../store/useContractStore";
 
@@ -23,6 +25,23 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
   const fuelType = watch("fuelType");
   const currentReg = watch("registration");
   const contractNumber = watch("contractNumber");
+  const [fetchingKm, setFetchingKm] = useState(false);
+
+  async function fetchKmFromGPS() {
+    const reg = currentReg?.replace(/\s+/g, "").toUpperCase();
+    if (!reg) return;
+    setFetchingKm(true);
+    try {
+      const km = await getOdometerForReg(reg);
+      if (km !== null) {
+        setValue("departureKm", String(km), { shouldDirty: true });
+      }
+    } catch {
+      // Silent fail - GPS may not be available
+    } finally {
+      setFetchingKm(false);
+    }
+  }
 
   // Check duplicate contract number in real-time
   const [dupWarning, setDupWarning] = useState(false);
@@ -114,7 +133,27 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
         <input {...register("departurePlace")} className="input" />
       </Field>
       <Field label={t("departure_km")}>
-        <input {...register("departureKm")} className="input" />
+        <div className="flex items-center gap-2">
+          {fetchingKm ? (
+            <div className="flex-1 h-9 bg-slate-200 rounded-lg animate-pulse" />
+          ) : (
+            <input
+              {...register("departureKm", { valueAsNumber: true })}
+              type="number"
+              className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+              placeholder="0"
+            />
+          )}
+          <button
+            type="button"
+            onClick={fetchKmFromGPS}
+            disabled={fetchingKm || !currentReg}
+            className="p-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-colors disabled:opacity-50"
+            title={isRTL ? "جلب الكيلومتراج من GPS" : "Récupérer du GPS"}
+          >
+            {fetchingKm ? <RefreshCw size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+          </button>
+        </div>
       </Field>
       <Field label={t("return_date")} error={errors.returnDate?.message as string}>
         <input type="date" {...register("returnDate")} className="input" />
