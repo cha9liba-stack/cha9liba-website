@@ -581,6 +581,27 @@ export default function ContractPreview({ contract, onClose }: Props) {
     ctx.direction = "rtl";
     ctx.fillStyle = settings.textColor;
 
+    // Helper function to draw text with proper RTL/LTR handling
+    function drawTextPrintDataOnly(val: string, x: number, y: number) {
+      const hasArabic = /[\u0600-\u06FF]/.test(val);
+
+      if (!hasArabic) {
+        // Pure latin/numeric — draw LTR aligned to the right anchor
+        ctx.save();
+        ctx.direction = "ltr";
+        ctx.textAlign = "right";
+        ctx.fillText(val, x, y);
+        ctx.restore();
+      } else {
+        // Arabic or mixed — always RTL, anchor right
+        ctx.save();
+        ctx.direction = "rtl";
+        ctx.textAlign = "right";
+        ctx.fillText(val, x, y);
+        ctx.restore();
+      }
+    }
+
     for (const [field, [x, y]] of Object.entries(positions)) {
       // Skip contract number — already printed on the pre-printed form
       if (field === "رقم العقد") continue;
@@ -600,7 +621,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         ctx.fillText("X", x, y);
         ctx.textAlign = "right";
       } else {
-        ctx.fillText(val, x, y);
+        drawTextPrintDataOnly(val, x, y);
       }
     }
 
@@ -649,6 +670,28 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
       ctx1.textAlign = "right";
       ctx1.direction = "rtl";
+
+      // Helper function to draw text with proper RTL/LTR handling
+      function drawTextPrint(val: string, x: number, y: number) {
+        const hasArabic = /[\u0600-\u06FF]/.test(val);
+
+        if (!hasArabic) {
+          // Pure latin/numeric — draw LTR aligned to the right anchor
+          ctx1.save();
+          ctx1.direction = "ltr";
+          ctx1.textAlign = "right";
+          ctx1.fillText(val, x, y);
+          ctx1.restore();
+        } else {
+          // Arabic or mixed — always RTL, anchor right
+          ctx1.save();
+          ctx1.direction = "rtl";
+          ctx1.textAlign = "right";
+          ctx1.fillText(val, x, y);
+          ctx1.restore();
+        }
+      }
+
       for (const [field, [x, y]] of Object.entries(positions)) {
         const val = data[field];
         if (!val) continue;
@@ -660,7 +703,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
           ctx1.fillText("X", x, y);
           ctx1.textAlign = "right";
         } else {
-          ctx1.fillText(val, x, y);
+          drawTextPrint(val, x, y);
         }
       }
       if (!contract.hasDriver2) {
