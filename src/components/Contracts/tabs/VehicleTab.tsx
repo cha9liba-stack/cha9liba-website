@@ -82,13 +82,23 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
     }
   }, [departureTime, lockReturnTime]);
 
-  // Auto-fill return date = departure date for new contracts
+  // Sync departure and return dates for new contracts
   const departureDate = watch("departureDate");
+  const returnDate = watch("returnDate");
+  const [isUpdatingDate, setIsUpdatingDate] = useState(false);
+
   useEffect(() => {
-    if (isNew && departureDate) {
+    if (!isNew) return;
+    if (isUpdatingDate) return;
+
+    setIsUpdatingDate(true);
+    if (departureDate && !returnDate) {
       setValue("returnDate", departureDate, { shouldDirty: true });
+    } else if (returnDate && !departureDate) {
+      setValue("departureDate", returnDate, { shouldDirty: true });
     }
-  }, [departureDate, isNew]);
+    setTimeout(() => setIsUpdatingDate(false), 0);
+  }, [departureDate, returnDate, isNew]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
