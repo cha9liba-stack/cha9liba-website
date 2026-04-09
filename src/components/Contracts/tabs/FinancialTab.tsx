@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import Field from "../../ui/Field";
@@ -39,6 +39,9 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
   const returnDate        = watch("returnDate");
   const ownerId           = watch("ownerId");
 
+  // Track if user manually modified totalFacture
+  const [userModifiedFacture, setUserModifiedFacture] = useState(false);
+
   const is2026Plus = useMemo(() => {
     const y = parseInt((departureDate || "").slice(0, 4), 10);
     return y >= 2026;
@@ -67,12 +70,19 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
 
   // Auto-calculate totalFacture for sous-traitants (2000 TND/day)
   useEffect(() => {
-    if (ownerId && nj > 0) {
+    if (ownerId && nj > 0 && !userModifiedFacture) {
       // Sous-traitant: calculate totalFacture = nj × 2000
       const autoFacture = nj * ST_DAILY_RATE;
       setValue("totalFacture", fmt(autoFacture), { shouldDirty: false });
     }
-  }, [ownerId, nj]);
+  }, [ownerId, nj, userModifiedFacture]);
+
+  // Track manual modification of totalFacture
+  useEffect(() => {
+    if (totalFactureInput && !userModifiedFacture) {
+      setUserModifiedFacture(true);
+    }
+  }, [totalFactureInput]);
 
   const facture  = toNum(totalFactureInput);
   const avanceN  = toNum(avance);
