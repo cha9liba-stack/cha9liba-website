@@ -82,6 +82,14 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
     }
   }, [departureTime, lockReturnTime]);
 
+  // Auto-fill return date = departure date for new contracts
+  const departureDate = watch("departureDate");
+  useEffect(() => {
+    if (isNew && departureDate) {
+      setValue("returnDate", departureDate, { shouldDirty: true });
+    }
+  }, [departureDate, isNew]);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Field label={t("contract_number")} error={errors.contractNumber?.message as string}>
