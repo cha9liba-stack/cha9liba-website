@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form";
 import Field from "../../ui/Field";
@@ -41,8 +41,8 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
   const returnDate        = watch("returnDate");
   const ownerId           = watch("ownerId");
 
-  // Track if user manually modified totalFacture
-  const [userModifiedFacture, setUserModifiedFacture] = useState(false);
+  // Track if user manually modified totalFacture (useRef persists across re-renders)
+  const userModifiedFacture = useRef(false);
 
   const is2026Plus = useMemo(() => {
     const y = parseInt((departureDate || "").slice(0, 4), 10);
@@ -72,12 +72,11 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
 
   // Auto-calculate totalFacture for sous-traitants (2000 TND/day)
   useEffect(() => {
-    if (ownerId && nj > 0 && !userModifiedFacture) {
-      // Sous-traitant: calculate totalFacture = nj × 2000
+    if (ownerId && nj > 0 && !userModifiedFacture.current) {
       const autoFacture = nj * ST_DAILY_RATE;
       setValue("totalFacture", fmt(autoFacture), { shouldDirty: false });
     }
-  }, [ownerId, nj, userModifiedFacture]);
+  }, [ownerId, nj]);
 
 
 
@@ -103,7 +102,7 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
             className="input text-end font-mono text-lg font-bold"
             placeholder="0.000"
             onChange={(e) => {
-              setUserModifiedFacture(true);
+              userModifiedFacture.current = true;
               register("totalFacture").onChange(e);
             }}
           />

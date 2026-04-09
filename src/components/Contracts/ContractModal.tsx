@@ -117,6 +117,14 @@ export default function ContractModal({ contract, onClose }: Props) {
           })(),
     });
 
+  // Sync contract date with departureDate for new contracts
+  const watchedDepartureDate = watch("departureDate");
+  useEffect(() => {
+    if (!contract && watchedDepartureDate) {
+      setValue("date", watchedDepartureDate, { shouldDirty: false });
+    }
+  }, [watchedDepartureDate]);
+
   // Check if client is banned when CIN or name changes
   const watchedCin = watch("driverCin");
   const watchedName = watch("driverName");
