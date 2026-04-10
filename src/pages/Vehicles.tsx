@@ -297,7 +297,7 @@ export default function Vehicles() {
           return (
             <button
               key={car.registration}
-              onClick={() => navigate(`/vehicles/${encodeURIComponent(car.registration)}`)}
+              onClick={() => navigate(`/app/vehicles/${encodeURIComponent(car.registration)}`)}
               className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-amber-200 transition-all text-left group overflow-hidden"
             >
               {/* Car photo or placeholder */}
