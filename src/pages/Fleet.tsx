@@ -456,57 +456,54 @@ export default function Fleet() {
   });
   const [alertModalOpen, setAlertModalOpen] = useState(false);
 
-  // Online bookings from website
   const DB_BOOKINGS = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
-  const [onlineBookings, setOnlineBookings] = useState<any[]>([]);
-  const [onlineBookingsLoading, setOnlineBookingsLoading] = useState(true);
 
-  useEffect(() => {
-    setOnlineBookingsLoading(true);
+  // All online bookings from Firebase (pending + confirmed)
+  const [allOnlineBookings, setAllOnlineBookings] = useState<any[]>([]);
+  const [onlineLoading, setOnlineLoading] = useState(true);
+
+  function loadOnlineBookings() {
+    setOnlineLoading(true);
     fetch(`${DB_BOOKINGS}/bookings.json`)
       .then(r => r.json())
       .then(data => {
         if (data) {
           const list = Object.entries(data)
             .map(([id, v]: any) => ({ ...v, id }))
-            .filter((b: any) => b.status === "pending")
+            .filter((b: any) => b.status !== "cancelled")
             .sort((a: any, b: any) => b._createdAt - a._createdAt);
-          setOnlineBookings(list);
+          setAllOnlineBookings(list);
+        } else {
+          setAllOnlineBookings([]);
         }
       }).catch(() => {})
-      .finally(() => setOnlineBookingsLoading(false));
-  }, []);
+      .finally(() => setOnlineLoading(false));
+  }
 
-  async function updateBookingStatus(id: string, status: "confirmed" | "rejected") {
-    const booking = onlineBookings.find(b => b.id === id);
+  useEffect(() => { loadOnlineBookings(); }, []);
+
+  const onlineBookings = allOnlineBookings.filter(b => b.status === "pending");
+  const confirmedBookings = allOnlineBookings.filter(b => b.status === "confirmed");
+
+  async function updateBookingStatus(id: string, status: "confirmed" | "rejected" | "cancelled") {
     await fetch(`${DB_BOOKINGS}/bookings/${id}.json`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, _updatedAt: Date.now() }),
     }).catch(() => {});
-
-    // If confirmed → add to local reservations list
-    if (status === "confirmed" && booking) {
-      const newRes: Reservation = {
-        id: `online_${id}`,
-        clientName: booking.clientName,
-        phone: booking.clientPhone || "",
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        brand: `${booking.brand} ${booking.model}`,
-        registration: booking.registration || "",
-        notes: booking.notes || `Réservation en ligne · ${booking.clientEmail || ""}`,
-        advance: booking.depositAmount ? String(booking.depositAmount) : "0",
-      };
-      setRes(prev => {
-        const updated = [...prev, newRes];
-        save(K.res, updated);
-        return updated;
-      });
-    }
-
-    setOnlineBookings(prev => prev.filter(b => b.id !== id));
+    loadOnlineBookings();
   }
+
+  async function deleteOnlineBooking(id: string) {
+    await fetch(`${DB_BOOKINGS}/bookings/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled", _updatedAt: Date.now() }),
+    }).catch(() => {});
+    loadOnlineBookings();
+  }
+
+  const [editBooking, setEditBooking] = useState<any | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   // Tick every minute
@@ -889,18 +886,21 @@ export default function Fleet() {
       </div>
 
       {/* ── Online Bookings from website ── */}
-      {(onlineBookings.length > 0 || onlineBookingsLoading) && (
+      {(onlineBookings.length > 0 || onlineLoading) && (
         <div className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-100">
             <Globe size={14} className="text-green-600" />
-            <span className="font-semibold text-sm text-green-700">{isRTL ? "حجوزات الموقع" : "Réservations en ligne"}</span>
+            <span className="font-semibold text-sm text-green-700">{isRTL ? "طلبات جديدة من الموقع" : "Nouvelles demandes web"}</span>
             <span className="ms-auto bg-green-500 text-white text-xs rounded-full px-2 py-0.5">{onlineBookings.length}</span>
+            <button onClick={loadOnlineBookings} className="p-1 hover:bg-green-100 rounded transition-colors ms-1" title="Rafraichir">
+              <CalendarClock size={12} className="text-green-600" />
+            </button>
           </div>
           <div className="p-3 space-y-3 min-h-[80px]">
-            {onlineBookingsLoading
+            {onlineLoading
               ? <p className="text-center text-slate-400 text-xs py-4 animate-pulse">Chargement...</p>
               : onlineBookings.length === 0
-              ? <p className="text-center text-slate-400 text-xs py-4">{isRTL ? "لا توجد طلبات" : "Aucune demande"}</p>
+              ? <p className="text-center text-slate-400 text-xs py-4">{isRTL ? "لا توجد طلبات جديدة" : "Aucune nouvelle demande"}</p>
               : onlineBookings.map(b => (
                 <div key={b.id} className="bg-green-50 border border-green-100 rounded-xl p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -913,9 +913,6 @@ export default function Fleet() {
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm font-black text-slate-800">{b.totalAmount} TND</p>
                       <p className="text-xs text-green-600">Acompte: {b.depositAmount} TND</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        {b._createdAt ? new Date(b._createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
-                      </p>
                     </div>
                   </div>
                   {b.notes && <p className="text-xs text-slate-500 italic mb-2">"{b.notes}"</p>}
@@ -944,51 +941,66 @@ export default function Fleet() {
           <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border-b border-amber-100">
             <CalendarClock size={14} className="text-amber-600" />
             <span className="font-semibold text-sm text-amber-700">{isRTL ? "الحجوزات" : "Réservations"}</span>
-            <span className="ms-auto bg-amber-500 text-white text-xs rounded-full px-2 py-0.5">{res.length}</span>
+            <span className="ms-auto bg-amber-500 text-white text-xs rounded-full px-2 py-0.5">{confirmedBookings.length + res.length}</span>
             <button onClick={() => setModal("res")}
               className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-500 text-white rounded-lg hover:bg-amber-600">
               <Plus size={11} />
             </button>
           </div>
           <div className="p-3 space-y-2 min-h-[120px]">
-            {res.length === 0
+            {onlineLoading
+              ? <p className="text-center text-slate-400 text-xs py-4 animate-pulse">Chargement...</p>
+              : confirmedBookings.length === 0 && res.length === 0
               ? <p className="text-center text-slate-400 text-xs py-6">{isRTL ? "لا توجد" : "Aucune"}</p>
-              : res.map(r => (
-                <div key={r.id} className="bg-amber-50 rounded-xl p-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-slate-800">{r.clientName}</p>
-                      <p className="text-xs text-slate-500">{r.brand} {r.registration} · {r.phone}</p>
-                      <p className="text-xs text-slate-400">{r.startDate} → {r.endDate}</p>
-                    </div>
-                    <div className="text-end flex-shrink-0 ms-2">
-                      <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
-                      <button onClick={async () => {
-                        // Remove from local state
-                        setRes(p => p.filter(x => x.id !== r.id));
-                        // If it's an online booking, mark as cancelled in Firebase
-                        if (r.id?.startsWith("online_")) {
-                          const fbId = r.id.replace("online_", "");
-                          await fetch(`${DB_URL_FLEET}/bookings/${fbId}.json`, {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ status: "cancelled", _updatedAt: Date.now() }),
-                          }).catch(() => {});
-                        }
-                      }}
-                        className="text-slate-300 hover:text-red-500 mt-1"><Trash2 size={12} /></button>
+              : <>
+                {/* Online bookings (confirmed) from Firebase */}
+                {confirmedBookings.map(b => (
+                  <div key={b.id} className="bg-green-50 border border-green-100 rounded-xl p-3">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] bg-green-500 text-white font-bold px-1.5 py-0.5 rounded-full">Web</span>
+                          <p className="font-semibold text-sm text-slate-800">{b.clientName}</p>
+                        </div>
+                        <p className="text-xs text-slate-500">{b.brand} {b.model} · {b.registration}</p>
+                        <p className="text-xs text-slate-500">{b.clientPhone}{b.clientEmail ? ` · ${b.clientEmail}` : ""}</p>
+                        <p className="text-xs text-slate-400">{b.startDate} → {b.endDate} ({b.days}j)</p>
+                        {b.notes && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {b.notes.includes("Carte") && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded-full">💳 Carte</span>}
+                            {b.notes.includes("Virement") && <span className="text-[10px] bg-purple-100 text-purple-700 font-bold px-1.5 py-0.5 rounded-full">🏦 Virement</span>}
+                            {b.notes.includes("livraison") && <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded-full">💵 Livraison</span>}
+                            {b.notes.includes("Flouci") && <span className="text-[10px] bg-green-100 text-green-700 font-bold px-1.5 py-0.5 rounded-full">📱 Flouci</span>}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-end flex-shrink-0">
+                        <p className="text-xs font-bold text-green-700">{b.depositAmount ? `${b.depositAmount} TND` : "—"}</p>
+                        <p className="text-[10px] text-slate-400">{b.totalAmount ? `Total: ${b.totalAmount} TND` : ""}</p>
+                        <button onClick={() => deleteOnlineBooking(b.id)}
+                          className="text-slate-300 hover:text-red-500 mt-1 block ms-auto"><Trash2 size={12} /></button>
+                      </div>
                     </div>
                   </div>
-                  {r.notes && (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                      {r.notes.includes("Carte") && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">💳 Carte</span>}
-                      {r.notes.includes("Virement") && <span className="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">🏦 Virement</span>}
-                      {r.notes.includes("livraison") && <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">💵 À la livraison</span>}
-                      {r.notes.includes("Ref:") && <span className="text-[10px] text-slate-400 font-mono">{r.notes.match(/Ref: (\S+)/)?.[1]}</span>}
+                ))}
+                {/* Manual reservations from localStorage */}
+                {res.map(r => (
+                  <div key={r.id} className="bg-amber-50 rounded-xl p-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-slate-800">{r.clientName}</p>
+                        <p className="text-xs text-slate-500">{r.brand} {r.registration} · {r.phone}</p>
+                        <p className="text-xs text-slate-400">{r.startDate} → {r.endDate}</p>
+                      </div>
+                      <div className="text-end flex-shrink-0 ms-2">
+                        <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
+                        <button onClick={() => { setRes(p => { const u = p.filter(x => x.id !== r.id); save(K.res, u); return u; }); }}
+                          className="text-slate-300 hover:text-red-500 mt-1"><Trash2 size={12} /></button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              ))
+                  </div>
+                ))}
+              </>
             }
           </div>
         </div>
