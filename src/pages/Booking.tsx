@@ -452,20 +452,27 @@ export default function Booking() {
         registration?: string; reg?: string;
         startDate?: string; endDate?: string;
         pickupDate?: string; returnDate?: string;
+        departureDate?: string; returnDate2?: string;
         status?: string;
-      }> | null) => {
+      }> | null, isBooking = false) => {
         if (!items) return;
         Object.values(items).forEach(item => {
-          if (item.status === "cancelled") return;
+          // For online bookings: only pending/confirmed block availability
+          if (isBooking) {
+            if (!item.status || item.status === "cancelled" || item.status === "rejected") return;
+          } else {
+            // For contracts: skip deleted
+            if ((item as any)._deleted) return;
+          }
           const reg = norm(item.registration || item.reg || "");
-          const s = item.startDate || item.pickupDate || "";
-          const e = item.endDate || item.returnDate || "";
+          const s = item.startDate || item.pickupDate || (item as any).departureDate || "";
+          const e = item.endDate || (item as any).returnDate || "";
           if (reg && s && e && datesOverlap(pickup, ret, s, e)) busy.add(reg);
         });
       };
 
-      check(contracts);
-      check(bookings);
+      check(contracts, false);
+      check(bookings, true);
       setBusyRegs(busy);
     } catch {
       setBusyRegs(new Set());
