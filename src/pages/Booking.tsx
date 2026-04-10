@@ -472,16 +472,18 @@ export default function Booking() {
     }
   }, []);
 
-  // Handle search
+  // Handle search — scroll immediately, fetch availability in background
   const handleSearch = async () => {
     setDateError("");
     if (!pickupDate || !returnDate || pickupDate >= returnDate || pickupDate < today()) {
       setDateError(t.errorDates);
       return;
     }
-    await checkAvailability(pickupDate, returnDate);
+    // Scroll immediately
     setSearched(true);
-    setTimeout(() => fleetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    fleetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Fetch availability in background
+    checkAvailability(pickupDate, returnDate);
   };
 
   // Handle submit — redirect to payment page
