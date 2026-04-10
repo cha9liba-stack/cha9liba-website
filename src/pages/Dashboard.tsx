@@ -120,6 +120,21 @@ export default function Dashboard() {
   const selectedBranch = useAuthStore(s => s.selectedBranch);
   const isAdmin = user?.role === "admin";
 
+  // Load car profiles from Firebase for accurate document alerts
+  const [carProfiles, setCarProfiles] = useState<Record<string, any>>(() => {
+    try { return JSON.parse(localStorage.getItem("palma_car_profiles") || "{}"); } catch { return {}; }
+  });
+  useEffect(() => {
+    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/car_profiles.json")
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          setCarProfiles(data);
+          localStorage.setItem("palma_car_profiles", JSON.stringify(data));
+        }
+      }).catch(() => {});
+  }, []);
+
   // Admin can filter by branch; non-admin uses their selected branch
   const [adminBranchFilter, setAdminBranchFilter] = useState<string>("all");
   const [branches, setBranches] = useState<{id: string; name: string}[]>([]);
@@ -251,20 +266,37 @@ export default function Dashboard() {
       monthly.push({ label, revenue: cc.reduce((s, c) => s + parseFloat(c.depot || "0"), 0), count: cc.length });
     }
 
-    const profiles: Record<string, any> = (() => {
-      try { return JSON.parse(localStorage.getItem("palma_car_profiles") || "{}"); } catch { return {}; }
-    })();
+    const profiles: Record<string, any> = carProfiles;
     const urgentDocs: { car: string; doc: string; days: number }[] = [];
     for (const [reg, p] of Object.entries(profiles) as any) {
-      for (const doc of (p.documents || [])) {
+      const docs: any[] = p.documents || [];
+      for (const doc of docs) {
+        // For vidange: use km-based logic
+        if (doc.type === "vidange") {
+          if (!doc.nextVidangeKm) continue;
+          // Only show the last vidange (highest nextVidangeKm)
+          const maxNextKm = Math.max(...docs.filter((d: any) => d.type === "vidange" && d.nextVidangeKm).map((d: any) => d.nextVidangeKm || 0));
+          if (doc.nextVidangeKm !== maxNextKm) continue;
+          // Will be handled by km alerts elsewhere — skip date-based check
+          continue;
+        }
         const days = daysUntil(doc.expiryDate);
-        if (days >= 0 && days <= 30) urgentDocs.push({ car: reg, doc: doc.label, days });
-        if (days < 0) urgentDocs.push({ car: reg, doc: doc.label, days });
+        // Skip expired docs if there's a newer valid one of the same type
+        if (days < 0) {
+          const hasNewerValid = docs.some((d: any) =>
+            d.id !== doc.id && d.type === doc.type && daysUntil(d.expiryDate) >= 0
+          );
+          if (hasNewerValid) continue;
+          // No newer valid one — show as expired
+          urgentDocs.push({ car: reg, doc: doc.label, days });
+          continue;
+        }
+        if (days <= 30) urgentDocs.push({ car: reg, doc: doc.label, days });
       }
     }
 
     return { monthlyRevenue, yearRevenue, monthly, urgentDocs };
-  }, [branchContracts]);
+  }, [branchContracts, carProfiles]);
 
   // Revenue detail for modal
   const revenueDetail = useMemo(() => {

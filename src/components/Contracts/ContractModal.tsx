@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Eye, History } from "lucide-react";
+import { X, Eye, History, AlertTriangle } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -100,6 +100,8 @@ export default function ContractModal({ contract, onClose }: Props) {
   const [previewData, setPreviewData] = useState<Contract | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
   const [clientDebt, setClientDebt] = useState<{ total: number; paid: number; reste: number } | null>(null);
+  const clientDebtRef = useRef<{ total: number; paid: number; reste: number } | null>(null);
+  const [debtConfirmPending, setDebtConfirmPending] = useState(false);
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } =
     useForm<FormData>({
@@ -131,6 +133,8 @@ export default function ContractModal({ contract, onClose }: Props) {
   const watchedName = watch("driverName");
   useEffect(() => {
     if (!watchedCin && !watchedName) return;
+    // Debounce: wait 600ms after user stops typing
+    const timer = setTimeout(() => {
     try {
       const clients = JSON.parse(localStorage.getItem("palma_clients") || "[]");
       const found = clients.find((c: any) =>
@@ -175,14 +179,22 @@ export default function ContractModal({ contract, onClose }: Props) {
         totalDebt = totalPaid + totalReste;
 
         if (totalReste > 0) {
-          setClientDebt({ total: totalDebt, paid: totalPaid, reste: totalReste });
+          const debt = { total: totalDebt, paid: totalPaid, reste: totalReste };
+          setClientDebt(debt);
+          clientDebtRef.current = debt;
+          // Show debt warning modal immediately when CIN is entered
+          if (!contract) setDebtConfirmPending(true);
         } else {
           setClientDebt(null);
+          clientDebtRef.current = null;
         }
       } else {
         setClientDebt(null);
+        clientDebtRef.current = null;
       }
     } catch {}
+    }, 600);
+    return () => clearTimeout(timer);
   }, [watchedCin, watchedName, contract?.id]);
 
   // Jump to first tab with errors
@@ -203,38 +215,19 @@ export default function ContractModal({ contract, onClose }: Props) {
     }
   }
 
+  // Called after user confirms debt warning (or no debt)
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    console.log("=== onSubmit called ===");
-    console.log("onSubmit - contract:", contract);
-    console.log("onSubmit - clientDebt:", clientDebt);
-    console.log("onSubmit - data:", data);
+    setError("");
+    await doSave(data);
+  };
+
+  function handleSaveClick() {
+    handleSubmit(onSubmit as any, (errs) => jumpToFirstError(errs))();
+  }
+
+  async function doSave(data: FormData) {
     setError("");
     try {
-      // Show confirmation for new contracts
-      if (!contract) {
-        console.log("Showing confirmation dialog for new contract");
-        const confirmed = window.confirm(
-          `⚠️ Voulez-vous vraiment créer ce contrat ?\n\nClient: ${data.driverName}\nVéhicule: ${data.brand} ${data.model} (${data.registration})`
-        );
-        console.log("Confirmed:", confirmed);
-        if (!confirmed) {
-          return;
-        }
-
-        // Check if client has debt and show additional confirmation
-        if (clientDebt && clientDebt.reste > 0) {
-          console.log("Showing debt confirmation dialog");
-          const debtConfirmed = window.confirm(
-            `⚠️ Ce client a une dette de ${clientDebt.reste.toFixed(2)} TND.\n\nVoulez-vous quand même continuer avec la création du contrat ?`
-          );
-          console.log("Debt confirmed:", debtConfirmed);
-          if (!debtConfirmed) {
-            return;
-          }
-        }
-      } else {
-        console.log("Editing existing contract, skipping confirmation");
-      }
 
       setSaving(true);
       const isDup = await isDuplicateContractNumber(data.contractNumber, contract?.id);
@@ -392,7 +385,7 @@ export default function ContractModal({ contract, onClose }: Props) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit as any, (errs) => jumpToFirstError(errs))} className="flex-1 overflow-y-auto">
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveClick(); }} className="flex-1 overflow-y-auto">
             <div className="p-6">{tabComponents[activeTab]}</div>
 
             {/* Footer */}
@@ -435,7 +428,8 @@ export default function ContractModal({ contract, onClose }: Props) {
                   {t("cancel")}
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSaveClick}
                   disabled={saving}
                   className="px-5 py-2 text-sm bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-60"
                 >
@@ -458,6 +452,81 @@ export default function ContractModal({ contract, onClose }: Props) {
           onSelect={handleLookupSelect}
           onClose={() => setLookupOpen(false)}
         />
+      )}
+
+      {/* Debt Confirmation Modal */}
+      {debtConfirmPending && clientDebt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" dir={isRTL ? "rtl" : "ltr"}>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-red-100 bg-red-50 rounded-t-2xl">
+              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={20} className="text-red-500" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-slate-800">
+                  {isRTL ? "تحذير: العميل لديه ديون" : "Client avec dettes impayées"}
+                </p>
+                <p className="text-xs text-red-500">
+                  {isRTL ? "يرجى مراجعة الوضع المالي قبل المتابعة" : "Vérifiez la situation financière avant de continuer"}
+                </p>
+              </div>
+              <button onClick={() => setDebtConfirmPending(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="divide-y divide-slate-100">
+              <div className="flex items-center gap-4 px-5 py-4">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0 text-lg">
+                  💰
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-800">{watch("driverName")}</p>
+                  <p className="text-xs font-mono text-slate-500">{watch("driverCin")}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {isRTL ? "ديون من عقود سابقة" : "Dettes sur contrats précédents"}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0 space-y-0.5">
+                  <p className="text-xs text-slate-400">{isRTL ? "المتبقي" : "Reste dû"}</p>
+                  <p className="text-lg font-bold text-red-600">{clientDebt.reste.toFixed(3)}</p>
+                  <p className="text-xs text-slate-400">TND</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-slate-100 text-center">
+                <div className="px-5 py-3">
+                  <p className="text-xs text-slate-400 mb-1">{isRTL ? "الإجمالي" : "Total facturé"}</p>
+                  <p className="font-semibold text-slate-700">{clientDebt.total.toFixed(3)} TND</p>
+                </div>
+                <div className="px-5 py-3">
+                  <p className="text-xs text-slate-400 mb-1">{isRTL ? "المدفوع" : "Déjà payé"}</p>
+                  <p className="font-semibold text-green-600">{clientDebt.paid.toFixed(3)} TND</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100">
+              <button
+                onClick={() => setDebtConfirmPending(false)}
+                className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                {isRTL ? "إلغاء" : "Annuler"}
+              </button>
+              <button
+                onClick={() => {
+                  setDebtConfirmPending(false);
+                  handleSubmit(onSubmit as any, (errs) => jumpToFirstError(errs))();
+                }}
+                className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+              >
+                {isRTL ? "متابعة رغم الديون" : "Continuer malgré les dettes"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

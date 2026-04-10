@@ -129,6 +129,8 @@ export interface CarDocument {
   label: string;
   expiryDate: string; // YYYY-MM-DD
   notes?: string;
+  kmAtVidange?: number;   // km au moment de la vidange
+  nextVidangeKm?: number; // km prévu pour la prochaine vidange (kmAtVidange + 10000)
 }
 
 export interface CarExpense {
@@ -156,6 +158,7 @@ export interface CarProfile {
   color?: string;            // اللون
   year?: number;             // سنة الصنع
   category?: string;         // الفئة
+  dailyPrice?: number;       // سعر الإيجار اليومي للعملاء
 }
 
 export interface ClientCompany {
@@ -207,4 +210,35 @@ export interface SousTraitant {
   maintenance: MaintenanceCar[];
   reservations: Reservation[];
   unpaid: UnpaidRecord[];
+}
+
+export type BookingStatus = "pending" | "confirmed" | "rejected" | "cancelled";
+
+export interface OnlineBooking {
+  id?: string;
+  // Vehicle
+  registration: string;
+  brand: string;
+  model: string;
+  dailyPrice: number;
+  // Dates
+  startDate: string;   // YYYY-MM-DD
+  endDate: string;     // YYYY-MM-DD
+  days: number;
+  totalAmount: number;
+  depositAmount: number; // 30% or configured %
+  // Client info
+  clientName: string;
+  clientPhone: string;
+  clientEmail?: string;
+  clientCin?: string;
+  clientAddress?: string;
+  // Status
+  status: BookingStatus;
+  notes?: string;
+  lang: "fr" | "ar" | "en";
+  // Metadata
+  _createdAt: number;
+  _updatedAt?: number;
+  _confirmedBy?: string;
 }

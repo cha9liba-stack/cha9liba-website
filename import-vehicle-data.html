@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Import Vehicle Data — Palma</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #f8fafc; }
+  h2 { color: #1e293b; }
+  button { padding: 12px 24px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 8px 4px; }
+  button:hover { background: #d97706; }
+  button.danger { background: #ef4444; }
+  #log { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 16px; max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+  .ok { color: #16a34a; } .err { color: #dc2626; } .info { color: #2563eb; }
+</style>
+</head>
+<body>
+<h2>🚗 Import données véhicules — Palma Rent a Car</h2>
+<p>Ce script va ajouter les vidanges, visites techniques et assurances à Firebase.</p>
+<button onclick="runImport()">▶ Lancer l'import</button>
+<div id="log"></div>
+
+<script>
+const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function norm(s) { return String(s||"").replace(/\s+/g,"").toUpperCase(); }
+
+// Convert DD/MM/YYYY to YYYY-MM-DD
+function toISO(d) {
+  if (!d) return "";
+  const p = d.trim().split(/[\/\-]/);
+  if (p.length === 3) {
+    if (p[0].length === 4) return d; // already ISO
+    return `${p[2]}-${p[1].padStart(2,"0")}-${p[0].padStart(2,"0")}`;
+  }
+  return d;
+}
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+// Format: { reg, vidanges: [{km, date}], visiteDate, assuranceDate }
+const VEHICLES = [
+  {
+    reg: "230TU2171", // Suzuki Swift G
+    vidanges: [
+      { km: 172261, date: "27-06-2025" },
+      { km: 183830, date: "26-08-2025" },
+      { km: 193800, date: "01-10-2025" },
+      { km: 204911, date: "06-12-2025" },
+      { km: 214900, date: "04/12/2025" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: null,
+  },
+  {
+    reg: "230TU9195", // Polo Sedan
+    vidanges: [
+      { km: 204927, date: "18-07-2025" },
+      { km: 215000, date: "02-10-2025" },
+      { km: 224500, date: "14-11-2025" },
+      { km: 234250, date: "26-01-2026" },
+      { km: 243250, date: "26-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "05/06/2026",
+  },
+  {
+    reg: "234TU9192", // Clio 5 Bleu
+    vidanges: [
+      { km: 121000, date: "27-06-2025" },
+      { km: 132150, date: "30-09-2025" },
+      { km: 142130, date: "04-12-2025" },
+      { km: 151585, date: "27-01-2026" },
+      { km: 161400, date: "27-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "27/07/2026",
+  },
+  {
+    reg: "236TU5605", // Hyundai I20 N
+    vidanges: [
+      { km: 116700, date: "11-07-2025" },
+      { km: 135700, date: "17-10-2025" },
+      { km: 148400, date: "09-01-2026" },
+      { km: 157500, date: "18-03-2026" },
+      { km: 167500, date: "18-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "27/05/2025",
+  },
+  {
+    reg: "236TU5606", // Hyundai I20 N
+    vidanges: [
+      { km: 146038, date: "08-10-2025" },
+      { km: 156050, date: "02-11-2025" },
+      { km: 167135, date: "21-01-2026" },
+      { km: 178317, date: "07-04-2026" },
+      { km: 188300, date: "07-04-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "03/05/2026",
+  },
+  {
+    reg: "238TU8305", // Kia Rio
+    vidanges: [
+      { km: 95700,  date: "19-06-2025" },
+      { km: 105340, date: "01-09-2025" },
+      { km: 116132, date: "28-11-2025" },
+      { km: 126300, date: "27-01-2026" },
+      { km: 136300, date: "27-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "25/02/2026",
+  },
+  {
+    reg: "240TU4485", // Virtus
+    vidanges: [
+      { km: 99800,  date: "29-09-2025" },
+      { km: 112374, date: "28-11-2025" },
+      { km: 121700, date: "26-01-2026" },
+      { km: 131300, date: "30-03-2026" },
+      { km: 141000, date: "30-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "24/05/2026",
+  },
+  {
+    reg: "240TU4486", // Virtus
+    vidanges: [
+      { km: 99500,  date: "18-06-2025" },
+      { km: 106500, date: "15-08-2025" },
+      { km: 122860, date: "05-11-2025" },
+      { km: 134000, date: "21-01-2026" },
+      { km: 144000, date: "21-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "17/06/2026",
+  },
+  {
+    reg: "242TU2526", // MG B
+    vidanges: [
+      { km: 72200,  date: "16-06-2025" },
+      { km: 82650,  date: "27-08-2025" },
+      { km: 95850,  date: "23-11-2025" },
+      { km: 104700, date: "12-01-2026" },
+      { km: 114700, date: "12-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "23/08/2026",
+  },
+  {
+    reg: "242TU2532", // MG G
+    vidanges: [
+      { km: 68500,  date: "03-06-2025" },
+      { km: 79900,  date: "09-10-2025" },
+      { km: 89900,  date: "25-12-2025" },
+      { km: 98575,  date: "23-02-2026" },
+      { km: 108500, date: "23-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "18/08/2026",
+  },
+  {
+    reg: "244TU1389", // Seat Ibiza
+    vidanges: [
+      { km: 68500,  date: "16-08-2025" },
+      { km: 80314,  date: "03-11-2025" },
+      { km: 90645,  date: "09-01-2026" },
+      { km: 100000, date: "28-02-2026" },
+      { km: 110000, date: "28-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "05/06/2026",
+  },
+  {
+    reg: "245TU1162", // Clio 5 B
+    vidanges: [
+      { km: 48600,  date: "20-05-2025" },
+      { km: 61731,  date: "27-06-2025" },
+      { km: 74845,  date: "03-12-2025" },
+      { km: 84800,  date: "21-02-2026" },
+      { km: 94000,  date: "21-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "16/08/2026",
+  },
+  {
+    reg: "245TU7468", // Kia Stonic
+    vidanges: [
+      { km: 42330,  date: "09-04-2025" },
+      { km: 51500,  date: "20-06-2025" },
+      { km: 60050,  date: "14-08-2025" },
+      { km: 70062,  date: "01-12-2025" },
+      { km: 80000,  date: "01-12-2025" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "27/02/2026",
+  },
+  {
+    reg: "246TU2504", // Hyundai I20 G
+    vidanges: [
+      { km: 39600,  date: "02-08-2025" },
+      { km: 50960,  date: "24-09-2025" },
+      { km: 61455,  date: "24-11-2025" },
+      { km: 71200,  date: "17-03-2026" },
+      { km: 81000,  date: "17-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "16/09/2026",
+  },
+  {
+    reg: "246TU2508", // Hyundai I20 B
+    vidanges: [
+      { km: 43000,  date: "27-06-2025" },
+      { km: 53055,  date: "20-09-2025" },
+      { km: 69000,  date: "17-11-2025" },
+      { km: 81700,  date: "12-02-2026" },
+      { km: 91700,  date: "12-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "13/09/2026",
+  },
+  {
+    reg: "246TU4912", // Kia Stonic
+    vidanges: [
+      { km: 51670,  date: "" },
+      { km: 60770,  date: "29-10-2025" },
+      { km: 72000,  date: "18-12-2025" },
+      { km: 81000,  date: "28-02-2026" },
+      { km: 91000,  date: "28-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "06/10/2026",
+  },
+  {
+    reg: "248TU201", // Seat Ibiza B
+    vidanges: [
+      { km: 30000,  date: "27-07-2025" },
+      { km: 39000,  date: "08-10-2025" },
+      { km: 49000,  date: "24-12-2025" },
+      { km: 59100,  date: "11-02-2026" },
+      { km: 69100,  date: "11-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "26/05/2026",
+  },
+  {
+    reg: "248TU203", // Seat Ibiza N
+    vidanges: [
+      { km: 34400,  date: "30-06-2025" },
+      { km: 45860,  date: "26-09-2025" },
+      { km: 57850,  date: "31-12-2025" },
+      { km: 68000,  date: "28-03-2026" },
+      { km: 78000,  date: "28-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "01/06/2026",
+  },
+  {
+    reg: "248TU1958", // Mahindra R
+    vidanges: [
+      { km: 40900,  date: "15-07-2025" },
+      { km: 49600,  date: "23-09-2025" },
+      { km: 62853,  date: "27-11-2025" },
+      { km: 71990,  date: "27-01-2026" },
+      { km: 82000,  date: "27-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "04/06/2026",
+  },
+  {
+    reg: "248TU1959", // Mahindra B
+    vidanges: [
+      { km: 40300,  date: "02-10-2025" },
+      { km: 51671,  date: "27-11-2025" },
+      { km: 63700,  date: "23-01-2026" },
+      { km: 75060,  date: "30-03-2026" },
+      { km: 85000,  date: "30-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "03/06/2026",
+  },
+  {
+    reg: "251TU1945", // Suzuki Swift R
+    vidanges: [
+      { km: 10457,  date: "04-08-2025" },
+      { km: 19500,  date: "16-10-2025" },
+      { km: 29520,  date: "27-12-2025" },
+      { km: 41500,  date: "08-04-2026" },
+      { km: 51000,  date: "08-04-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "27/04/2026",
+  },
+  {
+    reg: "251TU5941", // Clio 5 N
+    vidanges: [
+      { km: 10195,  date: "31-07-2025" },
+      { km: 20400,  date: "22-10-2025" },
+      { km: 30330,  date: "08-12-2025" },
+      { km: 40400,  date: "20-02-2026" },
+      { km: 50400,  date: "20-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "12/05/2026",
+  },
+  {
+    reg: "251TU5943", // Clio 5 G
+    vidanges: [
+      { km: 12000,  date: "07-07-2025" },
+      { km: 22300,  date: "16-09-2025" },
+      { km: 33732,  date: "04-12-2025" },
+      { km: 44400,  date: "18-03-2026" },
+      { km: 54400,  date: "18-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "12/05/2026",
+  },
+  {
+    reg: "251TU7138", // Seat Ibiza
+    vidanges: [
+      { km: 11500,  date: "08-08-2025" },
+      { km: 21000,  date: "12-10-2025" },
+      { km: 31100,  date: "22-12-2025" },
+      { km: 40100,  date: "16-02-2026" },
+      { km: 50100,  date: "16-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "15/05/2026",
+  },
+  {
+    reg: "252TU7057", // Kia Picanto G
+    vidanges: [
+      { km: 10000,  date: "16-09-2025" },
+      { km: 20300,  date: "06-11-2025" },
+      { km: 30300,  date: "06-11-2025" },
+      { km: 38727,  date: "23-02-2026" },
+      { km: 49000,  date: "23-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "22/06/2026",
+  },
+  {
+    reg: "252TU9601", // Skoda B
+    vidanges: [
+      { km: 10186,  date: "17-10-2025" },
+      { km: 20913,  date: "06-01-2026" },
+      { km: 31000,  date: "01-04-2026" },
+      { km: 41000,  date: "01-04-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "01/07/2026",
+  },
+  {
+    reg: "252TU9603", // Skoda V
+    vidanges: [
+      { km: 11600,  date: "24-09-2025" },
+      { km: 22500,  date: "02-12-2025" },
+      { km: 37700,  date: "20-02-2026" },
+      { km: 47000,  date: "20-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "01/07/2026",
+  },
+  {
+    reg: "253TU3541", // Virtus G
+    vidanges: [
+      { km: 10040,  date: "29-09-2025" },
+      { km: 24000,  date: "19-12-2025" },
+      { km: 34500,  date: "06-02-2026" },
+      { km: 44700,  date: "28-03-2026" },
+      { km: 54700,  date: "28-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "15/07/2026",
+  },
+  {
+    reg: "254TU7378", // T-Cross
+    vidanges: [
+      { km: 10500,  date: "13-11-2025" },
+      { km: 20700,  date: "13-01-2026" },
+      { km: 30800,  date: "13-01-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "01/09/2026",
+  },
+  {
+    reg: "254TU7379", // T-Cross
+    vidanges: [
+      { km: 10600,  date: "06-11-2025" },
+      { km: 20600,  date: "06-11-2025" },
+      { km: 29256,  date: "20-02-2026" },
+      { km: 39500,  date: "20-02-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "01/09/2026",
+  },
+  {
+    reg: "255TU7360", // Citroen Berlingo
+    vidanges: [
+      { km: 8900,   date: "22-12-2025" },
+      { km: 20027,  date: "03-03-2026" },
+      { km: 30000,  date: "03-03-2026" },
+    ],
+    visiteDate: "11/05/2026",
+    assuranceDate: "06/10/2026",
+  },
+  {
+    reg: "246TN4911", // Ford Ranger
+    vidanges: [
+      { km: 36865,  date: "14-08-2025" },
+    ],
+    visiteDate: "24/09/2026",
+    assuranceDate: "18/09/2026",
+  },
+];
+
+function log(msg, cls="") {
+  const el = document.getElementById("log");
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function runImport() {
+  log("🚀 Démarrage de l'import...", "info");
+
+  for (const v of VEHICLES) {
+    const key = norm(v.reg);
+    log(`\n📦 Traitement: ${v.reg} (${key})`, "info");
+
+    try {
+      // Load existing profile
+      const res = await fetch(`${DB}/car_profiles/${key}.json`);
+      const existing = await res.json() || {};
+
+      const docs = existing.documents || [];
+
+      // Remove old vidanges, visite_technique, assurance to replace
+      const filtered = docs.filter(d =>
+        d.type !== "vidange" && d.type !== "visite_technique" && d.type !== "assurance"
+      );
+
+      // Add all vidanges (keep history)
+      const validVidanges = v.vidanges.filter(vd => vd.km > 0);
+      // Sort by km
+      validVidanges.sort((a, b) => a.km - b.km);
+
+      for (let i = 0; i < validVidanges.length; i++) {
+        const vd = validVidanges[i];
+        const isLast = i === validVidanges.length - 1;
+        const dateISO = vd.date ? toISO(vd.date) : "";
+        filtered.push({
+          id: uid(),
+          type: "vidange",
+          label: isLast ? "Vidange (dernière)" : `Vidange #${i+1}`,
+          expiryDate: dateISO,
+          kmAtVidange: vd.km,
+          nextVidangeKm: vd.km + 10000,
+          notes: isLast ? "⬅ Dernière vidange" : "",
+        });
+        log(`  ✅ Vidange: ${vd.km.toLocaleString()} km → prochaine à ${(vd.km+10000).toLocaleString()} km`, "ok");
+      }
+
+      // Add visite technique
+      if (v.visiteDate) {
+        filtered.push({
+          id: uid(),
+          type: "visite_technique",
+          label: "Visite technique",
+          expiryDate: toISO(v.visiteDate),
+          notes: "",
+        });
+        log(`  ✅ Visite technique: ${v.visiteDate}`, "ok");
+      }
+
+      // Add assurance
+      if (v.assuranceDate) {
+        filtered.push({
+          id: uid(),
+          type: "assurance",
+          label: "Assurance",
+          expiryDate: toISO(v.assuranceDate),
+          notes: "",
+        });
+        log(`  ✅ Assurance: ${v.assuranceDate}`, "ok");
+      }
+
+      // Save to Firebase
+      const updated = {
+        ...existing,
+        registration: key,
+        documents: filtered,
+      };
+
+      const putRes = await fetch(`${DB}/car_profiles/${key}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+
+      if (putRes.ok) {
+        log(`  💾 Sauvegardé dans Firebase ✓`, "ok");
+      } else {
+        log(`  ❌ Erreur Firebase: ${putRes.status}`, "err");
+      }
+
+    } catch(e) {
+      log(`  ❌ Erreur: ${e.message}`, "err");
+    }
+  }
+
+  log("\n✅ Import terminé !", "ok");
+}
+</script>
+</body>
+</html>

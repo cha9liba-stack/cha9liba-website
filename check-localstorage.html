@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Check localStorage</title>
+<style>body{font-family:monospace;padding:20px;} textarea{width:100%;height:400px;font-size:12px;}</style>
+</head>
+<body>
+<h3>localStorage — palma_car_profiles</h3>
+<p>⚠️ Ouvrez cette page depuis <b>localhost:1420</b> (pas depuis le fichier directement)</p>
+<button onclick="show()">Afficher les données</button>
+<textarea id="out"></textarea>
+<script>
+function show() {
+  const data = localStorage.getItem("palma_car_profiles");
+  document.getElementById("out").value = data 
+    ? JSON.stringify(JSON.parse(data), null, 2)
+    : "VIDE — aucune donnée dans localStorage";
+}
+</script>
+</body>
+</html>

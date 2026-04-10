@@ -7,6 +7,12 @@ import {
   Calendar, DollarSign, Car, Wrench, ChevronDown, ChevronUp, X, Tag as SellIcon, Edit2
 } from "lucide-react";
 import type { CarProfile, CarDocument, CarExpense } from "../types";
+import { getOdometerForReg } from "../services/gpsService";
+
+// Safe GPS wrapper — won't crash in browser mode
+async function safeGetOdometer(reg: string): Promise<number | null> {
+  try { return await getOdometerForReg(reg); } catch { return null; }
+}
 
 const PROFILES_KEY = "palma_car_profiles";
 const DB_URL_PROFILES = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
@@ -100,28 +106,43 @@ export default function VehicleDetail() {
 
   const car = fleetCars.find((c: { registration: string }) => norm(c.registration) === norm(registration));
 
-  const [profiles, setProfiles] = useState<Record<string, CarProfile>>(loadProfiles);
+  const [profiles, setProfiles] = useState<Record<string, CarProfile>>(() => loadProfiles());
+  const [profileLoading, setProfileLoading] = useState(() => {
+    // If we have cached data, no need to show loading
+    const cached = loadProfiles();
+    return !cached[norm(registration || "")];
+  });
 
-  // Load this car's profile from Firebase on mount
+  // Load this car's profile — show cache immediately, refresh from Firebase in background
   useEffect(() => {
-    fetch(`${DB_URL_PROFILES}/car_profiles/${norm(registration)}.json`)
+    const key = norm(registration);
+    const cached = loadProfiles();
+
+    // Show cached data immediately if available
+    if (cached[key]) {
+      setProfiles(prev => ({ ...prev, [key]: cached[key] }));
+    }
+
+    // Always fetch from Firebase to get latest (background refresh)
+    fetch(`${DB_URL_PROFILES}/car_profiles/${key}.json`)
       .then(r => r.json())
       .then(data => {
         if (data) {
           const profile: CarProfile = {
-            registration: norm(registration),
+            registration: key,
             documents: [],
             expenses: [],
             ...data,
           };
-          const next = { ...loadProfiles(), [norm(registration)]: profile };
-          setProfiles(next);
-          saveProfiles(next);
+          setProfiles(prev => ({ ...prev, [key]: profile }));
+          cached[key] = profile;
+          saveProfiles(cached);
         }
-      }).catch(() => {});
+      }).catch(() => {})
+      .finally(() => setProfileLoading(false));
   }, [registration]);
   const profileKey = norm(registration);
-  const profile: CarProfile = profiles[profileKey] || { registration, documents: [], expenses: [] };
+  const profile: CarProfile = profiles[profileKey] || { registration: profileKey, documents: [], expenses: [] };
 
   function updateProfile(updated: CarProfile) {
     const next = { ...profiles, [profileKey]: updated };
@@ -177,7 +198,7 @@ export default function VehicleDetail() {
     const totalDays = carContracts.reduce((s, c) =>
       s + (c.departureDate && c.returnDate ? daysBetween(c.departureDate, c.returnDate) : 0), 0
     );
-    const totalExpenses = profile.expenses.reduce((s, e) => s + e.amount, 0);
+    const totalExpenses = (profile.expenses || []).reduce((s, e) => s + e.amount, 0);
     const net = totalRevenue - totalExpenses;
     const avgPerDay = totalDays > 0 ? totalRevenue / totalDays : 0;
     return { totalRevenue, totalDays, totalExpenses, net, avgPerDay };
@@ -216,7 +237,7 @@ export default function VehicleDetail() {
         .filter(c => c.departureDate?.startsWith(key))
         .reduce((s, c) => s + parseFloat(c.totalFacture || "0"), 0);
 
-      const expenses = profile.expenses
+      const expenses = (profile.expenses || [])
         .filter(e => e.date?.startsWith(key))
         .reduce((s, e) => s + e.amount, 0);
 
@@ -233,43 +254,93 @@ export default function VehicleDetail() {
     return months;
   }, [carContracts, profile]);
 
-  // Auto-computed kilometrage from latest contract returnKm
+  // GPS km state
+  const [gpsKm, setGpsKm] = useState<number | null>(null);
+
+  useEffect(() => {
+    getOdometerForReg(registration).then(km => {
+      if (km && km > 0) setGpsKm(km);
+    }).catch(() => {});
+  }, [registration]);
+
+  // currentKm = max(GPS, latest contract km, profile.kilometrage)
+  // Manual profile.kilometrage wins only if it's bigger than GPS
   const currentKm = useMemo(() => {
-    const withKm = carContracts
-      .filter(c => c.returnKm && parseInt(c.returnKm) > 0)
-      .sort((a, b) => b.returnDate.localeCompare(a.returnDate));
-    if (withKm.length > 0) return parseInt(withKm[0].returnKm);
-    const withDepKm = carContracts
-      .filter(c => c.departureKm && parseInt(c.departureKm) > 0)
-      .sort((a, b) => b.departureDate.localeCompare(a.departureDate));
-    if (withDepKm.length > 0) return parseInt(withDepKm[0].departureKm);
-    return profile.kilometrage;
-  }, [carContracts, profile.kilometrage]);
+    const fromContracts = (() => {
+      const withKm = carContracts
+        .filter(c => c.returnKm && parseInt(c.returnKm) > 0)
+        .sort((a, b) => b.returnDate.localeCompare(a.returnDate));
+      if (withKm.length > 0) return parseInt(withKm[0].returnKm);
+      const withDepKm = carContracts
+        .filter(c => c.departureKm && parseInt(c.departureKm) > 0)
+        .sort((a, b) => b.departureDate.localeCompare(a.departureDate));
+      if (withDepKm.length > 0) return parseInt(withDepKm[0].departureKm);
+      return 0;
+    })();
+
+    const candidates = [
+      gpsKm || 0,
+      fromContracts,
+      profile.kilometrage || 0,
+    ];
+    return Math.max(...candidates) || undefined;
+  }, [carContracts, profile.kilometrage, gpsKm]);
   function docStatus(d: CarDocument): "expired" | "urgent" | "ok" {
+    if (d.type === "vidange") return "ok"; // handled separately in render
     const days = daysUntil(d.expiryDate);
     if (days < 0) return "expired";
     if (days <= 30) return "urgent";
     return "ok";
   }
 
-  // Add document modal state
+  // Add/Edit document modal state
   const [showDocModal, setShowDocModal] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<CarDocument | null>(null);
   const [newDoc, setNewDoc] = useState<Partial<CarDocument>>({ type: "assurance" });
 
-  function saveDoc() {
-    if (!newDoc.expiryDate) return;
-    const doc: CarDocument = {
-      id: uid(), type: newDoc.type || "assurance",
-      label: newDoc.label || DOC_LABELS[newDoc.type || "assurance"],
-      expiryDate: newDoc.expiryDate, notes: newDoc.notes || "",
-    };
-    updateProfile({ ...profile, documents: [...profile.documents, doc] });
+  function openAddDoc() {
+    setEditingDoc(null);
     setNewDoc({ type: "assurance" });
+    setShowDocModal(true);
+  }
+
+  function openEditDoc(doc: CarDocument) {
+    setEditingDoc(doc);
+    setNewDoc({ ...doc });
+    setShowDocModal(true);
+  }
+
+  function saveDoc() {
+    if (newDoc.type === "vidange") {
+      if (!newDoc.kmAtVidange) return;
+    } else {
+      if (!newDoc.expiryDate) return;
+    }
+    const kmAt = newDoc.type === "vidange" ? Number(newDoc.kmAtVidange) : undefined;
+    const doc: CarDocument = {
+      id: editingDoc?.id || uid(),
+      type: newDoc.type || "assurance",
+      label: newDoc.label || DOC_LABELS[newDoc.type || "assurance"],
+      expiryDate: newDoc.expiryDate || "",
+      notes: newDoc.notes || "",
+      ...(newDoc.type === "vidange" && {
+        kmAtVidange: kmAt,
+        nextVidangeKm: (kmAt || 0) + 10000,
+      }),
+    };
+    updateProfile({
+      ...profile,
+      documents: editingDoc
+        ? (profile.documents || []).map(d => d.id === editingDoc.id ? doc : d)
+        : [...(profile.documents || []), doc],
+    });
+    setNewDoc({ type: "assurance" });
+    setEditingDoc(null);
     setShowDocModal(false);
   }
 
   function deleteDoc(id: string) {
-    updateProfile({ ...profile, documents: profile.documents.filter(d => d.id !== id) });
+    updateProfile({ ...profile, documents: (profile.documents || []).filter(d => d.id !== id) });
   }
 
   // Add expense modal state
@@ -282,13 +353,13 @@ export default function VehicleDetail() {
       id: uid(), date: newExp.date!, category: newExp.category || "entretien",
       amount: Number(newExp.amount), description: newExp.description || "",
     };
-    updateProfile({ ...profile, expenses: [...profile.expenses, exp] });
+    updateProfile({ ...profile, expenses: [...(profile.expenses || []), exp] });
     setNewExp({ category: "entretien", date: today() });
     setShowExpModal(false);
   }
 
   function deleteExp(id: string) {
-    updateProfile({ ...profile, expenses: profile.expenses.filter(e => e.id !== id) });
+    updateProfile({ ...profile, expenses: (profile.expenses || []).filter(e => e.id !== id) });
   }
 
   // Contracts filter
@@ -413,7 +484,7 @@ export default function VehicleDetail() {
                     const remaining = months > 0 ? `${months}m ${days}j` : `${days}j`;
                     return `${total} mois — reste ${remaining}`;
                   })() },
-                  { label: "Kilométrage",    value: currentKm?.toLocaleString() + " km" },
+                  { label: "Kilométrage", value: <span className="flex items-center gap-1.5 justify-end">{currentKm?.toLocaleString()} km{gpsKm && gpsKm > 0 && <span className="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">GPS</span>}</span> },
                   { label: "Couleur",        value: profile.color },
                   { label: "Année",          value: String(profile.year) },
                   { label: "1ère mise en service", value: profile.dateFirstCirculation },
@@ -438,38 +509,101 @@ export default function VehicleDetail() {
               <h3 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
                 <FileText size={15} className="text-blue-500" /> Documents & Échéances
               </h3>
-              <button onClick={() => setShowDocModal(true)}
+              <button onClick={() => openAddDoc()}
                 className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors">
                 <Plus size={12} /> Ajouter
               </button>
             </div>
             <div className="p-3 space-y-2">
-              {profile.documents.length === 0
+              {profileLoading
+                ? <p className="text-center text-slate-400 text-xs py-4 animate-pulse">Chargement...</p>
+                : (profile.documents || []).length === 0
                 ? <p className="text-center text-slate-400 text-xs py-4">Aucun document ajouté</p>
-                : profile.documents.map(doc => {
+                : (profile.documents || []).map(doc => {
                   const status = docStatus(doc);
+
+                  // ── VIDANGE ──────────────────────────────────────────────
+                  if (doc.type === "vidange") {
+                    // Find the last vidange (highest nextVidangeKm)
+                    const allVidanges = (profile.documents || []).filter(d => d.type === "vidange" && d.nextVidangeKm);
+                    const maxNextKm = Math.max(...allVidanges.map(d => d.nextVidangeKm || 0));
+                    const isLast = doc.nextVidangeKm === maxNextKm;
+                    const remaining = (doc.nextVidangeKm || 0) - (currentKm || 0);
+
+                    let rowStyle: string;
+                    let textStyle: string;
+                    let iconColor: string;
+                    let badgeEl: JSX.Element;
+
+                    if (!isLast) {
+                      rowStyle = "bg-green-50 border-green-200";
+                      textStyle = "text-green-700";
+                      iconColor = "text-green-500";
+                      badgeEl = <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Effectuée</span>;
+                    } else if (remaining <= 0) {
+                      rowStyle = "bg-red-50 border-red-200";
+                      textStyle = "text-red-700";
+                      iconColor = "text-red-500";
+                      badgeEl = <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Dépassée !</span>;
+                    } else if (remaining <= 200) {
+                      rowStyle = "bg-red-50 border-red-200";
+                      textStyle = "text-red-700";
+                      iconColor = "text-red-500";
+                      badgeEl = <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Dans {remaining} km !</span>;
+                    } else {
+                      rowStyle = "bg-blue-50 border-blue-200";
+                      textStyle = "text-blue-700";
+                      iconColor = "text-blue-500";
+                      badgeEl = <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">{remaining.toLocaleString()} km restants</span>;
+                    }
+
+                    return (
+                      <div key={doc.id} className={`flex items-center gap-3 p-3 rounded-xl border ${rowStyle}`}>
+                        <div className={`${iconColor} opacity-80`}>{DOC_ICONS[doc.type]}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-semibold ${textStyle}`}>{doc.label}</p>
+                          <p className="text-xs text-slate-400">
+                            Faite à {doc.kmAtVidange?.toLocaleString()} km · Prochaine à {doc.nextVidangeKm?.toLocaleString()} km
+                          </p>
+                        </div>
+                        {badgeEl}
+                        <button onClick={() => openEditDoc(doc)} className="text-slate-300 hover:text-blue-500 transition-colors ml-1">
+                          <Edit2 size={13} />
+                        </button>
+                        <button onClick={() => deleteDoc(doc.id)} className="text-slate-300 hover:text-red-500 transition-colors ml-1">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    );
+                  }
+
                   const days = daysUntil(doc.expiryDate);
-                  const statusStyle = {
-                    expired: "bg-red-50 border-red-200",
-                    urgent:  "bg-amber-50 border-amber-200",
-                    ok:      "bg-green-50 border-green-200",
-                  }[status];
-                  const textStyle = {
-                    expired: "text-red-700", urgent: "text-amber-700", ok: "text-green-700",
-                  }[status];
-                  const badge = {
-                    expired: <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Expiré</span>,
-                    urgent:  <span className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">{days}j restants</span>,
-                    ok:      <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">{days}j restants</span>,
-                  }[status];
+                  const docRowStyle = days < 0
+                    ? "bg-red-50 border-red-200"
+                    : days <= 30
+                    ? "bg-red-50 border-red-200"
+                    : "bg-blue-50 border-blue-200";
+                  const docTextStyle = days < 0
+                    ? "text-red-700"
+                    : days <= 30
+                    ? "text-red-700"
+                    : "text-blue-700";
+                  const badge = days < 0
+                    ? <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Expiré !</span>
+                    : days <= 30
+                    ? <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Dans {days}j !</span>
+                    : <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">{days}j restants</span>;
                   return (
-                    <div key={doc.id} className={`flex items-center gap-3 p-3 rounded-xl border ${statusStyle}`}>
-                      <div className={`${textStyle} opacity-70`}>{DOC_ICONS[doc.type]}</div>
+                    <div key={doc.id} className={`flex items-center gap-3 p-3 rounded-xl border ${docRowStyle}`}>
+                      <div className={`${docTextStyle} opacity-70`}>{DOC_ICONS[doc.type]}</div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold ${textStyle}`}>{doc.label}</p>
+                        <p className={`text-sm font-semibold ${docTextStyle}`}>{doc.label}</p>
                         <p className="text-xs text-slate-400">Expire le {doc.expiryDate}{doc.notes ? ` · ${doc.notes}` : ""}</p>
                       </div>
                       {badge}
+                      <button onClick={() => openEditDoc(doc)} className="text-slate-300 hover:text-blue-500 transition-colors ml-1">
+                        <Edit2 size={13} />
+                      </button>
                       <button onClick={() => deleteDoc(doc.id)} className="text-slate-300 hover:text-red-500 transition-colors ml-1">
                         <Trash2 size={13} />
                       </button>
@@ -492,9 +626,9 @@ export default function VehicleDetail() {
               </button>
             </div>
             <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
-              {profile.expenses.length === 0
+              {(profile.expenses || []).length === 0
                 ? <p className="text-center text-slate-400 text-xs py-4">Aucune dépense enregistrée</p>
-                : [...profile.expenses].sort((a, b) => b.date.localeCompare(a.date)).map(exp => (
+                : [...(profile.expenses || [])].sort((a, b) => b.date.localeCompare(a.date)).map(exp => (
                   <div key={exp.id} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-xl">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -668,7 +802,7 @@ export default function VehicleDetail() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-800 text-sm">Ajouter un document</h3>
+              <h3 className="font-semibold text-slate-800 text-sm">{editingDoc ? "Modifier le document" : "Ajouter un document"}</h3>
               <button onClick={() => setShowDocModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
             </div>
             <div className="p-5 space-y-3">
@@ -685,11 +819,38 @@ export default function VehicleDetail() {
                   placeholder={DOC_LABELS[newDoc.type || "assurance"]}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
               </div>
-              <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">Date d'expiration</label>
-                <input type="date" value={newDoc.expiryDate || ""} onChange={e => setNewDoc(d => ({ ...d, expiryDate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
-              </div>
+
+              {/* Vidange: km fields instead of expiry date */}
+              {newDoc.type === "vidange" ? (
+                <>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 block mb-1">Km à la vidange <span className="text-red-400">*</span></label>
+                    <input
+                      type="number" min="0"
+                      value={newDoc.kmAtVidange || ""}
+                      onChange={e => setNewDoc(d => ({ ...d, kmAtVidange: Number(e.target.value) }))}
+                      placeholder={currentKm ? String(currentKm) : "ex: 45000"}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                  </div>
+                  <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700">
+                    Prochaine vidange à : <span className="font-bold">{newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 10000).toLocaleString() : "—"} km</span>
+                    <span className="text-blue-400 ms-1">(alerte à {newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 9800).toLocaleString() : "—"} km)</span>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 block mb-1">Date de la vidange</label>
+                    <input type="date" value={newDoc.expiryDate || today()} onChange={e => setNewDoc(d => ({ ...d, expiryDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="text-xs font-medium text-slate-500 block mb-1">Date d'expiration</label>
+                  <input type="date" value={newDoc.expiryDate || ""} onChange={e => setNewDoc(d => ({ ...d, expiryDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
+                </div>
+              )}
+
               <div>
                 <label className="text-xs font-medium text-slate-500 block mb-1">Notes</label>
                 <input value={newDoc.notes || ""} onChange={e => setNewDoc(d => ({ ...d, notes: e.target.value }))}
@@ -876,6 +1037,7 @@ export default function VehicleDetail() {
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {[
+                { key: "dailyPrice",          label: "💻 Prix location / jour (TND)", type: "number", val: profile.dailyPrice },
                 { key: "priceAchat",          label: "Prix d'achat (TND)",       type: "number", val: profile.priceAchat },
                 { key: "avance",              label: "Avance (TND)",             type: "number", val: profile.avance },
                 { key: "priceTrait",          label: "Mensualité (TND)",         type: "number", val: profile.priceTrait },

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Restore Finances — Palma</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #f8fafc; }
+  button { padding: 12px 24px; background: #16a34a; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+  button:hover { background: #15803d; }
+  #log { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 16px; max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+  .ok { color: #16a34a; } .err { color: #dc2626; } .info { color: #2563eb; }
+</style>
+</head>
+<body>
+<h2>💰 Restaurer les données financières — Palma</h2>
+<button onclick="run()">▶ Restaurer maintenant</button>
+<div id="log"></div>
+<script>
+const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
+const FINANCIAL = {"9601TU252":{"priceAchat":101000,"avance":12168,"priceTrait":2057,"nombreMoisFix":42,"dateFirstCirculation":"2025-07-02","dateFirstTrait":"2025-07-25","kilometrage":900,"color":"Blanc","year":2025,"photo":"/car-images/252tu9601.jpg"},"7360TU255":{"priceAchat":76157.275,"avance":34023.195,"priceTrait":1028,"nombreMoisFix":42,"dateFirstCirculation":"2025-10-08","dateFirstTrait":"2025-10-10","kilometrage":7846,"color":"#a7a0a0","year":2025,"photo":"/car-images/255tu7360.jpg"},"1958TU248":{"priceAchat":62815.5,"avance":16500,"priceTrait":1750,"nombreMoisFix":42,"dateFirstCirculation":"2024-12-14","dateFirstTrait":"2024-12-30","kilometrage":34138,"color":"rouge","year":2024,"photo":"/car-images/248tu1958.jpg"},"7378TU254":{"priceAchat":88715.122,"avance":22750,"priceTrait":1609,"nombreMoisFix":42,"dateFirstCirculation":"2025-09-02","dateFirstTrait":"2025-09-25","kilometrage":1,"color":"#fdfcfc","year":2025,"photo":"/car-images/254tu7378.png"},"3541TU253":{"priceAchat":96990.383,"avance":11740.559,"priceTrait":2079.264,"nombreMoisFix":42,"dateFirstCirculation":"2025-07-16","dateFirstTrait":"2025-08-05","kilometrage":120,"color":"Gris","year":2025,"photo":"/car-images/253tu3541.jpg"},"2508TU246":{"priceAchat":77863.788,"avance":20000,"priceTrait":1600,"nombreMoisFix":42,"dateFirstCirculation":"2024-09-19","dateFirstTrait":"2024-09-25","kilometrage":38177,"color":"Blanc","year":2024,"photo":"/car-images/246tu2508.jpg"},"5606TU236":{"priceAchat":79000,"avance":20000,"priceTrait":1626,"nombreMoisFix":42,"dateFirstCirculation":"2023-04-28","dateFirstTrait":"2023-05-15","kilometrage":127835,"color":"Blanc","year":2023,"photo":"/car-images/236tu5606.jpg"},"7468TU245":{"priceAchat":87064.411,"avance":14557.77,"priceTrait":1768448,"nombreMoisFix":42,"dateFirstCirculation":"2024-08-30","dateFirstTrait":"2024-10-10","kilometrage":49831,"color":"Gris","year":2024,"photo":"/car-images/245tu7468.webp"},"9192TU234":{"priceAchat":56700,"avance":11757.518,"priceTrait":1509.405,"nombreMoisFix":42,"dateFirstCirculation":"2023-01-31","dateFirstTrait":"2023-02-03","kilometrage":118283,"color":"Bleu","year":2023,"photo":"/car-images/234tu9192.jpg"},"9603TU252":{"priceAchat":101000,"avance":12168,"priceTrait":2057,"nombreMoisFix":42,"dateFirstCirculation":"2025-07-02","dateFirstTrait":"2025-07-25","kilometrage":120,"color":"bleu marine","year":2025,"photo":"/car-images/252tu9603.jpg"},"4485TU240":{"priceAchat":81000,"avance":20000,"priceTrait":1469,"nombreMoisFix":42,"dateFirstCirculation":"2023-11-21","dateFirstTrait":"2023-12-15","kilometrage":82000,"color":"Blanc","year":23,"photo":"/car-images/240tu4485.png"},"7379TU254":{"priceAchat":88715.122,"avance":22750,"priceTrait":1609,"nombreMoisFix":42,"dateFirstCirculation":"2025-09-02","dateFirstTrait":"2025-09-25","kilometrage":10,"color":"Blanc","year":2025,"photo":"/car-images/254tu7379.png"},"7057TU252":{"priceAchat":68300.165,"avance":5750,"priceTrait":1527,"nombreMoisFix":41,"dateFirstCirculation":"2025-06-24","dateFirstTrait":"2025-07-25","kilometrage":0,"color":"Gris","year":2025,"photo":"/car-images/252tu7057.webp"},"7138TU251":{"priceAchat":91053.558,"avance":11371.001,"priceTrait":1943.477,"nombreMoisFix":42,"dateFirstCirculation":"2025-05-16","dateFirstTrait":"2025-05-25","kilometrage":270,"color":"Noir","year":2025,"photo":"/car-images/251tu7138.jpg"},"201TU248":{"priceAchat":88000,"avance":20000,"priceTrait":1600,"nombreMoisFix":42,"dateFirstCirculation":"2025-02-20","dateFirstTrait":"2025-03-10","kilometrage":24670,"color":"Blanc","year":2025,"photo":"/car-images/248tu201.jpg"},"203TU248":{"priceAchat":91028.955,"avance":15158.736,"priceTrait":1850.493,"nombreMoisFix":42,"dateFirstCirculation":"2024-12-05","dateFirstTrait":"2024-12-25","kilometrage":31337,"color":"Noir","year":2024,"photo":"/car-images/248tu203.jpg"},"1945TU251":{"priceAchat":72838.469,"avance":5921,"priceTrait":1632.11,"nombreMoisFix":42,"dateFirstCirculation":"2025-04-29","dateFirstTrait":"2025-05-10","kilometrage":1374,"color":"Rouge","year":2025,"photo":"/car-images/251tu1945.jpg"},"4912TU246":{"priceAchat":86198.442,"avance":14557.441,"priceTrait":1747.341,"nombreMoisFix":42,"dateFirstCirculation":"2024-09-30","dateFirstTrait":"2024-10-15","kilometrage":33620,"color":"Blanc","year":2024,"photo":"/car-images/246tu4912.png"},"8305TU238":{"priceAchat":82000,"avance":20000,"priceTrait":1473,"nombreMoisFix":42,"dateFirstCirculation":"2023-08-28","dateFirstTrait":"2023-09-15","kilometrage":84000,"color":"Noir","year":23,"photo":"/car-images/238tu8305.jpg"},"6155TU259":{"priceAchat":76750.019,"avance":14560.366,"priceTrait":1516.821,"nombreMoisFix":41,"dateFirstCirculation":"2026-03-12","dateFirstTrait":"2023-02-10","kilometrage":166,"color":"#000000","year":2026,"photo":"/car-images/259tu6155.jpg"},"5943TU251":{"priceAchat":78966.908,"avance":11000.5,"priceTrait":1657.72,"nombreMoisFix":42,"dateFirstCirculation":"2025-05-13","dateFirstTrait":"2025-06-05","kilometrage":2993,"color":"Gris","year":2025,"photo":"/car-images/251tu5943.webp"},"1959TU248":{"priceAchat":62815.5,"avance":16500,"priceTrait":1750,"nombreMoisFix":42,"dateFirstCirculation":"2024-12-14","dateFirstTrait":"2024-12-30","kilometrage":20221,"color":"Blanc","year":2024,"photo":"/car-images/248tu1959.jpg"},"2504TU246":{"priceAchat":100852.5,"avance":20000,"priceTrait":1925,"nombreMoisFix":42,"dateFirstCirculation":"2024-09-19","dateFirstTrait":"2024-10-15","kilometrage":30200,"color":"Gris","year":2024,"photo":"/car-images/246tu2504.jpg"},"2526TU242":{"priceAchat":99359.81,"avance":49679.905,"priceTrait":1211.705,"nombreMoisFix":42,"dateFirstCirculation":"2024-04-25","dateFirstTrait":"2024-02-29","kilometrage":71242,"color":"Blanc","year":24,"photo":"/car-images/242tu2526.webp"},"4486TU240":{"priceAchat":81000,"avance":20000,"priceTrait":1469,"nombreMoisFix":42,"dateFirstCirculation":"2023-11-21","dateFirstTrait":"0203-12-15","kilometrage":80000,"color":"Blanc","year":23,"photo":"/car-images/240tu4486.png"},"5605TU236":{"priceAchat":73643.15,"avance":11757.518,"priceTrait":1509.405,"nombreMoisFix":41,"dateFirstCirculation":"2023-04-28","dateFirstTrait":"2023-05-25","kilometrage":110789,"color":"Noir","year":2023,"photo":"/car-images/236tu5605.jpg"},"2532TU242":{"priceAchat":108000,"avance":20000,"priceTrait":1925,"nombreMoisFix":42,"dateFirstCirculation":"2024-02-29","dateFirstTrait":"2024-04-25","kilometrage":71242,"color":"Gris","year":2024,"photo":"/car-images/242tu2532.png"},"1162TU245":{"priceAchat":88000,"avance":20000,"priceTrait":1600,"nombreMoisFix":42,"dateFirstCirculation":"2024-07-31","dateFirstTrait":"2024-08-15","kilometrage":56560,"color":"Blanc","year":2024,"photo":"/car-images/245tu1162.webp"},"1389TU244":{"priceAchat":88000,"avance":20000,"priceTrait":1600,"nombreMoisFix":42,"dateFirstCirculation":"2024-06-06","dateFirstTrait":"2024-06-20","kilometrage":56252,"color":"Blanc","year":2024,"photo":"/car-images/244tu1389.jpg"},"5941TU251":{"priceAchat":78966.908,"avance":11000.5,"priceTrait":1657.72,"nombreMoisFix":42,"dateFirstCirculation":"2025-05-13","dateFirstTrait":"2025-06-05","kilometrage":2996,"color":"Noir","year":2025,"photo":"/car-images/251tu5941.jpg"}};
+
+function log(msg, cls="") {
+  const el = document.getElementById("log");
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function run() {
+  log("🚀 Restauration en cours...", "info");
+  for (const [key, fin] of Object.entries(FINANCIAL)) {
+    try {
+      // Read current (has documents)
+      const res = await fetch(`${DB}/car_profiles/${key}.json`);
+      const current = await res.json() || {};
+      // Merge: keep documents, add financial data
+      const merged = { registration: key, documents: [], expenses: [], ...fin, documents: current.documents || [], expenses: current.expenses || [] };
+      const put = await fetch(`${DB}/car_profiles/${key}.json`, {
+        method: "PUT", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(merged)
+      });
+      log(`${put.ok ? "✅" : "❌"} ${key} — ${(merged.documents||[]).length} docs`, put.ok ? "ok" : "err");
+    } catch(e) { log(`❌ ${key}: ${e.message}`, "err"); }
+  }
+  log("\n✅ Terminé ! Rechargez l'application.", "ok");
+}
+</script>
+</body>
+</html>

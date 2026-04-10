@@ -61,6 +61,18 @@ export default function Vehicles() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [profiles, setProfiles] = useState<Record<string, CarProfile>>(loadProfiles);
+
+  // Load profiles from Firebase to get latest documents
+  useEffect(() => {
+    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/car_profiles.json")
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          setProfiles(data);
+          localStorage.setItem("palma_car_profiles", JSON.stringify(data));
+        }
+      }).catch(() => {});
+  }, []);
   const [overrideHistory, setOverrideHistory] = useState<Record<string, any[]>>(() => {
     try { return JSON.parse(localStorage.getItem("palma_state_overrides") || "{}"); } catch { return {}; }
   });
@@ -134,11 +146,30 @@ export default function Vehicles() {
     );
     const profile = profiles[norm(registration)];
     const totalExpenses = (profile?.expenses || []).reduce((s, e) => s + e.amount, 0);
-    const urgentDocs = (profile?.documents || []).filter(d => {
+    const docs: any[] = profile?.documents || [];
+
+    // Same logic as Dashboard: skip expired if newer valid exists, skip old vidanges
+    const urgentDocs = docs.filter(d => {
+      if (d.type === "vidange") {
+        if (!d.nextVidangeKm) return false;
+        // Only last vidange, and only if urgent (≤ 200 km remaining)
+        const maxNextKm = Math.max(...docs.filter((x: any) => x.type === "vidange" && x.nextVidangeKm).map((x: any) => x.nextVidangeKm || 0));
+        if (d.nextVidangeKm !== maxNextKm) return false;
+        // Need current km — use profile.kilometrage as fallback
+        const curKm = profile?.kilometrage || 0;
+        const remaining = d.nextVidangeKm - curKm;
+        return remaining <= 200; // only alert if ≤ 200 km
+      }
       const days = daysUntil(d.expiryDate);
-      return days >= 0 && days <= 30;
+      if (days < 0) {
+        return !docs.some((x: any) => x.id !== d.id && x.type === d.type && daysUntil(x.expiryDate) >= 0);
+      }
+      return days <= 30;
     });
-    const expiredDocs = (profile?.documents || []).filter(d => daysUntil(d.expiryDate) < 0);
+    const expiredDocs = urgentDocs.filter(d => {
+      if (d.type === "vidange") return false;
+      return daysUntil(d.expiryDate) < 0;
+    });
     return { totalRevenue, totalDays, totalExpenses, urgentDocs, expiredDocs, contractCount: carContracts.length };
   }
 

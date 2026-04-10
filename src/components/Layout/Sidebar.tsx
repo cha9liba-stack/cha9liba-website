@@ -42,6 +42,7 @@ export default function Sidebar() {
     { to: "/vehicles",       icon: Car,        label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
     { to: "/clients",        icon: Users,      label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
     { to: "/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
+    { to: "/online-bookings", icon: Car,       label: isRTL ? "حجوزات الإنترنت" : "Réservations web",  hidden: isST },
     { to: "/gps",            icon: Navigation, label: "GPS",                                           hidden: isST },
   ].filter(i => !i.hidden);
 

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Search, Edit2, Trash2, RefreshCw, Eye, ChevronUp, ChevronDown, ChevronsUpDown, MessageSquare } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, RefreshCw, Eye, ChevronUp, ChevronDown, ChevronsUpDown, MessageSquare, Truck } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
 import { deleteContract, getAllContracts, subscribeToContracts, isRealContract } from "../services/contractService";
 import { isSousTraitant } from "../lib/permissions";
@@ -13,6 +13,7 @@ import { useSMSReminder } from "../hooks/useSMSReminder";
 import SMSComposeModal from "../components/SMS/SMSComposeModal";
 import SMSSettingsModal from "../components/SMS/SMSSettingsModal";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
+import DeliveryReceipt from "../components/DeliveryReceipt";
 import type { Contract } from "../types";
 
 type SortKey = "contractNumber" | "driverName" | "brand" | "departureDate" | "returnDate" | "totalFacture";
@@ -46,6 +47,7 @@ export default function Contracts() {
   const [smsResult, setSmsResult] = useState<{ id: string; ok: boolean } | null>(null);
   const [smsComposeContract, setSmsComposeContract] = useState<Contract | null>(null);
   const [showSMSSettings, setShowSMSSettings] = useState(false);
+  const [showDelivery, setShowDelivery] = useState(false);
 
   const isST = isSousTraitant(user);
   const stRegs = useSousTraitantCars();
@@ -205,6 +207,11 @@ export default function Contracts() {
           <button onClick={openNew}
             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             <Plus size={16} />{t("new_contract")}
+          </button>
+          <button onClick={() => setShowDelivery(true)}
+            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            title="Bon de livraison">
+            <Truck size={15} />
           </button>
           <button onClick={() => setShowSMSSettings(true)}
             className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -415,6 +422,7 @@ export default function Contracts() {
       {previewContract && <ContractPreview contract={previewContract} onClose={() => setPreviewContract(null)} />}
       {smsComposeContract && <SMSComposeModal contract={smsComposeContract} onClose={() => setSmsComposeContract(null)} />}
       {showSMSSettings && <SMSSettingsModal onClose={() => setShowSMSSettings(false)} />}
+      {showDelivery && <DeliveryReceipt onClose={() => setShowDelivery(false)} />}
 
       {confirmDeleteId && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

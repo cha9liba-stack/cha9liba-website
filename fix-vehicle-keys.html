@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Fix Vehicle Keys — Palma</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #f8fafc; }
+  button { padding: 12px 24px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 8px 4px; }
+  button:hover { background: #d97706; }
+  #log { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 16px; max-height: 600px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+  .ok { color: #16a34a; } .err { color: #dc2626; } .info { color: #2563eb; } .warn { color: #d97706; }
+</style>
+</head>
+<body>
+<h2>🔧 Fix Vehicle Keys — Palma Rent a Car</h2>
+<p>Ce script copie les données des anciens keys (ex: <code>248TU1958</code>) vers les nouveaux keys corrects (ex: <code>1958TU248</code>).</p>
+<button onclick="runFix()">▶ Lancer la correction</button>
+<div id="log"></div>
+
+<script>
+const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
+// Mapping: oldKey (import script) → newKey (app format from DEFAULT_FLEET)
+const KEY_MAP = {
+  "230TU2171":  "2171TU230",
+  "230TU9195":  "9195TU230",
+  "234TU9192":  "9192TU234",
+  "236TU5605":  "5605TU236",
+  "236TU5606":  "5606TU236",
+  "238TU8305":  "8305TU238",
+  "240TU4485":  "4485TU240",
+  "240TU4486":  "4486TU240",
+  "242TU2526":  "2526TU242",
+  "242TU2532":  "2532TU242",
+  "244TU1389":  "1389TU244",
+  "245TU1162":  "1162TU245",
+  "245TU7468":  "7468TU245",
+  "246TU2504":  "2504TU246",
+  "246TU2508":  "2508TU246",
+  "246TU4912":  "4912TU246",
+  "248TU201":   "201TU248",
+  "248TU203":   "203TU248",
+  "248TU1958":  "1958TU248",
+  "248TU1959":  "1959TU248",
+  "251TU1945":  "1945TU251",
+  "251TU5941":  "5941TU251",
+  "251TU5943":  "5943TU251",
+  "251TU7138":  "7138TU251",
+  "252TU7057":  "7057TU252",
+  "252TU9601":  "9601TU252",
+  "252TU9603":  "9603TU252",
+  "253TU3541":  "3541TU253",
+  "254TU7378":  "7378TU254",
+  "254TU7379":  "7379TU254",
+  "255TU7360":  "7360TU255",
+  "246TN4911":  "4911TN246",
+};
+
+function log(msg, cls="") {
+  const el = document.getElementById("log");
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function runFix() {
+  log("🚀 Démarrage de la correction des keys...", "info");
+
+  for (const [oldKey, newKey] of Object.entries(KEY_MAP)) {
+    log(`\n📦 ${oldKey} → ${newKey}`, "info");
+
+    try {
+      // 1. Read old key
+      const res = await fetch(`${DB}/car_profiles/${oldKey}.json`);
+      const data = await res.json();
+
+      if (!data) {
+        log(`  ⚠️ Aucune donnée pour ${oldKey}`, "warn");
+        continue;
+      }
+
+      // 2. Read existing new key (may have other data like photo, finances)
+      const resNew = await fetch(`${DB}/car_profiles/${newKey}.json`);
+      const existingNew = await resNew.json() || {};
+
+      // 3. Merge: keep existing data, add/replace documents from old key
+      const merged = {
+        ...existingNew,
+        registration: newKey,
+        documents: data.documents || [],
+      };
+
+      // 4. Write to new key
+      const putRes = await fetch(`${DB}/car_profiles/${newKey}.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(merged),
+      });
+
+      if (putRes.ok) {
+        log(`  ✅ Copié vers ${newKey} (${(data.documents||[]).length} documents)`, "ok");
+      } else {
+        log(`  ❌ Erreur écriture: ${putRes.status}`, "err");
+        continue;
+      }
+
+      // 5. Delete old key
+      const delRes = await fetch(`${DB}/car_profiles/${oldKey}.json`, { method: "DELETE" });
+      if (delRes.ok) {
+        log(`  🗑️ Ancien key ${oldKey} supprimé`, "ok");
+      } else {
+        log(`  ⚠️ Impossible de supprimer ${oldKey}`, "warn");
+      }
+
+    } catch(e) {
+      log(`  ❌ Erreur: ${e.message}`, "err");
+    }
+  }
+
+  log("\n✅ Correction terminée ! Rechargez l'application.", "ok");
+}
+</script>
+</body>
+</html>
