@@ -944,16 +944,16 @@ export default function Fleet() {
           <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border-b border-amber-100">
             <CalendarClock size={14} className="text-amber-600" />
             <span className="font-semibold text-sm text-amber-700">{isRTL ? "الحجوزات" : "Réservations"}</span>
-            <span className="ms-auto bg-amber-500 text-white text-xs rounded-full px-2 py-0.5">{resOnDate.length}</span>
+            <span className="ms-auto bg-amber-500 text-white text-xs rounded-full px-2 py-0.5">{res.length}</span>
             <button onClick={() => setModal("res")}
               className="flex items-center gap-1 px-2 py-1 text-xs bg-amber-500 text-white rounded-lg hover:bg-amber-600">
               <Plus size={11} />
             </button>
           </div>
           <div className="p-3 space-y-2 min-h-[120px]">
-            {resOnDate.length === 0
+            {res.length === 0
               ? <p className="text-center text-slate-400 text-xs py-6">{isRTL ? "لا توجد" : "Aucune"}</p>
-              : resOnDate.map(r => (
+              : res.map(r => (
                 <div key={r.id} className="bg-amber-50 rounded-xl p-3 flex justify-between items-start">
                   <div>
                     <p className="font-semibold text-sm text-slate-800">{r.clientName}</p>
