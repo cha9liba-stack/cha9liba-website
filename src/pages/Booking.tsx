@@ -362,6 +362,14 @@ export default function Booking() {
   const isRtl = lang === "ar";
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [heroImg, setHeroImg] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroImg(i => (i + 1) % 6);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -676,11 +684,23 @@ export default function Booking() {
       {/* Hero */}
       <section className="relative pt-16 min-h-screen flex flex-col justify-between overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src="/car-images/254tu7378.png"
-            alt="hero car"
-            className="w-full h-full object-cover object-center scale-105"
-          />
+          {/* Slideshow background */}
+          {[
+            "/car-images/254tu7378.png",
+            "/car-images/254tu7379.png",
+            "/car-images/252tu9601.jpg",
+            "/car-images/246tu4912.png",
+            "/car-images/253tu3541.jpg",
+            "/car-images/238tu8305.jpg",
+          ].map((src, i) => (
+            <img
+              key={src}
+              src={src}
+              alt="hero car"
+              className="absolute inset-0 w-full h-full object-cover object-center scale-105 transition-opacity duration-1000"
+              style={{ opacity: heroImg === i ? 1 : 0 }}
+            />
+          ))}
           <div className="absolute inset-0 bg-black/55" />
         </div>
 
