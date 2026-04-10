@@ -131,11 +131,18 @@ export default function Payment() {
   async function handleConfirm() {
     setSubmitting(true);
     try {
+      const paymentLabels: Record<PayMethod, string> = {
+        card: "Carte bancaire (Konnect)",
+        bank: `Virement bancaire (Ref: ${ref})`,
+        cash: "Paiement à la livraison",
+      };
+
       // Save booking to Firebase with payment method
       const payload = {
         ...booking,
         paymentMethod: method,
         paymentRef: method === "bank" ? ref : undefined,
+        notes: `${booking.notes ? booking.notes + " · " : ""}${paymentLabels[method]}`,
         status: "pending",
         _createdAt: Date.now(),
       };

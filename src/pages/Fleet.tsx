@@ -954,18 +954,27 @@ export default function Fleet() {
             {res.length === 0
               ? <p className="text-center text-slate-400 text-xs py-6">{isRTL ? "لا توجد" : "Aucune"}</p>
               : res.map(r => (
-                <div key={r.id} className="bg-amber-50 rounded-xl p-3 flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-sm text-slate-800">{r.clientName}</p>
-                    <p className="text-xs text-slate-500">{r.brand} {r.registration} · {r.phone}</p>
-                    <p className="text-xs text-slate-400">{r.startDate} → {r.endDate}</p>
+                <div key={r.id} className="bg-amber-50 rounded-xl p-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-slate-800">{r.clientName}</p>
+                      <p className="text-xs text-slate-500">{r.brand} {r.registration} · {r.phone}</p>
+                      <p className="text-xs text-slate-400">{r.startDate} → {r.endDate}</p>
+                    </div>
+                    <div className="text-end flex-shrink-0 ms-2">
+                      <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
+                      <button onClick={() => setRes(p => p.filter(x => x.id !== r.id))}
+                        className="text-slate-300 hover:text-red-500 mt-1"><Trash2 size={12} /></button>
+                    </div>
                   </div>
-                  <div className="text-end">
-                    <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
-                    <p className="text-xs text-slate-400">{r.notes}</p>
-                    <button onClick={() => setRes(p => p.filter(x => x.id !== r.id))}
-                      className="text-slate-300 hover:text-red-500 mt-1"><Trash2 size={12} /></button>
-                  </div>
+                  {r.notes && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      {r.notes.includes("Carte") && <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">💳 Carte</span>}
+                      {r.notes.includes("Virement") && <span className="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded-full">🏦 Virement</span>}
+                      {r.notes.includes("livraison") && <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded-full">💵 À la livraison</span>}
+                      {r.notes.includes("Ref:") && <span className="text-[10px] text-slate-400 font-mono">{r.notes.match(/Ref: (\S+)/)?.[1]}</span>}
+                    </div>
+                  )}
                 </div>
               ))
             }
