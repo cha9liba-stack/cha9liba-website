@@ -371,6 +371,7 @@ export default function Booking() {
 
   const [fleet, setFleet] = useState<FleetCar[]>(DEFAULT_FLEET);
   const [busyRegs, setBusyRegs] = useState<Set<string>>(new Set());
+  const [availLoading, setAvailLoading] = useState(false);
   const [depositPct] = useState(30);
   const [dataLoading, setDataLoading] = useState(true);
   const [pickupDate, setPickupDate] = useState("");
@@ -441,43 +442,63 @@ export default function Booking() {
   const checkAvailability = useCallback(async (pickup: string, ret: string) => {
     try {
       const [contractsRes, bookingsRes] = await Promise.all([
-        fetch(`${DB}/contracts.json`),
+        fetch(`${DB}/contracts.json?orderBy=%22%24key%22&limitToLast=500`),
         fetch(`${DB}/bookings.json`),
       ]);
       const contracts = contractsRes.ok ? await contractsRes.json() : null;
       const bookings = bookingsRes.ok ? await bookingsRes.json() : null;
       const busy = new Set<string>();
 
-      const check = (items: Record<string, {
-        registration?: string; reg?: string;
-        startDate?: string; endDate?: string;
-        pickupDate?: string; returnDate?: string;
-        departureDate?: string; returnDate2?: string;
-        status?: string;
-      }> | null, isBooking = false) => {
-        if (!items) return;
-        Object.values(items).forEach(item => {
-          // For online bookings: only pending/confirmed block availability
-          if (isBooking) {
-            if (!item.status || item.status === "cancelled" || item.status === "rejected") return;
-          } else {
-            // For contracts: skip deleted
-            if ((item as any)._deleted) return;
-          }
-          const reg = norm(item.registration || item.reg || "");
-          const s = item.startDate || item.pickupDate || (item as any).departureDate || "";
-          const e = item.endDate || (item as any).returnDate || "";
-          if (reg && s && e && datesOverlap(pickup, ret, s, e)) busy.add(reg);
-        });
-      };
+      console.log("Checking availability for:", pickup, "to", ret);
 
-      check(contracts, false);
-      check(bookings, true);
+      // Check contracts
+      if (contracts) {
+        Object.values(contracts as Record<string, any>).forEach(item => {
+          if (!item || item._deleted) return;
+          // Exclude cancelled contracts (both English and Arabic)
+          const status = item.status || item["حالة"] || "";
+          if (status === "cancelled" || status === "rejected" || status === "ملغى" || status === "مرفوض") {
+            console.log("Skipping cancelled contract:", item.registration, "status:", status);
+            return;
+          }
+          const reg = norm(item.registration || item["رقم اللوحة"] || "");
+          // Support both new (departureDate/returnDate) and old Arabic field names
+          const s = item.departureDate || item["يوم الانطلاق"] || "";
+          const e = item.returnDate || item["يوم الرجوع"] || "";
+          if (reg && s && e && datesOverlap(pickup, ret, s, e)) {
+            console.log("Contract makes car busy:", reg, "from", s, "to", e);
+            busy.add(reg);
+          }
+        });
+      }
+
+      // Check online bookings (only pending/confirmed)
+      if (bookings) {
+        Object.values(bookings as Record<string, any>).forEach(item => {
+          if (!item) return;
+          const status = item.status || "";
+          if (status === "cancelled" || status === "rejected" || status === "ملغى" || status === "مرفوض") {
+            console.log("Skipping cancelled booking:", item.registration, "status:", status);
+            return;
+          }
+          const reg = norm(item.registration || "");
+          const s = item.startDate || "";
+          const e = item.endDate || "";
+          if (reg && s && e && datesOverlap(pickup, ret, s, e)) {
+            console.log("Booking makes car busy:", reg, "from", s, "to", e);
+            busy.add(reg);
+          }
+        });
+      }
+
+      console.log("Busy registrations:", Array.from(busy));
       setBusyRegs(busy);
     } catch {
       setBusyRegs(new Set());
+    } finally {
+      setAvailLoading(false);
     }
-  }, []);
+  }, [pickupDate, returnDate]);
 
   // Handle search — scroll immediately, fetch availability in background
   const handleSearch = async () => {
@@ -490,6 +511,7 @@ export default function Booking() {
     setSearched(true);
     fleetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     // Fetch availability in background
+    setAvailLoading(true);
     checkAvailability(pickupDate, returnDate);
   };
 
@@ -831,6 +853,15 @@ export default function Booking() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-black text-gray-900 mb-2">{t.fleetTitle}</h2>
             <p className="text-gray-500">{t.fleetSub}</p>
+            {searched && (
+              <button
+                onClick={() => { setAvailLoading(true); checkAvailability(pickupDate, returnDate); }}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-full transition-colors">
+                {availLoading
+                  ? <><Loader2 size={11} className="animate-spin" /> {lang === "fr" ? "Vérification..." : lang === "ar" ? "جاري التحقق..." : "Checking..."}</>
+                  : <><Search size={11} /> {lang === "fr" ? "Actualiser la disponibilité" : lang === "ar" ? "تحديث التوفر" : "Refresh availability"}</>}
+              </button>
+            )}
           </div>
           {dataLoading ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
