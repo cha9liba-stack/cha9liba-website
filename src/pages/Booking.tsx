@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Shield, Route, Headphones, BadgeDollarSign, Phone, Mail, MapPin,
   Calendar, Search, Car, Users, Clock, Star, ChevronRight, X,
@@ -355,6 +356,7 @@ function CarImage({ reg, photo, alt }: { reg: string; photo?: string; alt: strin
 }
 
 export default function Booking() {
+  const navigate = useNavigate();
   const [lang, setLang] = useState<LangKey>("fr");
   const t = T[lang];
   const isRtl = lang === "ar";
@@ -482,7 +484,7 @@ export default function Booking() {
     setTimeout(() => fleetRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   };
 
-  // Handle submit
+  // Handle submit — redirect to payment page
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
@@ -490,45 +492,34 @@ export default function Booking() {
     if (!formPhone.trim()) errs.phone = t.errorPhone;
     if (Object.keys(errs).length) { setFormErrors(errs); return; }
     setFormErrors({});
-    setSubmitting(true);
-    try {
-      const numDays = pickupDate && returnDate ? daysBetween(pickupDate, returnDate) : 1;
-      const totalAmount = modalCar ? numDays * modalCar.dailyPrice : 0;
-      const depositAmount = Math.ceil(totalAmount * depositPct / 100);
-      const payload: Partial<OnlineBooking> = {
-        clientName: formName,
-        clientPhone: formPhone,
-        clientEmail: formEmail || undefined,
-        clientCin: formCin || undefined,
-        clientAddress: formAddr || undefined,
-        notes: formNotes || undefined,
-        registration: modalCar?.registration ?? "",
-        brand: modalCar?.brand ?? "",
-        model: modalCar?.model ?? "",
-        dailyPrice: modalCar?.dailyPrice ?? 0,
-        startDate: pickupDate,
-        endDate: returnDate,
-        days: numDays,
-        totalAmount,
-        depositAmount,
-        status: "pending",
-        lang,
-        _createdAt: Date.now(),
-      };
-      await fetch(`${DB}/bookings.json`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      setModalCar(null);
-      setToast(true);
-      setFormName(""); setFormPhone(""); setFormEmail(""); setFormCin(""); setFormAddr(""); setFormNotes("");
-      setTimeout(() => setToast(false), 4000);
-    } catch {
-      // ignore
-    } finally {
-      setSubmitting(false);
-    }
+
+    const numDays = pickupDate && returnDate ? daysBetween(pickupDate, returnDate) : 1;
+    const totalAmount = modalCar ? numDays * modalCar.dailyPrice : 0;
+    const depositAmount = Math.ceil(totalAmount * depositPct / 100);
+
+    // Build booking payload and navigate to payment
+    const bookingData = {
+      clientName: formName,
+      clientPhone: formPhone,
+      clientEmail: formEmail || undefined,
+      clientCin: formCin || undefined,
+      clientAddress: formAddr || undefined,
+      notes: formNotes || undefined,
+      registration: modalCar?.registration ?? "",
+      brand: modalCar?.brand ?? "",
+      model: modalCar?.model ?? "",
+      photo: modalCar?.photo,
+      dailyPrice: modalCar?.dailyPrice ?? 0,
+      startDate: pickupDate,
+      endDate: returnDate,
+      days: numDays,
+      totalAmount,
+      depositAmount,
+      lang,
+    };
+
+    setModalCar(null);
+    navigate("/payment", { state: { booking: bookingData } });
   };
 
   const days = pickupDate && returnDate ? daysBetween(pickupDate, returnDate) : 1;

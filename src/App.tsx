@@ -10,6 +10,7 @@ import Vehicles from "./pages/Vehicles";
 import VehicleDetail from "./pages/VehicleDetail";
 import Clients from "./pages/Clients";
 import Booking from "./pages/Booking";
+import Payment from "./pages/Payment";
 import InvoicePublic from "./pages/InvoicePublic";
 import { lazy, Suspense } from "react";
 import SMSTest from "./pages/SMSTest";
@@ -45,6 +46,7 @@ export default function App() {
       <Routes>
         {/* Root = Booking page (public) */}
         <Route path="/" element={<Booking />} />
+        <Route path="/payment" element={<Payment />} />
         <Route path="/login" element={<Login />} />
         <Route path="/invoice" element={<InvoicePublic />} />
         <Route
