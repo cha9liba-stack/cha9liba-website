@@ -23,7 +23,7 @@ export default function Login() {
       const user = await login(username, password);
       if (user) {
         setUser(user);
-        navigate("/");
+        navigate("/app");
       } else {
         setError("Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©");
       }

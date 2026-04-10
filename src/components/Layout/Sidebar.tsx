@@ -30,20 +30,20 @@ export default function Sidebar() {
   const isST = isSousTraitant(user);
 
   const mainItems = [
-    { to: "/",             icon: LayoutDashboard, label: isRTL ? "لوحة القيادة" : "Tableau de bord", hidden: isST },
-    { to: "/contracts",    icon: FileText,         label: isRTL ? "العقود" : "Contrats", hidden: false },
-    { to: "/invoices",     icon: Receipt,          label: isRTL ? "الفواتير" : "Factures", hidden: isST },
-    { to: "/statistics",   icon: BarChart2,        label: isRTL ? "الإحصائيات" : "Statistiques", hidden: isST || user?.role !== "admin" },
-    { to: "/settings",     icon: Settings,         label: isRTL ? "الإعدادات" : "Paramètres", hidden: isST },
+    { to: "/app",             icon: LayoutDashboard, label: isRTL ? "لوحة القيادة" : "Tableau de bord", hidden: isST },
+    { to: "/app/contracts",    icon: FileText,         label: isRTL ? "العقود" : "Contrats", hidden: false },
+    { to: "/app/invoices",     icon: Receipt,          label: isRTL ? "الفواتير" : "Factures", hidden: isST },
+    { to: "/app/statistics",   icon: BarChart2,        label: isRTL ? "الإحصائيات" : "Statistiques", hidden: isST || user?.role !== "admin" },
+    { to: "/app/settings",     icon: Settings,         label: isRTL ? "الإعدادات" : "Paramètres", hidden: isST },
   ].filter(i => !i.hidden);
 
   const gestionItems = [
-    { to: "/fleet",          icon: Gauge,      label: isRTL ? "الأسطول اليومي" : "Flotte",           hidden: false },
-    { to: "/vehicles",       icon: Car,        label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
-    { to: "/clients",        icon: Users,      label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
-    { to: "/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
-    { to: "/online-bookings", icon: Car,       label: isRTL ? "حجوزات الإنترنت" : "Réservations web",  hidden: isST },
-    { to: "/gps",            icon: Navigation, label: "GPS",                                           hidden: isST },
+    { to: "/app/fleet",          icon: Gauge,      label: isRTL ? "الأسطول اليومي" : "Flotte",           hidden: false },
+    { to: "/app/vehicles",       icon: Car,        label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
+    { to: "/app/clients",        icon: Users,      label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
+    { to: "/app/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
+    { to: "/app/online-bookings", icon: Car,       label: isRTL ? "حجوزات الإنترنت" : "Réservations web",  hidden: isST },
+    { to: "/app/gps",            icon: Navigation, label: "GPS",                                           hidden: isST },
   ].filter(i => !i.hidden);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -81,7 +81,7 @@ export default function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {/* Main items */}
         {mainItems.map(({ to, icon: Icon, label }) => (
-          <NavLink key={to} to={to} end={to === "/"} className={navLinkClass}>
+          <NavLink key={to} to={to} end={to === "/app"} className={navLinkClass}>
             <Icon size={18} />
             {label}
           </NavLink>

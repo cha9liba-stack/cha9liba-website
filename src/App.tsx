@@ -35,7 +35,7 @@ function RootRedirect() {
 function STProtectedRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user);
   if (!user) return <Navigate to="/login" replace />;
-  if (isSousTraitant(user)) return <Navigate to="/contracts" replace />;
+  if (isSousTraitant(user)) return <Navigate to="/app/contracts" replace />;
   return <>{children}</>;
 }
 
@@ -43,11 +43,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Root = Booking page (public) */}
+        <Route path="/" element={<Booking />} />
         <Route path="/login" element={<Login />} />
         <Route path="/invoice" element={<InvoicePublic />} />
-        <Route path="/booking" element={<Booking />} />
         <Route
-          path="/"
+          path="/app"
           element={
             <ProtectedRoute>
               <AppLayout />
@@ -74,7 +75,7 @@ export default function App() {
           <Route path="gps" element={<STProtectedRoute><GPS /></STProtectedRoute>} />
           <Route path="sms-test" element={<SMSTest />} />
         </Route>
-        <Route path="*" element={<RootRedirect />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

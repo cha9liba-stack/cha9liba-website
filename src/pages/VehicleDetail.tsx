@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+﻿import { useState, useMemo, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import {
@@ -9,7 +9,7 @@ import {
 import type { CarProfile, CarDocument, CarExpense } from "../types";
 import { getOdometerForReg } from "../services/gpsService";
 
-// Safe GPS wrapper — won't crash in browser mode
+// Safe GPS wrapper â€” won't crash in browser mode
 async function safeGetOdometer(reg: string): Promise<number | null> {
   try { return await getOdometerForReg(reg); } catch { return null; }
 }
@@ -53,7 +53,7 @@ const DOC_ICONS: Record<CarDocument["type"], React.ReactNode> = {
 };
 const EXP_CATS: CarExpense["category"][] = ["carburant", "reparation", "entretien", "assurance", "vignette", "autre"];
 const EXP_LABELS: Record<CarExpense["category"], string> = {
-  carburant: "Carburant", reparation: "Réparation", entretien: "Entretien",
+  carburant: "Carburant", reparation: "RÃ©paration", entretien: "Entretien",
   assurance: "Assurance", vignette: "Vignette", autre: "Autre",
 };
 
@@ -113,7 +113,7 @@ export default function VehicleDetail() {
     return !cached[norm(registration || "")];
   });
 
-  // Load this car's profile — show cache immediately, refresh from Firebase in background
+  // Load this car's profile â€” show cache immediately, refresh from Firebase in background
   useEffect(() => {
     const key = norm(registration);
     const cached = loadProfiles();
@@ -157,7 +157,7 @@ export default function VehicleDetail() {
   const [showEditVehicleData, setShowEditVehicleData] = useState(false);
   const [vehicleDataForm, setVehicleDataForm] = useState<Partial<CarProfile>>({});
 
-  // Photo upload — compress before saving to avoid localStorage quota
+  // Photo upload â€” compress before saving to avoid localStorage quota
   const photoRef = useRef<HTMLInputElement>(null);
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -178,7 +178,7 @@ export default function VehicleDetail() {
       try {
         updateProfile({ ...profile, photo: compressed });
       } catch {
-        alert("Impossible de sauvegarder la photo — espace insuffisant.");
+        alert("Impossible de sauvegarder la photo â€” espace insuffisant.");
       }
     };
     img.src = url;
@@ -204,7 +204,7 @@ export default function VehicleDetail() {
     return { totalRevenue, totalDays, totalExpenses, net, avgPerDay };
   }, [carContracts, profile.expenses]);
 
-  // Monthly analytics — revenue, expenses, mensualité per month
+  // Monthly analytics â€” revenue, expenses, mensualitÃ© per month
   const monthlyStats = useMemo(() => {
     if (!profile.dateFirstTrait) return [];
     const mensualite = profile.priceTrait || 0;
@@ -377,17 +377,17 @@ export default function VehicleDetail() {
   if (!car) return (
     <div className="p-8 text-center text-slate-400">
       <Car size={40} className="mx-auto mb-3 opacity-30" />
-      <p>Véhicule introuvable</p>
-      <button onClick={() => navigate("/vehicles")} className="mt-3 text-amber-500 hover:underline text-sm">← Retour</button>
+      <p>VÃ©hicule introuvable</p>
+      <button onClick={() => navigate("/app/vehicles")} className="mt-3 text-amber-500 hover:underline text-sm">â† Retour</button>
     </div>
   );
 
   return (
     <div className="p-5 space-y-5 max-w-6xl mx-auto">
 
-      {/* ── Header ── */}
+      {/* â”€â”€ Header â”€â”€ */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate("/vehicles")}
+        <button onClick={() => navigate("/app/vehicles")}
           className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500">
           <ArrowLeft size={18} />
         </button>
@@ -404,7 +404,7 @@ export default function VehicleDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {/* ── LEFT COLUMN ── */}
+        {/* â”€â”€ LEFT COLUMN â”€â”€ */}
         <div className="space-y-4">
 
           {/* Photo */}
@@ -440,8 +440,8 @@ export default function VehicleDetail() {
             </h3>
             {[
               { label: "Revenus totaux",  value: stats.totalRevenue, color: "text-green-600", icon: <TrendingUp size={13} /> },
-              { label: "Dépenses totales", value: stats.totalExpenses, color: "text-red-500",  icon: <TrendingDown size={13} /> },
-              { label: "Bénéfice net",    value: stats.net,           color: stats.net >= 0 ? "text-green-700" : "text-red-600", icon: <DollarSign size={13} /> },
+              { label: "DÃ©penses totales", value: stats.totalExpenses, color: "text-red-500",  icon: <TrendingDown size={13} /> },
+              { label: "BÃ©nÃ©fice net",    value: stats.net,           color: stats.net >= 0 ? "text-green-700" : "text-red-600", icon: <DollarSign size={13} /> },
             ].map(({ label, value, color, icon }) => (
               <div key={label} className="flex items-center justify-between">
                 <span className="text-xs text-slate-500 flex items-center gap-1">{icon}{label}</span>
@@ -449,7 +449,7 @@ export default function VehicleDetail() {
               </div>
             ))}
             <div className="border-t border-slate-100 pt-2 flex justify-between text-xs text-slate-400">
-              <span>{stats.totalDays} jours loués</span>
+              <span>{stats.totalDays} jours louÃ©s</span>
               <span>{stats.avgPerDay.toFixed(1)} TND/j moy.</span>
             </div>
             <div className="flex justify-between text-xs text-slate-400">
@@ -459,7 +459,7 @@ export default function VehicleDetail() {
             {profile.priceAchat && (
               <div className="border-t border-slate-100 pt-3 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase">Données véhicule</p>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase">DonnÃ©es vÃ©hicule</p>
                   <button onClick={() => setShowEditVehicleData(true)}
                     className="flex items-center gap-1 text-[10px] text-amber-600 hover:text-amber-700 transition-colors">
                     <Edit2 size={10} /> Modifier
@@ -468,26 +468,26 @@ export default function VehicleDetail() {
                 {[
                   { label: "Prix d'achat",   value: profile.priceAchat?.toFixed(3) + " TND" },
                   { label: "Avance",         value: profile.avance?.toFixed(3) + " TND" },
-                  { label: "Mensualité",     value: profile.priceTrait?.toFixed(3) + " TND" },
-                  { label: "Durée",          value: (() => {
+                  { label: "MensualitÃ©",     value: profile.priceTrait?.toFixed(3) + " TND" },
+                  { label: "DurÃ©e",          value: (() => {
                     const total = profile.nombreMoisFix;
                     if (!total || !profile.dateFirstTrait) return total + " mois";
                     const start = new Date(profile.dateFirstTrait);
                     const end = new Date(start);
                     end.setMonth(end.getMonth() + total);
                     const now = new Date();
-                    if (now >= end) return `${total} mois (✓ Terminé)`;
+                    if (now >= end) return `${total} mois (âœ“ TerminÃ©)`;
                     const diffMs = end.getTime() - now.getTime();
                     const diffDays = Math.ceil(diffMs / 86400000);
                     const months = Math.floor(diffDays / 30);
                     const days = diffDays % 30;
                     const remaining = months > 0 ? `${months}m ${days}j` : `${days}j`;
-                    return `${total} mois — reste ${remaining}`;
+                    return `${total} mois â€” reste ${remaining}`;
                   })() },
-                  { label: "Kilométrage", value: <span className="flex items-center gap-1.5 justify-end">{currentKm?.toLocaleString()} km{gpsKm && gpsKm > 0 && <span className="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">GPS</span>}</span> },
+                  { label: "KilomÃ©trage", value: <span className="flex items-center gap-1.5 justify-end">{currentKm?.toLocaleString()} km{gpsKm && gpsKm > 0 && <span className="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">GPS</span>}</span> },
                   { label: "Couleur",        value: profile.color },
-                  { label: "Année",          value: String(profile.year) },
-                  { label: "1ère mise en service", value: profile.dateFirstCirculation },
+                  { label: "AnnÃ©e",          value: String(profile.year) },
+                  { label: "1Ã¨re mise en service", value: profile.dateFirstCirculation },
                   { label: "1er versement",        value: profile.dateFirstTrait },
                 ].filter(r => r.value && r.value !== "undefined" && r.value !== "null").map(r => (
                   <div key={r.label} className="flex justify-between text-xs">
@@ -500,14 +500,14 @@ export default function VehicleDetail() {
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN ── */}
+        {/* â”€â”€ RIGHT COLUMN â”€â”€ */}
         <div className="lg:col-span-2 space-y-4">
 
           {/* Documents */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
               <h3 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-                <FileText size={15} className="text-blue-500" /> Documents & Échéances
+                <FileText size={15} className="text-blue-500" /> Documents & Ã‰chÃ©ances
               </h3>
               <button onClick={() => openAddDoc()}
                 className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors">
@@ -518,11 +518,11 @@ export default function VehicleDetail() {
               {profileLoading
                 ? <p className="text-center text-slate-400 text-xs py-4 animate-pulse">Chargement...</p>
                 : (profile.documents || []).length === 0
-                ? <p className="text-center text-slate-400 text-xs py-4">Aucun document ajouté</p>
+                ? <p className="text-center text-slate-400 text-xs py-4">Aucun document ajoutÃ©</p>
                 : (profile.documents || []).map(doc => {
                   const status = docStatus(doc);
 
-                  // ── VIDANGE ──────────────────────────────────────────────
+                  // â”€â”€ VIDANGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                   if (doc.type === "vidange") {
                     // Find the last vidange (highest nextVidangeKm)
                     const allVidanges = (profile.documents || []).filter(d => d.type === "vidange" && d.nextVidangeKm);
@@ -539,12 +539,12 @@ export default function VehicleDetail() {
                       rowStyle = "bg-green-50 border-green-200";
                       textStyle = "text-green-700";
                       iconColor = "text-green-500";
-                      badgeEl = <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Effectuée</span>;
+                      badgeEl = <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">EffectuÃ©e</span>;
                     } else if (remaining <= 0) {
                       rowStyle = "bg-red-50 border-red-200";
                       textStyle = "text-red-700";
                       iconColor = "text-red-500";
-                      badgeEl = <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Dépassée !</span>;
+                      badgeEl = <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">DÃ©passÃ©e !</span>;
                     } else if (remaining <= 200) {
                       rowStyle = "bg-red-50 border-red-200";
                       textStyle = "text-red-700";
@@ -563,7 +563,7 @@ export default function VehicleDetail() {
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-semibold ${textStyle}`}>{doc.label}</p>
                           <p className="text-xs text-slate-400">
-                            Faite à {doc.kmAtVidange?.toLocaleString()} km · Prochaine à {doc.nextVidangeKm?.toLocaleString()} km
+                            Faite Ã  {doc.kmAtVidange?.toLocaleString()} km Â· Prochaine Ã  {doc.nextVidangeKm?.toLocaleString()} km
                           </p>
                         </div>
                         {badgeEl}
@@ -589,7 +589,7 @@ export default function VehicleDetail() {
                     ? "text-red-700"
                     : "text-blue-700";
                   const badge = days < 0
-                    ? <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Expiré !</span>
+                    ? <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">ExpirÃ© !</span>
                     : days <= 30
                     ? <span className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Dans {days}j !</span>
                     : <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">{days}j restants</span>;
@@ -598,7 +598,7 @@ export default function VehicleDetail() {
                       <div className={`${docTextStyle} opacity-70`}>{DOC_ICONS[doc.type]}</div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${docTextStyle}`}>{doc.label}</p>
-                        <p className="text-xs text-slate-400">Expire le {doc.expiryDate}{doc.notes ? ` · ${doc.notes}` : ""}</p>
+                        <p className="text-xs text-slate-400">Expire le {doc.expiryDate}{doc.notes ? ` Â· ${doc.notes}` : ""}</p>
                       </div>
                       {badge}
                       <button onClick={() => openEditDoc(doc)} className="text-slate-300 hover:text-blue-500 transition-colors ml-1">
@@ -618,7 +618,7 @@ export default function VehicleDetail() {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
               <h3 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-                <Wrench size={15} className="text-red-500" /> Dépenses
+                <Wrench size={15} className="text-red-500" /> DÃ©penses
               </h3>
               <button onClick={() => setShowExpModal(true)}
                 className="flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors">
@@ -627,7 +627,7 @@ export default function VehicleDetail() {
             </div>
             <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
               {(profile.expenses || []).length === 0
-                ? <p className="text-center text-slate-400 text-xs py-4">Aucune dépense enregistrée</p>
+                ? <p className="text-center text-slate-400 text-xs py-4">Aucune dÃ©pense enregistrÃ©e</p>
                 : [...(profile.expenses || [])].sort((a, b) => b.date.localeCompare(a.date)).map(exp => (
                   <div key={exp.id} className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-xl">
                     <div className="flex-1 min-w-0">
@@ -656,8 +656,8 @@ export default function VehicleDetail() {
                 </h3>
                 <div className="flex items-center gap-3 text-[10px]">
                   <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block"/>Revenus</span>
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block"/>Mensualité</span>
-                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-purple-400 inline-block"/>Dépenses</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-400 inline-block"/>MensualitÃ©</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-purple-400 inline-block"/>DÃ©penses</span>
                 </div>
               </div>
               <div className="p-4 space-y-3">
@@ -671,9 +671,9 @@ export default function VehicleDetail() {
                           {/* Tooltip */}
                           <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] rounded-lg px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap pointer-events-none shadow-lg">
                             <p className="font-semibold">{m.label}</p>
-                            <p className="text-amber-300">↑ {m.revenue.toFixed(0)} TND</p>
-                            {m.mensualite > 0 && <p className="text-red-300">↓ {m.mensualite.toFixed(0)} TND</p>}
-                            {m.expenses > 0 && <p className="text-purple-300">↓ {m.expenses.toFixed(0)} TND</p>}
+                            <p className="text-amber-300">â†‘ {m.revenue.toFixed(0)} TND</p>
+                            {m.mensualite > 0 && <p className="text-red-300">â†“ {m.mensualite.toFixed(0)} TND</p>}
+                            {m.expenses > 0 && <p className="text-purple-300">â†“ {m.expenses.toFixed(0)} TND</p>}
                             <p className={m.profit >= 0 ? "text-green-300" : "text-red-300"}>
                               = {m.profit >= 0 ? "+" : ""}{m.profit.toFixed(0)} TND
                             </p>
@@ -701,8 +701,8 @@ export default function VehicleDetail() {
                       <tr className="text-slate-400 text-[10px] uppercase border-b border-slate-100">
                         <th className="py-1.5 text-start">Mois</th>
                         <th className="py-1.5 text-end text-amber-600">Revenus</th>
-                        <th className="py-1.5 text-end text-red-500">Mensualité</th>
-                        <th className="py-1.5 text-end text-purple-500">Dépenses</th>
+                        <th className="py-1.5 text-end text-red-500">MensualitÃ©</th>
+                        <th className="py-1.5 text-end text-purple-500">DÃ©penses</th>
                         <th className="py-1.5 text-end">Solde</th>
                       </tr>
                     </thead>
@@ -713,11 +713,11 @@ export default function VehicleDetail() {
                             {m.label}
                             {m.traitIndex && <span className="ms-1 text-[9px] text-slate-400">#{m.traitIndex}</span>}
                           </td>
-                          <td className="py-1.5 text-end font-mono text-amber-600">{m.revenue > 0 ? m.revenue.toFixed(0) : "—"}</td>
-                          <td className="py-1.5 text-end font-mono text-red-500">{m.mensualite > 0 ? m.mensualite.toFixed(0) : "—"}</td>
-                          <td className="py-1.5 text-end font-mono text-purple-500">{m.expenses > 0 ? m.expenses.toFixed(0) : "—"}</td>
+                          <td className="py-1.5 text-end font-mono text-amber-600">{m.revenue > 0 ? m.revenue.toFixed(0) : "â€”"}</td>
+                          <td className="py-1.5 text-end font-mono text-red-500">{m.mensualite > 0 ? m.mensualite.toFixed(0) : "â€”"}</td>
+                          <td className="py-1.5 text-end font-mono text-purple-500">{m.expenses > 0 ? m.expenses.toFixed(0) : "â€”"}</td>
                           <td className={`py-1.5 text-end font-bold ${m.profit > 0 ? "text-green-600" : m.profit < 0 ? "text-red-600" : "text-slate-400"}`}>
-                            {m.revenue === 0 && m.expenses === 0 && m.mensualite === 0 ? "—" : (m.profit >= 0 ? "+" : "") + m.profit.toFixed(0)}
+                            {m.revenue === 0 && m.expenses === 0 && m.mensualite === 0 ? "â€”" : (m.profit >= 0 ? "+" : "") + m.profit.toFixed(0)}
                           </td>
                         </tr>
                       ))}
@@ -760,7 +760,7 @@ export default function VehicleDetail() {
             </div>
             <div className="divide-y divide-slate-50">
               {filteredContracts.length === 0
-                ? <p className="text-center text-slate-400 text-xs py-6">Aucun contrat trouvé</p>
+                ? <p className="text-center text-slate-400 text-xs py-6">Aucun contrat trouvÃ©</p>
                 : displayedContracts.map(c => {
                   const nj = c.departureDate && c.returnDate ? daysBetween(c.departureDate, c.returnDate) : 0;
                   const total = parseFloat(c.totalFacture || "0");
@@ -771,7 +771,7 @@ export default function VehicleDetail() {
                           <span className="text-xs font-mono text-amber-600">#{c.contractNumber}</span>
                           <span className="text-sm font-medium text-slate-800 truncate">{c.driverName}</span>
                         </div>
-                        <p className="text-xs text-slate-400">{c.departureDate} → {c.returnDate} · {nj}j</p>
+                        <p className="text-xs text-slate-400">{c.departureDate} â†’ {c.returnDate} Â· {nj}j</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-green-600">{total.toFixed(3)}</p>
@@ -787,7 +787,7 @@ export default function VehicleDetail() {
                   className="w-full py-2.5 text-xs text-amber-600 hover:bg-amber-50 transition-colors flex items-center justify-center gap-1"
                 >
                   {showAllContracts
-                    ? <><ChevronUp size={13} /> Réduire</>
+                    ? <><ChevronUp size={13} /> RÃ©duire</>
                     : <><ChevronDown size={13} /> Voir tous ({filteredContracts.length - 5} de plus)</>
                   }
                 </button>
@@ -797,13 +797,13 @@ export default function VehicleDetail() {
         </div>
       </div>
 
-      {/* ── Add Document Modal ── */}
+      {/* â”€â”€ Add Document Modal â”€â”€ */}
       {showDocModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="font-semibold text-slate-800 text-sm">{editingDoc ? "Modifier le document" : "Ajouter un document"}</h3>
-              <button onClick={() => setShowDocModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+              <button onClick={() => setShowDocModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">Ã—</button>
             </div>
             <div className="p-5 space-y-3">
               <div>
@@ -814,7 +814,7 @@ export default function VehicleDetail() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">Libellé (optionnel)</label>
+                <label className="text-xs font-medium text-slate-500 block mb-1">LibellÃ© (optionnel)</label>
                 <input value={newDoc.label || ""} onChange={e => setNewDoc(d => ({ ...d, label: e.target.value }))}
                   placeholder={DOC_LABELS[newDoc.type || "assurance"]}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400" />
@@ -824,7 +824,7 @@ export default function VehicleDetail() {
               {newDoc.type === "vidange" ? (
                 <>
                   <div>
-                    <label className="text-xs font-medium text-slate-500 block mb-1">Km à la vidange <span className="text-red-400">*</span></label>
+                    <label className="text-xs font-medium text-slate-500 block mb-1">Km Ã  la vidange <span className="text-red-400">*</span></label>
                     <input
                       type="number" min="0"
                       value={newDoc.kmAtVidange || ""}
@@ -834,8 +834,8 @@ export default function VehicleDetail() {
                     />
                   </div>
                   <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700">
-                    Prochaine vidange à : <span className="font-bold">{newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 10000).toLocaleString() : "—"} km</span>
-                    <span className="text-blue-400 ms-1">(alerte à {newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 9800).toLocaleString() : "—"} km)</span>
+                    Prochaine vidange Ã  : <span className="font-bold">{newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 10000).toLocaleString() : "â€”"} km</span>
+                    <span className="text-blue-400 ms-1">(alerte Ã  {newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 9800).toLocaleString() : "â€”"} km)</span>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-500 block mb-1">Date de la vidange</label>
@@ -865,17 +865,17 @@ export default function VehicleDetail() {
         </div>
       )}
 
-      {/* ── Add Expense Modal ── */}
+      {/* â”€â”€ Add Expense Modal â”€â”€ */}
       {showExpModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-800 text-sm">Ajouter une dépense</h3>
-              <button onClick={() => setShowExpModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+              <h3 className="font-semibold text-slate-800 text-sm">Ajouter une dÃ©pense</h3>
+              <button onClick={() => setShowExpModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">Ã—</button>
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="text-xs font-medium text-slate-500 block mb-1">Catégorie</label>
+                <label className="text-xs font-medium text-slate-500 block mb-1">CatÃ©gorie</label>
                 <select value={newExp.category} onChange={e => setNewExp(d => ({ ...d, category: e.target.value as CarExpense["category"] }))}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
                   {EXP_CATS.map(c => <option key={c} value={c}>{EXP_LABELS[c]}</option>)}
@@ -905,15 +905,15 @@ export default function VehicleDetail() {
         </div>
       )}
 
-      {/* ── Sell Modal ── */}
+      {/* â”€â”€ Sell Modal â”€â”€ */}
       {showSellModal && (() => {
         const sp = parseFloat(sellPrice) || 0;
         const priceAchat = profile.priceAchat || 0;
         const totalExpenses = stats.totalExpenses;
         const totalRevenue = stats.totalRevenue;
         const totalMensualites = (profile.priceTrait || 0) * (profile.nombreMoisFix || 0);
-        const coutTotal = priceAchat + totalExpenses; // coût total de possession
-        const totalEntrees = totalRevenue + sp;       // revenus kiraء + prix vente
+        const coutTotal = priceAchat + totalExpenses; // coÃ»t total de possession
+        const totalEntrees = totalRevenue + sp;       // revenus kiraØ¡ + prix vente
         const profitNet = totalEntrees - coutTotal;
         const roi = coutTotal > 0 ? (profitNet / coutTotal) * 100 : 0;
 
@@ -922,9 +922,9 @@ export default function VehicleDetail() {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-green-50 rounded-t-2xl">
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <SellIcon size={16} className="text-green-600" /> Vente du véhicule
+                  <SellIcon size={16} className="text-green-600" /> Vente du vÃ©hicule
                 </h3>
-                <button onClick={() => setShowSellModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
+                <button onClick={() => setShowSellModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">Ã—</button>
               </div>
               <div className="p-5 space-y-4">
                 {/* Prix de vente input */}
@@ -939,14 +939,14 @@ export default function VehicleDetail() {
                   />
                 </div>
 
-                {/* Calcul détaillé */}
+                {/* Calcul dÃ©taillÃ© */}
                 {sp > 0 && (
                   <div className="bg-slate-50 rounded-xl p-4 space-y-2.5">
                     <p className="text-xs font-semibold text-slate-500 uppercase mb-3">Bilan complet</p>
 
-                    {/* Entrées */}
+                    {/* EntrÃ©es */}
                     <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold text-green-600 uppercase">Entrées</p>
+                      <p className="text-[10px] font-semibold text-green-600 uppercase">EntrÃ©es</p>
                       <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Revenus location</span>
                         <span className="font-mono text-green-600">+{totalRevenue.toFixed(3)}</span>
@@ -956,7 +956,7 @@ export default function VehicleDetail() {
                         <span className="font-mono text-green-600">+{sp.toFixed(3)}</span>
                       </div>
                       <div className="flex justify-between text-sm font-semibold border-t border-slate-200 pt-1.5">
-                        <span className="text-slate-700">Total entrées</span>
+                        <span className="text-slate-700">Total entrÃ©es</span>
                         <span className="font-mono text-green-700">+{totalEntrees.toFixed(3)}</span>
                       </div>
                     </div>
@@ -970,13 +970,13 @@ export default function VehicleDetail() {
                       </div>
                       {totalMensualites > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-500">Total mensualités ({profile.nombreMoisFix} mois)</span>
+                          <span className="text-slate-500">Total mensualitÃ©s ({profile.nombreMoisFix} mois)</span>
                           <span className="font-mono text-slate-400 text-xs">inclus dans prix achat</span>
                         </div>
                       )}
                       {totalExpenses > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-slate-500">Dépenses entretien</span>
+                          <span className="text-slate-500">DÃ©penses entretien</span>
                           <span className="font-mono text-red-500">-{totalExpenses.toFixed(3)}</span>
                         </div>
                       )}
@@ -986,7 +986,7 @@ export default function VehicleDetail() {
                       </div>
                     </div>
 
-                    {/* Résultat */}
+                    {/* RÃ©sultat */}
                     <div className={`rounded-xl p-3 mt-2 ${profitNet >= 0 ? "bg-green-100" : "bg-red-100"}`}>
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-slate-700">Profit net</span>
@@ -1025,27 +1025,27 @@ export default function VehicleDetail() {
         );
       })()}
 
-      {/* ── Edit Vehicle Data Modal ── */}
+      {/* â”€â”€ Edit Vehicle Data Modal â”€â”€ */}
       {showEditVehicleData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <Edit2 size={15} className="text-amber-500" /> Modifier les données véhicule
+                <Edit2 size={15} className="text-amber-500" /> Modifier les donnÃ©es vÃ©hicule
               </h3>
-              <button onClick={() => setShowEditVehicleData(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
+              <button onClick={() => setShowEditVehicleData(false)} className="text-slate-400 hover:text-slate-600 text-xl">Ã—</button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {[
-                { key: "dailyPrice",          label: "💻 Prix location / jour (TND)", type: "number", val: profile.dailyPrice },
+                { key: "dailyPrice",          label: "ðŸ’» Prix location / jour (TND)", type: "number", val: profile.dailyPrice },
                 { key: "priceAchat",          label: "Prix d'achat (TND)",       type: "number", val: profile.priceAchat },
                 { key: "avance",              label: "Avance (TND)",             type: "number", val: profile.avance },
-                { key: "priceTrait",          label: "Mensualité (TND)",         type: "number", val: profile.priceTrait },
-                { key: "nombreMoisFix",       label: "Durée (mois)",             type: "number", val: profile.nombreMoisFix },
+                { key: "priceTrait",          label: "MensualitÃ© (TND)",         type: "number", val: profile.priceTrait },
+                { key: "nombreMoisFix",       label: "DurÃ©e (mois)",             type: "number", val: profile.nombreMoisFix },
                 { key: "dateFirstTrait",      label: "1er versement",            type: "date",   val: profile.dateFirstTrait },
-                { key: "dateFirstCirculation",label: "1ère mise en service",     type: "date",   val: profile.dateFirstCirculation },
+                { key: "dateFirstCirculation",label: "1Ã¨re mise en service",     type: "date",   val: profile.dateFirstCirculation },
                 { key: "color",               label: "Couleur",                  type: "text",   val: profile.color },
-                { key: "year",                label: "Année",                    type: "number", val: profile.year },
+                { key: "year",                label: "AnnÃ©e",                    type: "number", val: profile.year },
               ].map(({ key, label, type, val }) => (
                 <div key={key}>
                   <label className="text-xs font-medium text-slate-500 block mb-1">{label}</label>
@@ -1078,3 +1078,4 @@ export default function VehicleDetail() {
     </div>
   );
 }
+

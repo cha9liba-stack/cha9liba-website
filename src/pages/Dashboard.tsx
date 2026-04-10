@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";import { useNavigate } from "react-router-dom";
+﻿import { useMemo, useState, useEffect } from "react";import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
@@ -24,12 +24,12 @@ function daysBetween(a: string, b: string) {
   return Math.max(1, Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 function fmtDate(d: string) {
-  if (!d) return "—";
+  if (!d) return "â€”";
   const [y, m, day] = d.split("-");
   return `${day}-${m}-${y}`;
 }
 
-// ── Detail Modal ──────────────────────────────────────────────────────────────
+// â”€â”€ Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
   title: string;
   contracts: Contract[];
@@ -50,7 +50,7 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
             {title}
             <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{displayed.length}</span>
           </h3>
-          <button onClick={onClose} className="text-white/70 hover:text-white text-xl">×</button>
+          <button onClick={onClose} className="text-white/70 hover:text-white text-xl">Ã—</button>
         </div>
 
 
@@ -61,13 +61,13 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
             : <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-slate-50">
                   <tr className="text-slate-400 text-xs uppercase">
-                    <th className="px-4 py-2.5 text-start">N°</th>
+                    <th className="px-4 py-2.5 text-start">NÂ°</th>
                     <th className="px-4 py-2.5 text-start">Client</th>
-                    <th className="px-4 py-2.5 text-start">Véhicule</th>
-                    <th className="px-4 py-2.5 text-start">Départ</th>
+                    <th className="px-4 py-2.5 text-start">VÃ©hicule</th>
+                    <th className="px-4 py-2.5 text-start">DÃ©part</th>
                     <th className="px-4 py-2.5 text-start">Retour</th>
-                    <th className="px-4 py-2.5 text-start">Durée</th>
-                    <th className="px-4 py-2.5 text-start">Tél</th>
+                    <th className="px-4 py-2.5 text-start">DurÃ©e</th>
+                    <th className="px-4 py-2.5 text-start">TÃ©l</th>
                     {showPrices && <th className="px-4 py-2.5 text-start">Montant</th>}
                   </tr>
                 </thead>
@@ -93,7 +93,7 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
                             {nj >= 365 ? `${(nj/365).toFixed(1)} ans` : `${nj}j`}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{c.driverPhone || "—"}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-500">{c.driverPhone || "â€”"}</td>
                         {showPrices && <td className="px-4 py-2.5 text-xs font-semibold text-green-600">{parseFloat(c.totalFacture || "0").toFixed(3)}</td>}
                       </tr>
                     );
@@ -164,7 +164,7 @@ export default function Dashboard() {
     return base.filter(c => (c as any).branchId === effectiveBranch);
   }, [contracts, effectiveBranch, stRegs]);
 
-  // For counts (active, total) — show all contracts including old ones without branchId
+  // For counts (active, total) â€” show all contracts including old ones without branchId
   const allVisibleContracts = useMemo(() => {
     if (effectiveBranch === "all") return contracts;
     return contracts.filter(c => !(c as any).branchId || (c as any).branchId === effectiveBranch);
@@ -195,7 +195,7 @@ export default function Dashboard() {
 
   function norm(s: string) { return String(s || "").replace(/\s+/g, "").toUpperCase(); }
 
-  // ── Use same logic as Fleet to compute late/active counts ──
+  // â”€â”€ Use same logic as Fleet to compute late/active counts â”€â”€
   const fleetCars = useMemo(() => {
     try {
       const saved = localStorage.getItem("palma_fleet_cars");
@@ -277,7 +277,7 @@ export default function Dashboard() {
           // Only show the last vidange (highest nextVidangeKm)
           const maxNextKm = Math.max(...docs.filter((d: any) => d.type === "vidange" && d.nextVidangeKm).map((d: any) => d.nextVidangeKm || 0));
           if (doc.nextVidangeKm !== maxNextKm) continue;
-          // Will be handled by km alerts elsewhere — skip date-based check
+          // Will be handled by km alerts elsewhere â€” skip date-based check
           continue;
         }
         const days = daysUntil(doc.expiryDate);
@@ -287,7 +287,7 @@ export default function Dashboard() {
             d.id !== doc.id && d.type === doc.type && daysUntil(d.expiryDate) >= 0
           );
           if (hasNewerValid) continue;
-          // No newer valid one — show as expired
+          // No newer valid one â€” show as expired
           urgentDocs.push({ car: reg, doc: doc.label, days });
           continue;
         }
@@ -323,7 +323,7 @@ export default function Dashboard() {
         }
       }
     }
-    // Mensualités
+    // MensualitÃ©s
     const mensualites: { car: string; amount: number }[] = [];
     for (const [reg, p] of Object.entries(profiles) as any) {
       if (p.priceTrait && p.dateFirstTrait && p.nombreMoisFix) {
@@ -361,7 +361,7 @@ export default function Dashboard() {
     {
       key: "late" as const,
       label: "En retard", value: lateCount,
-      color: "bg-red-500", icon: AlertTriangle, sub: "retour dépassé",
+      color: "bg-red-500", icon: AlertTriangle, sub: "retour dÃ©passÃ©",
     },
     {
       key: "revenue" as const,
@@ -408,7 +408,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── KPI Cards ── */}
+      {/* â”€â”€ KPI Cards â”€â”€ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {kpiCards.filter(c => !c.adminOnly || isAdmin).map(({ key, label, value, color, icon: Icon, sub }) => (
           <div
@@ -428,14 +428,14 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* ── Revenue chart ── */}
+        {/* â”€â”€ Revenue chart â”€â”€ */}
         {(isAdmin || vis.showStatistics) && (
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-              <DollarSign size={15} className="text-amber-500" /> Revenus — 6 derniers mois
+              <DollarSign size={15} className="text-amber-500" /> Revenus â€” 6 derniers mois
             </h2>
-            <span className="text-xs text-slate-400">{stats.yearRevenue.toFixed(0)} TND cette année</span>
+            <span className="text-xs text-slate-400">{stats.yearRevenue.toFixed(0)} TND cette annÃ©e</span>
           </div>
           <div className="flex items-end gap-2 h-32">
             {stats.monthly.map(m => (
@@ -451,7 +451,7 @@ export default function Dashboard() {
         </div>
         )}
 
-        {/* ── Alerts ── */}
+        {/* â”€â”€ Alerts â”€â”€ */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2 mb-3">
             <AlertTriangle size={15} className="text-red-500" /> Alertes documents
@@ -459,7 +459,7 @@ export default function Dashboard() {
           {stats.urgentDocs.length === 0
             ? <div className="text-center py-6 text-slate-400 text-xs">
                 <CheckCircle size={24} className="mx-auto mb-2 text-green-400" />
-                Tous les documents sont à jour
+                Tous les documents sont Ã  jour
               </div>
             : <div className="space-y-2 max-h-48 overflow-y-auto">
                 {stats.urgentDocs.sort((a, b) => a.days - b.days).map((d, i) => (
@@ -471,7 +471,7 @@ export default function Dashboard() {
                       <p className="text-[10px] text-slate-400 font-mono">{d.car}</p>
                     </div>
                     <span className={`text-[10px] font-bold whitespace-nowrap ${d.days < 0 ? "text-red-600" : "text-amber-600"}`}>
-                      {d.days < 0 ? "Expiré" : `${d.days}j`}
+                      {d.days < 0 ? "ExpirÃ©" : `${d.days}j`}
                     </span>
                   </div>
                 ))}
@@ -480,13 +480,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Recent contracts ── */}
+      {/* â”€â”€ Recent contracts â”€â”€ */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
           <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
             <Clock size={15} className="text-slate-400" /> Derniers contrats
           </h2>
-          <button onClick={() => navigate("/contracts")}
+          <button onClick={() => navigate("/app/contracts")}
             className="flex items-center gap-1 text-xs text-amber-600 hover:underline">
             Voir tout <ArrowUpRight size={12} />
           </button>
@@ -497,14 +497,14 @@ export default function Dashboard() {
             : <table className="w-full text-sm">
                 <thead>
                   <tr className="text-slate-400 text-xs uppercase bg-slate-50">
-                    <th className="px-5 py-2.5 text-start">N°</th>
+                    <th className="px-5 py-2.5 text-start">NÂ°</th>
                     <th className="px-5 py-2.5 text-start">Client</th>
-                    <th className="px-5 py-2.5 text-start">Véhicule</th>
-                    <th className="px-5 py-2.5 text-start">Départ</th>
+                    <th className="px-5 py-2.5 text-start">VÃ©hicule</th>
+                    <th className="px-5 py-2.5 text-start">DÃ©part</th>
                     <th className="px-5 py-2.5 text-start">Retour</th>
                     {(isAdmin || vis.showPrices) && <th className="px-5 py-2.5 text-start">Montant</th>}
-                    <th className="px-5 py-2.5 text-start">Créé par</th>
-                    <th className="px-5 py-2.5 text-start">État</th>
+                    <th className="px-5 py-2.5 text-start">CrÃ©Ã© par</th>
+                    <th className="px-5 py-2.5 text-start">Ã‰tat</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -515,29 +515,29 @@ export default function Dashboard() {
                       <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-5 py-2.5 font-mono text-amber-600 text-xs">#{c.contractNumber}</td>
                         <td className="px-5 py-2.5 font-medium text-slate-700">{c.driverName}</td>
-                        <td className="px-5 py-2.5 text-slate-500 text-xs">{c.brand} {c.model} · {c.registration}</td>
+                        <td className="px-5 py-2.5 text-slate-500 text-xs">{c.brand} {c.model} Â· {c.registration}</td>
                         <td className="px-5 py-2.5 text-slate-400 text-xs">{fmtDate(c.departureDate)}</td>
                         <td className="px-5 py-2.5 text-xs font-medium" style={{ color: isLate ? "#ef4444" : "#64748b" }}>{fmtDate(c.returnDate)}</td>
                         {(isAdmin || vis.showPrices) && (
                           <td className="px-5 py-2.5 font-semibold text-green-600 text-xs">{parseFloat(c.totalFacture || "0").toFixed(3)} TND</td>
                         )}
                         <td className="px-5 py-2.5 text-xs text-slate-500">
-                          <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "—"}</p>
+                          <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "â€”"}</p>
                           <p className="text-slate-400">{
                             (c as any)._updatedAt
                               ? new Date((c as any)._updatedAt < 1e12 ? (c as any)._updatedAt * 1000 : (c as any)._updatedAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
                               : (c as any)._createdAt
                               ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
-                              : "—"
+                              : "â€”"
                           }</p>
                           {(c as any)._updatedBy && (c as any)._updatedBy !== (c as any)._createdBy && (
-                            <p className="text-[10px] text-amber-500">✎ {(c as any)._updatedBy}</p>
+                            <p className="text-[10px] text-amber-500">âœŽ {(c as any)._updatedBy}</p>
                           )}
                         </td>
                         <td className="px-5 py-2.5">
                           {isLate   && <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded-full text-[10px] font-medium">Retard</span>}
                           {isActive && !isLate && <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded-full text-[10px] font-medium">Actif</span>}
-                          {!isActive && !isLate && <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[10px]">Terminé</span>}
+                          {!isActive && !isLate && <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[10px]">TerminÃ©</span>}
                         </td>
                       </tr>
                     );
@@ -548,7 +548,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Detail Modals ── */}
+      {/* â”€â”€ Detail Modals â”€â”€ */}
       {modal === "active" && (
         <DetailModal title="Contrats actifs" contracts={allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t)} color="bg-green-500" onClose={() => setModal(null)} showPrices={isAdmin || vis.showPrices} />
       )}
@@ -565,9 +565,9 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 bg-amber-500 rounded-t-2xl">
               <h3 className="font-bold text-white flex items-center gap-2">
-                <TrendingUp size={16} /> Analyse financière — {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                <TrendingUp size={16} /> Analyse financiÃ¨re â€” {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
               </h3>
-              <button onClick={() => setModal(null)} className="text-white/70 hover:text-white text-xl">×</button>
+              <button onClick={() => setModal(null)} className="text-white/70 hover:text-white text-xl">Ã—</button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
@@ -575,8 +575,8 @@ export default function Dashboard() {
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "Revenus location", value: revenueDetail.totalRevenue, color: "text-green-600", bg: "bg-green-50" },
-                  { label: "Dépenses", value: revenueDetail.totalExpenses + (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0), color: "text-red-600", bg: "bg-red-50" },
-                  { label: "Bénéfice net", value: revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0), color: (revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0)) >= 0 ? "text-green-700" : "text-red-700", bg: (revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0)) >= 0 ? "bg-green-100" : "bg-red-100" },
+                  { label: "DÃ©penses", value: revenueDetail.totalExpenses + (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0), color: "text-red-600", bg: "bg-red-50" },
+                  { label: "BÃ©nÃ©fice net", value: revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0), color: (revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0)) >= 0 ? "text-green-700" : "text-red-700", bg: (revenueDetail.totalRevenue - revenueDetail.totalExpenses - (effectiveBranch === "all" ? revenueDetail.totalMensualites : 0)) >= 0 ? "bg-green-100" : "bg-red-100" },
                 ].map(({ label, value, color, bg }) => (
                   <div key={label} className={`${bg} rounded-xl p-3 text-center`}>
                     <p className={`text-xl font-bold ${color}`}>{value.toFixed(3)}</p>
@@ -588,7 +588,7 @@ export default function Dashboard() {
               {/* Income from contracts */}
               <div>
                 <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"/> Mداخيل — Contrats ({revenueDetail.monthContracts.length})
+                  <span className="w-2 h-2 bg-green-500 rounded-full"/> MØ¯Ø§Ø®ÙŠÙ„ â€” Contrats ({revenueDetail.monthContracts.length})
                 </h4>
                 {revenueDetail.monthContracts.length === 0
                   ? <p className="text-xs text-slate-400 py-2">Aucun contrat ce mois</p>
@@ -607,11 +607,11 @@ export default function Dashboard() {
                 }
               </div>
 
-              {/* Mensualités — admin all branches only */}
+              {/* MensualitÃ©s â€” admin all branches only */}
               {effectiveBranch === "all" && revenueDetail.mensualites.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-400 rounded-full"/> Mensualités ({revenueDetail.mensualites.length})
+                    <span className="w-2 h-2 bg-red-400 rounded-full"/> MensualitÃ©s ({revenueDetail.mensualites.length})
                   </h4>
                   <div className="space-y-1.5">
                     {revenueDetail.mensualites.map((m, i) => (
@@ -628,7 +628,7 @@ export default function Dashboard() {
               {revenueDetail.expenses.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full"/> Dépenses ({revenueDetail.expenses.length})
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"/> DÃ©penses ({revenueDetail.expenses.length})
                   </h4>
                   <div className="space-y-1.5">
                     {revenueDetail.expenses.map((e, i) => (
@@ -654,3 +654,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
