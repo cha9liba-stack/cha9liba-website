@@ -963,7 +963,19 @@ export default function Fleet() {
                     </div>
                     <div className="text-end flex-shrink-0 ms-2">
                       <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
-                      <button onClick={() => setRes(p => p.filter(x => x.id !== r.id))}
+                      <button onClick={async () => {
+                        // Remove from local state
+                        setRes(p => p.filter(x => x.id !== r.id));
+                        // If it's an online booking, mark as cancelled in Firebase
+                        if (r.id?.startsWith("online_")) {
+                          const fbId = r.id.replace("online_", "");
+                          await fetch(`${DB_URL_FLEET}/bookings/${fbId}.json`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: "cancelled", _updatedAt: Date.now() }),
+                          }).catch(() => {});
+                        }
+                      }}
                         className="text-slate-300 hover:text-red-500 mt-1"><Trash2 size={12} /></button>
                     </div>
                   </div>
