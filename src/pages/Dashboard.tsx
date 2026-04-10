@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useMemo, useState, useEffect } from "react";import { useNavigate } from "react-router-dom";
+﻿﻿import { useMemo, useState, useEffect } from "react";import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
@@ -24,7 +24,7 @@ function daysBetween(a: string, b: string) {
   return Math.max(1, Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 function fmtDate(d: string) {
-  if (!d) return ""”";
+  if (!d) return "â€”";
   const [y, m, day] = d.split("-");
   return `${day}-${m}-${y}`;
 }
@@ -50,7 +50,7 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
             {title}
             <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{displayed.length}</span>
           </h3>
-          <button onClick={onClose} className="text-white/70 hover:text-white text-xl">Ã—</button>
+          <button onClick={onClose} className="text-white/70 hover:text-white text-xl">×</button>
         </div>
 
 
@@ -61,7 +61,7 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
             : <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-slate-50">
                   <tr className="text-slate-400 text-xs uppercase">
-                    <th className="px-4 py-2.5 text-start">NÂ°</th>
+                    <th className="px-4 py-2.5 text-start">N°</th>
                     <th className="px-4 py-2.5 text-start">Client</th>
                     <th className="px-4 py-2.5 text-start">Véhicule</th>
                     <th className="px-4 py-2.5 text-start">Départ</th>
@@ -93,7 +93,7 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
                             {nj >= 365 ? `${(nj/365).toFixed(1)} ans` : `${nj}j`}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{c.driverPhone || ""”"}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-500">{c.driverPhone || "â€”"}</td>
                         {showPrices && <td className="px-4 py-2.5 text-xs font-semibold text-green-600">{parseFloat(c.totalFacture || "0").toFixed(3)}</td>}
                       </tr>
                     );
@@ -164,7 +164,7 @@ export default function Dashboard() {
     return base.filter(c => (c as any).branchId === effectiveBranch);
   }, [contracts, effectiveBranch, stRegs]);
 
-  // For counts (active, total) "” show all contracts including old ones without branchId
+  // For counts (active, total) â€” show all contracts including old ones without branchId
   const allVisibleContracts = useMemo(() => {
     if (effectiveBranch === "all") return contracts;
     return contracts.filter(c => !(c as any).branchId || (c as any).branchId === effectiveBranch);
@@ -277,7 +277,7 @@ export default function Dashboard() {
           // Only show the last vidange (highest nextVidangeKm)
           const maxNextKm = Math.max(...docs.filter((d: any) => d.type === "vidange" && d.nextVidangeKm).map((d: any) => d.nextVidangeKm || 0));
           if (doc.nextVidangeKm !== maxNextKm) continue;
-          // Will be handled by km alerts elsewhere "” skip date-based check
+          // Will be handled by km alerts elsewhere â€” skip date-based check
           continue;
         }
         const days = daysUntil(doc.expiryDate);
@@ -287,7 +287,7 @@ export default function Dashboard() {
             d.id !== doc.id && d.type === doc.type && daysUntil(d.expiryDate) >= 0
           );
           if (hasNewerValid) continue;
-          // No newer valid one "” show as expired
+          // No newer valid one â€” show as expired
           urgentDocs.push({ car: reg, doc: doc.label, days });
           continue;
         }
@@ -433,7 +433,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
-              <DollarSign size={15} className="text-amber-500" /> Revenus "” 6 derniers mois
+              <DollarSign size={15} className="text-amber-500" /> Revenus â€” 6 derniers mois
             </h2>
             <span className="text-xs text-slate-400">{stats.yearRevenue.toFixed(0)} TND cette année</span>
           </div>
@@ -463,7 +463,7 @@ export default function Dashboard() {
               </div>
             : <div className="space-y-2 max-h-48 overflow-y-auto">
                 {stats.urgentDocs.sort((a, b) => a.days - b.days).map((d, i) => (
-                  <div key={i} onClick={() => navigate(`/app/vehicles/${encodeURIComponent(d.car)}`)}
+                  <div key={i} onClick={() => navigate(`/vehicles/${encodeURIComponent(d.car)}`)}
                     className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${d.days < 0 ? "bg-red-500" : "bg-amber-400"}`} />
                     <div className="flex-1 min-w-0">
@@ -497,7 +497,7 @@ export default function Dashboard() {
             : <table className="w-full text-sm">
                 <thead>
                   <tr className="text-slate-400 text-xs uppercase bg-slate-50">
-                    <th className="px-5 py-2.5 text-start">NÂ°</th>
+                    <th className="px-5 py-2.5 text-start">N°</th>
                     <th className="px-5 py-2.5 text-start">Client</th>
                     <th className="px-5 py-2.5 text-start">Véhicule</th>
                     <th className="px-5 py-2.5 text-start">Départ</th>
@@ -515,23 +515,23 @@ export default function Dashboard() {
                       <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-5 py-2.5 font-mono text-amber-600 text-xs">#{c.contractNumber}</td>
                         <td className="px-5 py-2.5 font-medium text-slate-700">{c.driverName}</td>
-                        <td className="px-5 py-2.5 text-slate-500 text-xs">{c.brand} {c.model} Â· {c.registration}</td>
+                        <td className="px-5 py-2.5 text-slate-500 text-xs">{c.brand} {c.model} · {c.registration}</td>
                         <td className="px-5 py-2.5 text-slate-400 text-xs">{fmtDate(c.departureDate)}</td>
                         <td className="px-5 py-2.5 text-xs font-medium" style={{ color: isLate ? "#ef4444" : "#64748b" }}>{fmtDate(c.returnDate)}</td>
                         {(isAdmin || vis.showPrices) && (
                           <td className="px-5 py-2.5 font-semibold text-green-600 text-xs">{parseFloat(c.totalFacture || "0").toFixed(3)} TND</td>
                         )}
                         <td className="px-5 py-2.5 text-xs text-slate-500">
-                          <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || ""”"}</p>
+                          <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "â€”"}</p>
                           <p className="text-slate-400">{
                             (c as any)._updatedAt
                               ? new Date((c as any)._updatedAt < 1e12 ? (c as any)._updatedAt * 1000 : (c as any)._updatedAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
                               : (c as any)._createdAt
                               ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
-                              : ""”"
+                              : "â€”"
                           }</p>
                           {(c as any)._updatedBy && (c as any)._updatedBy !== (c as any)._createdBy && (
-                            <p className="text-[10px] text-amber-500">âœŽ {(c as any)._updatedBy}</p>
+                            <p className="text-[10px] text-amber-500">✎ {(c as any)._updatedBy}</p>
                           )}
                         </td>
                         <td className="px-5 py-2.5">
@@ -565,9 +565,9 @@ export default function Dashboard() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 bg-amber-500 rounded-t-2xl">
               <h3 className="font-bold text-white flex items-center gap-2">
-                <TrendingUp size={16} /> Analyse financière "” {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                <TrendingUp size={16} /> Analyse financière â€” {new Date().toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
               </h3>
-              <button onClick={() => setModal(null)} className="text-white/70 hover:text-white text-xl">Ã—</button>
+              <button onClick={() => setModal(null)} className="text-white/70 hover:text-white text-xl">×</button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
@@ -588,7 +588,7 @@ export default function Dashboard() {
               {/* Income from contracts */}
               <div>
                 <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"/> MØ¯Ø§Ø®ÙŠÙ„ "” Contrats ({revenueDetail.monthContracts.length})
+                  <span className="w-2 h-2 bg-green-500 rounded-full"/> مداخيل â€” Contrats ({revenueDetail.monthContracts.length})
                 </h4>
                 {revenueDetail.monthContracts.length === 0
                   ? <p className="text-xs text-slate-400 py-2">Aucun contrat ce mois</p>
@@ -607,7 +607,7 @@ export default function Dashboard() {
                 }
               </div>
 
-              {/* Mensualités "” admin all branches only */}
+              {/* Mensualités â€” admin all branches only */}
               {effectiveBranch === "all" && revenueDetail.mensualites.length > 0 && (
                 <div>
                   <h4 className="font-semibold text-slate-700 text-sm mb-2 flex items-center gap-2">
