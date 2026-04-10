@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight, Plus, Trash2, Car, Wrench, CalendarClock, AlertCircle, Bell, X, MessageSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2, Car, Wrench, CalendarClock, AlertCircle, Bell, X, MessageSquare, Globe, Check } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { isSousTraitant } from "../lib/permissions";
@@ -455,6 +455,36 @@ export default function Fleet() {
     catch { return new Set(); }
   });
   const [alertModalOpen, setAlertModalOpen] = useState(false);
+
+  // Online bookings from website
+  const DB_BOOKINGS = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+  const [onlineBookings, setOnlineBookings] = useState<any[]>([]);
+  const [onlineBookingsLoading, setOnlineBookingsLoading] = useState(true);
+
+  useEffect(() => {
+    setOnlineBookingsLoading(true);
+    fetch(`${DB_BOOKINGS}/bookings.json`)
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          const list = Object.entries(data)
+            .map(([id, v]: any) => ({ ...v, id }))
+            .filter((b: any) => b.status === "pending")
+            .sort((a: any, b: any) => b._createdAt - a._createdAt);
+          setOnlineBookings(list);
+        }
+      }).catch(() => {})
+      .finally(() => setOnlineBookingsLoading(false));
+  }, []);
+
+  async function updateBookingStatus(id: string, status: "confirmed" | "rejected") {
+    await fetch(`${DB_BOOKINGS}/bookings/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, _updatedAt: Date.now() }),
+    }).catch(() => {});
+    setOnlineBookings(prev => prev.filter(b => b.id !== id));
+  }
   const [now, setNow] = useState(() => new Date());
 
   // Tick every minute
@@ -835,6 +865,54 @@ export default function Fleet() {
           </table>
         </div>
       </div>
+
+      {/* ── Online Bookings from website ── */}
+      {(onlineBookings.length > 0 || onlineBookingsLoading) && (
+        <div className="bg-white rounded-2xl border border-green-100 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-100">
+            <Globe size={14} className="text-green-600" />
+            <span className="font-semibold text-sm text-green-700">{isRTL ? "حجوزات الموقع" : "Réservations en ligne"}</span>
+            <span className="ms-auto bg-green-500 text-white text-xs rounded-full px-2 py-0.5">{onlineBookings.length}</span>
+          </div>
+          <div className="p-3 space-y-3 min-h-[80px]">
+            {onlineBookingsLoading
+              ? <p className="text-center text-slate-400 text-xs py-4 animate-pulse">Chargement...</p>
+              : onlineBookings.length === 0
+              ? <p className="text-center text-slate-400 text-xs py-4">{isRTL ? "لا توجد طلبات" : "Aucune demande"}</p>
+              : onlineBookings.map(b => (
+                <div key={b.id} className="bg-green-50 border border-green-100 rounded-xl p-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-slate-800">{b.clientName}</p>
+                      <p className="text-xs text-slate-500">{b.clientPhone}{b.clientEmail ? ` · ${b.clientEmail}` : ""}</p>
+                      <p className="text-xs font-medium text-green-700 mt-0.5">{b.brand} {b.model} · {b.registration}</p>
+                      <p className="text-xs text-slate-400">{b.startDate} → {b.endDate} ({b.days}j)</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-black text-slate-800">{b.totalAmount} TND</p>
+                      <p className="text-xs text-green-600">Acompte: {b.depositAmount} TND</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        {b._createdAt ? new Date(b._createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}
+                      </p>
+                    </div>
+                  </div>
+                  {b.notes && <p className="text-xs text-slate-500 italic mb-2">"{b.notes}"</p>}
+                  <div className="flex gap-2">
+                    <button onClick={() => updateBookingStatus(b.id, "confirmed")}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
+                      <Check size={12} /> {isRTL ? "موافقة" : "Confirmer"}
+                    </button>
+                    <button onClick={() => updateBookingStatus(b.id, "rejected")}
+                      className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition-colors">
+                      <X size={12} /> {isRTL ? "رفض" : "Refuser"}
+                    </button>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
 
       {/* ── Sections: Reservations + Unpaid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
