@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useState, useMemo, useRef, useEffect } from "react";
+﻿﻿﻿﻿﻿import { useState, useMemo, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import {
@@ -563,7 +563,7 @@ export default function VehicleDetail() {
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-semibold ${textStyle}`}>{doc.label}</p>
                           <p className="text-xs text-slate-400">
-                            Faite Ã  {doc.kmAtVidange?.toLocaleString()} km Â· Prochaine Ã  {doc.nextVidangeKm?.toLocaleString()} km
+                            Faite Ã  {doc.kmAtVidange?.toLocaleString()} km · Prochaine Ã  {doc.nextVidangeKm?.toLocaleString()} km
                           </p>
                         </div>
                         {badgeEl}
@@ -598,7 +598,7 @@ export default function VehicleDetail() {
                       <div className={`${docTextStyle} opacity-70`}>{DOC_ICONS[doc.type]}</div>
                       <div className="flex-1 min-w-0">
                         <p className={`text-sm font-semibold ${docTextStyle}`}>{doc.label}</p>
-                        <p className="text-xs text-slate-400">Expire le {doc.expiryDate}{doc.notes ? ` Â· ${doc.notes}` : ""}</p>
+                        <p className="text-xs text-slate-400">Expire le {doc.expiryDate}{doc.notes ? ` · ${doc.notes}` : ""}</p>
                       </div>
                       {badge}
                       <button onClick={() => openEditDoc(doc)} className="text-slate-300 hover:text-blue-500 transition-colors ml-1">
@@ -771,7 +771,7 @@ export default function VehicleDetail() {
                           <span className="text-xs font-mono text-amber-600">#{c.contractNumber}</span>
                           <span className="text-sm font-medium text-slate-800 truncate">{c.driverName}</span>
                         </div>
-                        <p className="text-xs text-slate-400">{c.departureDate} ←’ {c.returnDate} Â· {nj}j</p>
+                        <p className="text-xs text-slate-400">{c.departureDate} ←’ {c.returnDate} · {nj}j</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-green-600">{total.toFixed(3)}</p>
@@ -803,7 +803,7 @@ export default function VehicleDetail() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="font-semibold text-slate-800 text-sm">{editingDoc ? "Modifier le document" : "Ajouter un document"}</h3>
-              <button onClick={() => setShowDocModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">Ã—</button>
+              <button onClick={() => setShowDocModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
             </div>
             <div className="p-5 space-y-3">
               <div>
@@ -871,7 +871,7 @@ export default function VehicleDetail() {
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="font-semibold text-slate-800 text-sm">Ajouter une dépense</h3>
-              <button onClick={() => setShowExpModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">Ã—</button>
+              <button onClick={() => setShowExpModal(false)} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
             </div>
             <div className="p-5 space-y-3">
               <div>
@@ -924,7 +924,7 @@ export default function VehicleDetail() {
                 <h3 className="font-bold text-slate-800 flex items-center gap-2">
                   <SellIcon size={16} className="text-green-600" /> Vente du véhicule
                 </h3>
-                <button onClick={() => setShowSellModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">Ã—</button>
+                <button onClick={() => setShowSellModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
               </div>
               <div className="p-5 space-y-4">
                 {/* Prix de vente input */}
@@ -1033,7 +1033,7 @@ export default function VehicleDetail() {
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <Edit2 size={15} className="text-amber-500" /> Modifier les données véhicule
               </h3>
-              <button onClick={() => setShowEditVehicleData(false)} className="text-slate-400 hover:text-slate-600 text-xl">Ã—</button>
+              <button onClick={() => setShowEditVehicleData(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {[
