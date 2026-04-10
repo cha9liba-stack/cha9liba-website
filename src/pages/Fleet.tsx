@@ -478,11 +478,33 @@ export default function Fleet() {
   }, []);
 
   async function updateBookingStatus(id: string, status: "confirmed" | "rejected") {
+    const booking = onlineBookings.find(b => b.id === id);
     await fetch(`${DB_BOOKINGS}/bookings/${id}.json`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, _updatedAt: Date.now() }),
     }).catch(() => {});
+
+    // If confirmed → add to local reservations list
+    if (status === "confirmed" && booking) {
+      const newRes: Reservation = {
+        id: `online_${id}`,
+        clientName: booking.clientName,
+        phone: booking.clientPhone || "",
+        startDate: booking.startDate,
+        endDate: booking.endDate,
+        brand: `${booking.brand} ${booking.model}`,
+        registration: booking.registration || "",
+        notes: booking.notes || `Réservation en ligne · ${booking.clientEmail || ""}`,
+        advance: booking.depositAmount ? String(booking.depositAmount) : "0",
+      };
+      setRes(prev => {
+        const updated = [...prev, newRes];
+        save(K.res, updated);
+        return updated;
+      });
+    }
+
     setOnlineBookings(prev => prev.filter(b => b.id !== id));
   }
   const [now, setNow] = useState(() => new Date());
