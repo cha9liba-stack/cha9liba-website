@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿import { useState, useMemo, useRef, useEffect } from "react";
+﻿import { useState, useMemo, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import {
@@ -9,7 +9,7 @@ import {
 import type { CarProfile, CarDocument, CarExpense } from "../types";
 import { getOdometerForReg } from "../services/gpsService";
 
-// Safe GPS wrapper - won't crash in browser mode
+// Safe GPS wrapper — won't crash in browser mode
 async function safeGetOdometer(reg: string): Promise<number | null> {
   try { return await getOdometerForReg(reg); } catch { return null; }
 }
@@ -113,7 +113,7 @@ export default function VehicleDetail() {
     return !cached[norm(registration || "")];
   });
 
-  // Load this car's profile - show cache immediately, refresh from Firebase in background
+  // Load this car's profile — show cache immediately, refresh from Firebase in background
   useEffect(() => {
     const key = norm(registration);
     const cached = loadProfiles();
@@ -157,7 +157,7 @@ export default function VehicleDetail() {
   const [showEditVehicleData, setShowEditVehicleData] = useState(false);
   const [vehicleDataForm, setVehicleDataForm] = useState<Partial<CarProfile>>({});
 
-  // Photo upload - compress before saving to avoid localStorage quota
+  // Photo upload — compress before saving to avoid localStorage quota
   const photoRef = useRef<HTMLInputElement>(null);
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -178,7 +178,7 @@ export default function VehicleDetail() {
       try {
         updateProfile({ ...profile, photo: compressed });
       } catch {
-        alert("Impossible de sauvegarder la photo - espace insuffisant.");
+        alert("Impossible de sauvegarder la photo — espace insuffisant.");
       }
     };
     img.src = url;
@@ -204,7 +204,7 @@ export default function VehicleDetail() {
     return { totalRevenue, totalDays, totalExpenses, net, avgPerDay };
   }, [carContracts, profile.expenses]);
 
-  // Monthly analytics - revenue, expenses, mensualité per month
+  // Monthly analytics — revenue, expenses, mensualité per month
   const monthlyStats = useMemo(() => {
     if (!profile.dateFirstTrait) return [];
     const mensualite = profile.priceTrait || 0;
@@ -378,14 +378,14 @@ export default function VehicleDetail() {
     <div className="p-8 text-center text-slate-400">
       <Car size={40} className="mx-auto mb-3 opacity-30" />
       <p>Véhicule introuvable</p>
-      <button onClick={() => navigate("/app/vehicles")} className="mt-3 text-amber-500 hover:underline text-sm">← Retour</button>
+      <button onClick={() => navigate("/app/vehicles")} className="mt-3 text-amber-500 hover:underline text-sm">← Retour</button>
     </div>
   );
 
   return (
     <div className="p-5 space-y-5 max-w-6xl mx-auto">
 
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* ── Header ── */}
       <div className="flex items-center gap-3">
         <button onClick={() => navigate("/app/vehicles")}
           className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-500">
@@ -404,7 +404,7 @@ export default function VehicleDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-        {/* â”€â”€ LEFT COLUMN â”€â”€ */}
+        {/* ── LEFT COLUMN ── */}
         <div className="space-y-4">
 
           {/* Photo */}
@@ -476,13 +476,13 @@ export default function VehicleDetail() {
                     const end = new Date(start);
                     end.setMonth(end.getMonth() + total);
                     const now = new Date();
-                    if (now >= end) return `${total} mois (âœ“ Terminé)`;
+                    if (now >= end) return `${total} mois (✓ Terminé)`;
                     const diffMs = end.getTime() - now.getTime();
                     const diffDays = Math.ceil(diffMs / 86400000);
                     const months = Math.floor(diffDays / 30);
                     const days = diffDays % 30;
                     const remaining = months > 0 ? `${months}m ${days}j` : `${days}j`;
-                    return `${total} mois - reste ${remaining}`;
+                    return `${total} mois — reste ${remaining}`;
                   })() },
                   { label: "Kilométrage", value: <span className="flex items-center gap-1.5 justify-end">{currentKm?.toLocaleString()} km{gpsKm && gpsKm > 0 && <span className="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">GPS</span>}</span> },
                   { label: "Couleur",        value: profile.color },
@@ -500,7 +500,7 @@ export default function VehicleDetail() {
           </div>
         </div>
 
-        {/* â”€â”€ RIGHT COLUMN â”€â”€ */}
+        {/* ── RIGHT COLUMN ── */}
         <div className="lg:col-span-2 space-y-4">
 
           {/* Documents */}
@@ -522,7 +522,7 @@ export default function VehicleDetail() {
                 : (profile.documents || []).map(doc => {
                   const status = docStatus(doc);
 
-                  // â”€â”€ VIDANGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+                  // ── VIDANGE ──────────────────────────────────────────────
                   if (doc.type === "vidange") {
                     // Find the last vidange (highest nextVidangeKm)
                     const allVidanges = (profile.documents || []).filter(d => d.type === "vidange" && d.nextVidangeKm);
@@ -563,7 +563,7 @@ export default function VehicleDetail() {
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-semibold ${textStyle}`}>{doc.label}</p>
                           <p className="text-xs text-slate-400">
-                            Faite Ã  {doc.kmAtVidange?.toLocaleString()} km · Prochaine Ã  {doc.nextVidangeKm?.toLocaleString()} km
+                            Faite à {doc.kmAtVidange?.toLocaleString()} km · Prochaine à {doc.nextVidangeKm?.toLocaleString()} km
                           </p>
                         </div>
                         {badgeEl}
@@ -671,9 +671,9 @@ export default function VehicleDetail() {
                           {/* Tooltip */}
                           <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] rounded-lg px-2 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap pointer-events-none shadow-lg">
                             <p className="font-semibold">{m.label}</p>
-                            <p className="text-amber-300">←‘ {m.revenue.toFixed(0)} TND</p>
-                            {m.mensualite > 0 && <p className="text-red-300">←“ {m.mensualite.toFixed(0)} TND</p>}
-                            {m.expenses > 0 && <p className="text-purple-300">←“ {m.expenses.toFixed(0)} TND</p>}
+                            <p className="text-amber-300">↑ {m.revenue.toFixed(0)} TND</p>
+                            {m.mensualite > 0 && <p className="text-red-300">↓ {m.mensualite.toFixed(0)} TND</p>}
+                            {m.expenses > 0 && <p className="text-purple-300">↓ {m.expenses.toFixed(0)} TND</p>}
                             <p className={m.profit >= 0 ? "text-green-300" : "text-red-300"}>
                               = {m.profit >= 0 ? "+" : ""}{m.profit.toFixed(0)} TND
                             </p>
@@ -713,11 +713,11 @@ export default function VehicleDetail() {
                             {m.label}
                             {m.traitIndex && <span className="ms-1 text-[9px] text-slate-400">#{m.traitIndex}</span>}
                           </td>
-                          <td className="py-1.5 text-end font-mono text-amber-600">{m.revenue > 0 ? m.revenue.toFixed(0) : "â€”"}</td>
-                          <td className="py-1.5 text-end font-mono text-red-500">{m.mensualite > 0 ? m.mensualite.toFixed(0) : "â€”"}</td>
-                          <td className="py-1.5 text-end font-mono text-purple-500">{m.expenses > 0 ? m.expenses.toFixed(0) : "â€”"}</td>
+                          <td className="py-1.5 text-end font-mono text-amber-600">{m.revenue > 0 ? m.revenue.toFixed(0) : "—"}</td>
+                          <td className="py-1.5 text-end font-mono text-red-500">{m.mensualite > 0 ? m.mensualite.toFixed(0) : "—"}</td>
+                          <td className="py-1.5 text-end font-mono text-purple-500">{m.expenses > 0 ? m.expenses.toFixed(0) : "—"}</td>
                           <td className={`py-1.5 text-end font-bold ${m.profit > 0 ? "text-green-600" : m.profit < 0 ? "text-red-600" : "text-slate-400"}`}>
-                            {m.revenue === 0 && m.expenses === 0 && m.mensualite === 0 ? "â€”" : (m.profit >= 0 ? "+" : "") + m.profit.toFixed(0)}
+                            {m.revenue === 0 && m.expenses === 0 && m.mensualite === 0 ? "—" : (m.profit >= 0 ? "+" : "") + m.profit.toFixed(0)}
                           </td>
                         </tr>
                       ))}
@@ -771,7 +771,7 @@ export default function VehicleDetail() {
                           <span className="text-xs font-mono text-amber-600">#{c.contractNumber}</span>
                           <span className="text-sm font-medium text-slate-800 truncate">{c.driverName}</span>
                         </div>
-                        <p className="text-xs text-slate-400">{c.departureDate} ←’ {c.returnDate} · {nj}j</p>
+                        <p className="text-xs text-slate-400">{c.departureDate} → {c.returnDate} · {nj}j</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-green-600">{total.toFixed(3)}</p>
@@ -797,7 +797,7 @@ export default function VehicleDetail() {
         </div>
       </div>
 
-      {/* â”€â”€ Add Document Modal â”€â”€ */}
+      {/* ── Add Document Modal ── */}
       {showDocModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
@@ -824,7 +824,7 @@ export default function VehicleDetail() {
               {newDoc.type === "vidange" ? (
                 <>
                   <div>
-                    <label className="text-xs font-medium text-slate-500 block mb-1">Km Ã  la vidange <span className="text-red-400">*</span></label>
+                    <label className="text-xs font-medium text-slate-500 block mb-1">Km à la vidange <span className="text-red-400">*</span></label>
                     <input
                       type="number" min="0"
                       value={newDoc.kmAtVidange || ""}
@@ -834,8 +834,8 @@ export default function VehicleDetail() {
                     />
                   </div>
                   <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs text-blue-700">
-                    Prochaine vidange Ã  : <span className="font-bold">{newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 10000).toLocaleString() : "â€”"} km</span>
-                    <span className="text-blue-400 ms-1">(alerte Ã  {newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 9800).toLocaleString() : "â€”"} km)</span>
+                    Prochaine vidange à : <span className="font-bold">{newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 10000).toLocaleString() : "—"} km</span>
+                    <span className="text-blue-400 ms-1">(alerte à {newDoc.kmAtVidange ? (Number(newDoc.kmAtVidange) + 9800).toLocaleString() : "—"} km)</span>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-500 block mb-1">Date de la vidange</label>
@@ -865,7 +865,7 @@ export default function VehicleDetail() {
         </div>
       )}
 
-      {/* â”€â”€ Add Expense Modal â”€â”€ */}
+      {/* ── Add Expense Modal ── */}
       {showExpModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm">
@@ -905,7 +905,7 @@ export default function VehicleDetail() {
         </div>
       )}
 
-      {/* â”€â”€ Sell Modal â”€â”€ */}
+      {/* ── Sell Modal ── */}
       {showSellModal && (() => {
         const sp = parseFloat(sellPrice) || 0;
         const priceAchat = profile.priceAchat || 0;
@@ -913,7 +913,7 @@ export default function VehicleDetail() {
         const totalRevenue = stats.totalRevenue;
         const totalMensualites = (profile.priceTrait || 0) * (profile.nombreMoisFix || 0);
         const coutTotal = priceAchat + totalExpenses; // coût total de possession
-        const totalEntrees = totalRevenue + sp;       // revenus kiraØ¡ + prix vente
+        const totalEntrees = totalRevenue + sp;       // revenus kiraء + prix vente
         const profitNet = totalEntrees - coutTotal;
         const roi = coutTotal > 0 ? (profitNet / coutTotal) * 100 : 0;
 
@@ -1025,7 +1025,7 @@ export default function VehicleDetail() {
         );
       })()}
 
-      {/* â”€â”€ Edit Vehicle Data Modal â”€â”€ */}
+      {/* ── Edit Vehicle Data Modal ── */}
       {showEditVehicleData && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
@@ -1037,7 +1037,7 @@ export default function VehicleDetail() {
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {[
-                { key: "dailyPrice",          label: "ðŸ’» Prix location / jour (TND)", type: "number", val: profile.dailyPrice },
+                { key: "dailyPrice",          label: "💻 Prix location / jour (TND)", type: "number", val: profile.dailyPrice },
                 { key: "priceAchat",          label: "Prix d'achat (TND)",       type: "number", val: profile.priceAchat },
                 { key: "avance",              label: "Avance (TND)",             type: "number", val: profile.avance },
                 { key: "priceTrait",          label: "Mensualité (TND)",         type: "number", val: profile.priceTrait },
@@ -1078,4 +1078,3 @@ export default function VehicleDetail() {
     </div>
   );
 }
-
