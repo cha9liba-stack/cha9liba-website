@@ -229,8 +229,13 @@ export default function ContractModal({ contract, onClose }: Props) {
   async function doSave(data: FormData) {
     setError("");
     try {
-
       setSaving(true);
+
+      // Check internet connection
+      if (!navigator.onLine) {
+        setError("⚠️ Pas de connexion internet. Le contrat sera sauvegardé localement.");
+      }
+
       const isDup = await isDuplicateContractNumber(data.contractNumber, contract?.id);
       if (isDup) { setError(t("duplicate_number")); setSaving(false); return; }
 
@@ -314,8 +319,10 @@ export default function ContractModal({ contract, onClose }: Props) {
         } catch {}
       }
       onClose();
-    } catch {
-      setError(t("error_occurred"));
+    } catch (err: any) {
+      const msg = err?.message || t("error_occurred");
+      setError(msg);
+      console.error("[ContractModal] doSave error:", err);
     } finally {
       setSaving(false);
     }

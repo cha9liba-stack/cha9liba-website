@@ -130,9 +130,14 @@ export async function getAllContracts(): Promise<Contract[]> {
 export async function insertContract(contract: Omit<Contract, "id">): Promise<string> {
   const now = Date.now();
   if (isOnline()) {
-    const id = await fbInsertContract(contract);
-    await localPut("contracts", { ...contract, id, _createdAt: now, _updatedAt: now });
-    return id;
+    try {
+      const id = await fbInsertContract(contract);
+      await localPut("contracts", { ...contract, id, _createdAt: now, _updatedAt: now });
+      return id;
+    } catch (e) {
+      console.error("[Firebase] insertContract failed:", e);
+      throw new Error("Échec de la sauvegarde. Vérifiez votre connexion internet.");
+    }
   }
   const tempId = `local_${now}`;
   await localPut("contracts", { ...contract, id: tempId, _createdAt: now, _updatedAt: now });
@@ -142,7 +147,12 @@ export async function insertContract(contract: Omit<Contract, "id">): Promise<st
 export async function updateContract(id: string, data: Partial<Contract>): Promise<void> {
   const updated = { ...data, _updatedAt: Date.now() };
   if (isOnline()) {
-    await fbUpdateContract(id, updated);
+    try {
+      await fbUpdateContract(id, updated);
+    } catch (e) {
+      console.error("[Firebase] updateContract failed:", e);
+      throw new Error("Échec de la mise à jour. Vérifiez votre connexion internet.");
+    }
   }
   const all = await localGetAll<Contract>("contracts");
   const existing = all.find((c) => c.id === id);
