@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, Trash2, Phone, Mail, Calendar, Car, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Bell, Trash2, Phone, Calendar } from "lucide-react";
 
 const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
 
@@ -17,6 +18,7 @@ type Notification = {
 };
 
 export default function Notifications() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +62,11 @@ export default function Notifications() {
         ? <div className="text-center py-12 text-slate-400 bg-white rounded-2xl border border-slate-100">Aucune notification</div>
         : <div className="space-y-3">
           {notifications.map(n => (
-            <div key={n.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+            <div
+              key={n.id}
+              onClick={() => navigate(`/app/vehicles/${n.registration}`)}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 cursor-pointer hover:border-amber-300 hover:shadow-md transition-all"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -91,9 +97,14 @@ export default function Notifications() {
                   <p className="text-[10px] text-slate-400">
                     {new Date(n._createdAt).toLocaleDateString("fr-FR", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}
                   </p>
-                  <button onClick={() => deleteNotification(n.id)}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteNotification(n.id);
+                    }}
                     className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Supprimer">
+                    title="Supprimer"
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>

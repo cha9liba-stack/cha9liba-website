@@ -205,12 +205,6 @@ export interface SousTraitant {
   _createdAt: number;
   _updatedAt: number;
 }
-  date: string; // YYYY-MM-DD
-  rentedContracts: Contract[];
-  maintenance: MaintenanceCar[];
-  reservations: Reservation[];
-  unpaid: UnpaidRecord[];
-}
 
 export type BookingStatus = "pending" | "confirmed" | "rejected" | "cancelled";
 

@@ -463,7 +463,7 @@ export default function Dashboard() {
               </div>
             : <div className="space-y-2 max-h-48 overflow-y-auto">
                 {stats.urgentDocs.sort((a, b) => a.days - b.days).map((d, i) => (
-                  <div key={i} onClick={() => navigate(`/vehicles/${encodeURIComponent(d.car)}`)}
+                  <div key={i} onClick={() => navigate(`/app/vehicles/${encodeURIComponent(d.car)}`)}
                     className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${d.days < 0 ? "bg-red-500" : "bg-amber-400"}`} />
                     <div className="flex-1 min-w-0">

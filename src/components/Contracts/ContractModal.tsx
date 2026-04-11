@@ -298,7 +298,7 @@ export default function ContractModal({ contract, onClose }: Props) {
         syncDebt(contract.id);
         await logAction(user, "update_contract", contract.id);
       } else {
-        const id = await insertContract({ ...data, _createdBy: user?.username || user?.email || "unknown", _createdAt: Date.now(), branchId: selectedBranch?.id || "main" } as Omit<Contract, "id">);
+        const id = await insertContract({ ...data, _createdBy: user?.username || "unknown", _createdAt: Date.now(), branchId: selectedBranch?.id || "main" } as Omit<Contract, "id">);
         upsertContract({ ...data, id } as Contract);
         syncDebt(id);
         await logAction(user, "create_contract", id);
