@@ -307,6 +307,20 @@ export default function ContractModal({ contract, onClose }: Props) {
     setPreviewData({ ...data, id: contract?.id } as Contract);
   }
 
+  async function openPreviewWithCheck() {
+    const data = getValues();
+    // For new contracts, check duplicate before allowing preview/print
+    if (!contract) {
+      const isDup = await isDuplicateContractNumber(data.contractNumber, undefined);
+      if (isDup) {
+        setError(t("duplicate_number"));
+        return;
+      }
+    }
+    setError("");
+    setPreviewData({ ...data, id: contract?.id } as Contract);
+  }
+
   function handleLookupSelect(old: Contract) {
     // Copy all fields except id and contractNumber (keep new number)
     const currentNumber = getValues("contractNumber");
@@ -414,7 +428,7 @@ export default function ContractModal({ contract, onClose }: Props) {
               <div className="flex gap-3 ms-auto">
                 <button
                   type="button"
-                  onClick={openPreview}
+                  onClick={openPreviewWithCheck}
                   className="flex items-center gap-1.5 px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors"
                 >
                   <Eye size={15} />
