@@ -79,26 +79,52 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
         <Field label={isRTL ? "المبلغ الإجمالي (TOTAL FACTURE)" : "TOTAL FACTURE"} className="sm:col-span-2">
           <input
             {...register("totalFacture")}
+            type="number"
+            min="0"
+            step="0.001"
             className="input text-end font-mono text-lg font-bold"
             placeholder="0.000"
+            onBlur={e => {
+              const v = parseFloat(e.target.value);
+              if (v < 0) setValue("totalFacture", "0.000");
+            }}
           />
         </Field>
 
         <Field label={t("divers")}>
-          <input {...register("divers")} className="input text-end font-mono" placeholder="0.000" />
+          <input {...register("divers")} type="number" min="0" step="0.001" className="input text-end font-mono" placeholder="0.000" />
         </Field>
         <Field label={t("prep")}>
-          <input {...register("prep")} className="input text-end font-mono" placeholder="0.000" />
+          <input {...register("prep")} type="number" min="0" step="0.001" className="input text-end font-mono" placeholder="0.000" />
         </Field>
 
         <Field label={isRTL ? "المبلغ المدفوع (Avance)" : "Avance payée"}>
-          <input {...register("depot")} className="input text-end font-mono" placeholder="0.000" />
+          <input
+            {...register("depot")}
+            type="number"
+            min="0"
+            step="0.001"
+            className="input text-end font-mono"
+            placeholder="0.000"
+            onBlur={e => {
+              const avanceVal = parseFloat(e.target.value);
+              const factureVal = toNum(watch("totalFacture"));
+              const sommeVal = factureVal + taxe2dt + TIMBRE;
+              if (avanceVal < 0) setValue("depot", "0.000");
+              if (avanceVal > sommeVal && sommeVal > 0) {
+                setValue("depot", fmt(sommeVal));
+              }
+            }}
+          />
         </Field>
 
         <Field label={isRTL ? "ضمان الإيداع" : "Dépôt de garantie"} className="sm:col-span-2">
           <div className="flex items-center gap-3">
             <input
               {...register("depotGarantie")}
+              type="number"
+              min="0"
+              step="0.001"
               className="input text-end font-mono flex-1"
               placeholder="0.000"
             />

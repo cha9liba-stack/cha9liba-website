@@ -64,7 +64,7 @@ const schema = z.object({
   divers: z.string().optional().default("0.000"),
   totalHT: z.string().optional().default("0.000"),
   tva: z.string().optional().default("0.000"),
-  totalFacture: z.string().optional().default("0.000"),
+  totalFacture: z.string().optional().default("0.000").refine(v => parseFloat(v || "0") >= 0, { message: "Le montant ne peut pas être négatif" }),
   plusMoinsDivers: z.string().optional().default("0.000"),
   depot: z.string().min(1),
   depotGarantie: z.string().optional().default("0.000"),
@@ -234,6 +234,26 @@ export default function ContractModal({ contract, onClose }: Props) {
       // Check internet connection
       if (!navigator.onLine) {
         setError("⚠️ Pas de connexion internet. Le contrat sera sauvegardé localement.");
+      }
+
+      // Validate amounts
+      const facture = parseFloat(data.totalFacture || "0");
+      if (facture <= 0) {
+        setError(isRTL ? "⚠️ يجب إدخال مبلغ الفاتورة" : "⚠️ Le montant TOTAL FACTURE est obligatoire");
+        setSaving(false);
+        return;
+      }
+      const avance = parseFloat(data.depot || "0");
+      const somme = parseFloat(data.somme || "0");
+      if (avance < 0) {
+        setError(isRTL ? "⚠️ المبلغ المدفوع لا يمكن أن يكون سالباً" : "⚠️ L'avance ne peut pas être négative");
+        setSaving(false);
+        return;
+      }
+      if (somme > 0 && avance > somme) {
+        setError(isRTL ? "⚠️ المبلغ المدفوع أكبر من المجموع" : "⚠️ L'avance dépasse le total");
+        setSaving(false);
+        return;
       }
 
       const isDup = await isDuplicateContractNumber(data.contractNumber, contract?.id);
