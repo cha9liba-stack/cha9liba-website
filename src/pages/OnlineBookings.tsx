@@ -26,11 +26,16 @@ export default function OnlineBookings() {
     }).catch(() => {});
 
     fetch(`${DB}/bookings.json`).then(r => r.json()).then(data => {
-      if (data) {
-        const list = Object.entries(data).map(([id, v]: any) => ({ ...v, id }))
-          .sort((a: any, b: any) => b._createdAt - a._createdAt);
+      if (data && typeof data === "object") {
+        const list = Object.entries(data).map(([id, v]: any) => ({ ...v, id, status: v.status || "pending" }))
+          .sort((a: any, b: any) => (b._createdAt || 0) - (a._createdAt || 0));
         setBookings(list);
+      } else {
+        setBookings([]);
       }
+    }).catch(err => {
+      console.error("[OnlineBookings] Failed to load bookings:", err);
+      setBookings([]);
     }).finally(() => setLoading(false));
   }, []);
 
@@ -134,8 +139,8 @@ export default function OnlineBookings() {
                     {STATUS_LABELS[b.status]?.label}
                   </span>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-slate-800">{b.totalAmount.toFixed(0)} TND</p>
-                    <p className="text-xs text-amber-600">Acompte: {b.depositAmount.toFixed(0)} TND</p>
+                    <p className="text-sm font-bold text-slate-800">{(b.totalAmount || 0).toFixed(0)} TND</p>
+                    <p className="text-xs text-amber-600">Acompte: {(b.depositAmount || 0).toFixed(0)} TND</p>
                   </div>
                   <p className="text-[10px] text-slate-400">{new Date(b._createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
                 </div>

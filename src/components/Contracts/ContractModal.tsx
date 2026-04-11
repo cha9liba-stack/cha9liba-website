@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { X, Eye, History, AlertTriangle } from "lucide-react";
+import { X, Eye, History, AlertTriangle, Printer } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -103,6 +103,7 @@ export default function ContractModal({ contract, onClose }: Props) {
   const [clientDebt, setClientDebt] = useState<{ total: number; paid: number; reste: number } | null>(null);
   const clientDebtRef = useRef<{ total: number; paid: number; reste: number } | null>(null);
   const [debtConfirmPending, setDebtConfirmPending] = useState(false);
+  const [printWithoutSaveWarning, setPrintWithoutSaveWarning] = useState(false);
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } =
     useForm<FormData>({
@@ -368,7 +369,25 @@ export default function ContractModal({ contract, onClose }: Props) {
           return;
         }
       }
+      // Show warning for new contracts (not yet saved)
+      setPrintWithoutSaveWarning(true);
+      return;
     }
+    setError("");
+    setPreviewData({ ...data, id: contract?.id } as Contract);
+  }
+
+  async function handlePrintWithSave() {
+    const data = getValues();
+    setPrintWithoutSaveWarning(false);
+    setError("");
+    await doSave(data);
+    setPreviewData({ ...data, id: contract?.id } as Contract);
+  }
+
+  function handlePrintWithoutSave() {
+    const data = getValues();
+    setPrintWithoutSaveWarning(false);
     setError("");
     setPreviewData({ ...data, id: contract?.id } as Contract);
   }
@@ -589,6 +608,47 @@ export default function ContractModal({ contract, onClose }: Props) {
                 className="px-4 py-2 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
               >
                 {isRTL ? "متابعة رغم الديون" : "Continuer malgré les dettes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print Without Save Warning Modal */}
+      {printWithoutSaveWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg" dir={isRTL ? "rtl" : "ltr"}>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-amber-100 bg-amber-50 rounded-t-2xl">
+              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Printer size={20} className="text-amber-500" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-slate-800">
+                  {isRTL ? "تنبيه: العقد غير محفوظ" : "Attention: Contrat non sauvegardé"}
+                </p>
+                <p className="text-xs text-amber-600">
+                  {isRTL ? "هل تريد حفظ العقد قبل الطباعة؟" : "Voulez-vous sauvegarder le contrat avant l'impression ?"}
+                </p>
+              </div>
+              <button onClick={() => setPrintWithoutSaveWarning(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-2 px-5 py-3 border-t border-slate-100">
+              <button
+                onClick={handlePrintWithoutSave}
+                className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                {isRTL ? "طباعة بدون حفظ" : "Imprimer sans sauvegarder"}
+              </button>
+              <button
+                onClick={handlePrintWithSave}
+                className="px-4 py-2 text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+              >
+                {isRTL ? "حفظ ثم طباعة" : "Sauvegarder puis imprimer"}
               </button>
             </div>
           </div>
