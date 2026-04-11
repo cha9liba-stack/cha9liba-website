@@ -244,13 +244,13 @@ export default function ContractModal({ contract, onClose }: Props) {
         return;
       }
       const avance = parseFloat(data.depot || "0");
-      const somme = parseFloat(data.somme || "0");
+      const sommeVal = parseFloat(data.somme || "0");
       if (avance < 0) {
         setError(isRTL ? "⚠️ المبلغ المدفوع لا يمكن أن يكون سالباً" : "⚠️ L'avance ne peut pas être négative");
         setSaving(false);
         return;
       }
-      if (somme > 0 && avance > somme) {
+      if (sommeVal > 0 && avance > sommeVal) {
         setError(isRTL ? "⚠️ المبلغ المدفوع أكبر من المجموع" : "⚠️ L'avance dépasse le total");
         setSaving(false);
         return;
