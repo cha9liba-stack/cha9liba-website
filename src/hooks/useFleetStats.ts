@@ -34,7 +34,7 @@ export function useFleetStats() {
       }
     } catch {}
 
-    // Active contracts today — deduplicated by registration
+    // Active contracts today - deduplicated by registration
     const active = contracts.filter(c => c.departureDate && c.returnDate && c.departureDate <= t && c.returnDate >= t && !c._deleted);
     const activeMap = new Map<string, Contract>();
     for (const c of active) {
@@ -76,7 +76,7 @@ export function useFleetStats() {
         continue;
       }
 
-      // No active contract — apply override
+      // No active contract - apply override
       const override = overrides[key];
       if (override === "available")   { available++;   continue; }
       if (override === "maintenance") { maintenance++; continue; }

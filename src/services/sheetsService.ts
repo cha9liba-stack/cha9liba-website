@@ -134,7 +134,7 @@ export async function syncFromSheets(
       if (!row.num_contrat) continue;
       const exists = merged.find((c) => c.contractNumber === row.num_contrat);
       if (!exists) {
-        // New contract from Sheets — add it
+        // New contract from Sheets - add it
         merged.push({
           contractNumber: row.num_contrat,
           brand:          row.voiture.split(" ")[0] || "",

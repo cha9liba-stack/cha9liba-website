@@ -125,7 +125,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
         {/* Toolbar */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
-          <span className="font-semibold text-slate-700 text-sm">{typeLabel} — {invNum}</span>
+          <span className="font-semibold text-slate-700 text-sm">{typeLabel} - {invNum}</span>
           <div className="flex gap-2">
             <button onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm rounded-lg">
@@ -202,7 +202,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               );
             })()}
 
-            {/* ── Lines — fill remaining space ── */}
+            {/* - Lines - fill remaining space - */}
             <div className="lines-wrap" style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
             <table style={{ width:"100%", height:"100%", borderCollapse:"collapse", tableLayout:"fixed", border:"1px solid #1a56db" }}>
               <thead><tr>
@@ -308,7 +308,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            {/* ── Company footer — single line centered ── */}
+            {/* - Company footer - single line centered - */}
             <div className="footer-bar" style={{ marginTop:"10px", textAlign:"center", fontWeight:"bold", color:"#2d7a2d", borderTop:"2px solid #2d7a2d", paddingTop:"6px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", fontSize:"11px" }}>
               MF: {CO.mf} &nbsp;|&nbsp; RIB: {CO.rib} &nbsp;|&nbsp; {CO.email} &nbsp;|&nbsp; Tél: {CO.tel} &nbsp;|&nbsp; Instagram: {CO.ig}
             </div>

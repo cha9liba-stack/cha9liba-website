@@ -124,7 +124,7 @@ export default function SousTraitants() {
   return (
     <div className="flex h-[calc(100vh-0px)] overflow-hidden">
 
-      {/* LEFT — list */}
+      {/* LEFT - list */}
       <div className={`flex flex-col border-r border-slate-100 bg-white ${selected ? "w-80 min-w-[280px]" : "flex-1"}`}>
         <div className="px-4 py-4 border-b border-slate-100 flex items-center justify-between">
           <h1 className="font-bold text-slate-800 flex items-center gap-2">
@@ -168,7 +168,7 @@ export default function SousTraitants() {
         </div>
       </div>
 
-      {/* RIGHT — detail */}
+      {/* RIGHT - detail */}
       {selected && (
         <div className="flex-1 overflow-y-auto bg-slate-50 p-5 space-y-4">
 

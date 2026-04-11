@@ -9,7 +9,7 @@ import {
 import type { CarProfile, CarDocument, CarExpense } from "../types";
 import { getOdometerForReg } from "../services/gpsService";
 
-// Safe GPS wrapper â€” won't crash in browser mode
+// Safe GPS wrapper - won't crash in browser mode
 async function safeGetOdometer(reg: string): Promise<number | null> {
   try { return await getOdometerForReg(reg); } catch { return null; }
 }
@@ -113,7 +113,7 @@ export default function VehicleDetail() {
     return !cached[norm(registration || "")];
   });
 
-  // Load this car's profile â€” show cache immediately, refresh from Firebase in background
+  // Load this car's profile - show cache immediately, refresh from Firebase in background
   useEffect(() => {
     const key = norm(registration);
     const cached = loadProfiles();
@@ -157,7 +157,7 @@ export default function VehicleDetail() {
   const [showEditVehicleData, setShowEditVehicleData] = useState(false);
   const [vehicleDataForm, setVehicleDataForm] = useState<Partial<CarProfile>>({});
 
-  // Photo upload â€” compress before saving to avoid localStorage quota
+  // Photo upload - compress before saving to avoid localStorage quota
   const photoRef = useRef<HTMLInputElement>(null);
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -178,7 +178,7 @@ export default function VehicleDetail() {
       try {
         updateProfile({ ...profile, photo: compressed });
       } catch {
-        alert("Impossible de sauvegarder la photo â€” espace insuffisant.");
+        alert("Impossible de sauvegarder la photo - espace insuffisant.");
       }
     };
     img.src = url;
@@ -204,7 +204,7 @@ export default function VehicleDetail() {
     return { totalRevenue, totalDays, totalExpenses, net, avgPerDay };
   }, [carContracts, profile.expenses]);
 
-  // Monthly analytics â€” revenue, expenses, mensualité per month
+  // Monthly analytics - revenue, expenses, mensualité per month
   const monthlyStats = useMemo(() => {
     if (!profile.dateFirstTrait) return [];
     const mensualite = profile.priceTrait || 0;
@@ -482,7 +482,7 @@ export default function VehicleDetail() {
                     const months = Math.floor(diffDays / 30);
                     const days = diffDays % 30;
                     const remaining = months > 0 ? `${months}m ${days}j` : `${days}j`;
-                    return `${total} mois â€” reste ${remaining}`;
+                    return `${total} mois - reste ${remaining}`;
                   })() },
                   { label: "Kilométrage", value: <span className="flex items-center gap-1.5 justify-end">{currentKm?.toLocaleString()} km{gpsKm && gpsKm > 0 && <span className="text-[10px] text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">GPS</span>}</span> },
                   { label: "Couleur",        value: profile.color },

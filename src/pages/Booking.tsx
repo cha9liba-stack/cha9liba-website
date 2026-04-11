@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Shield, Route, Headphones, BadgeDollarSign, Phone, Mail, MapPin,
   Calendar, Search, Car, Users, Clock, Star, ChevronRight, X,
-  CheckCircle, Loader2, Fuel, User, FileText, MessageSquare, Menu
+  CheckCircle, Loader2, Fuel, User, FileText, MessageSquare, Menu, Bell
 } from "lucide-react";
 import type { OnlineBooking } from "../types";
 
@@ -50,7 +50,7 @@ type LangKey = "fr" | "ar" | "en";
 const T: Record<LangKey, Record<string, string>> = {
   fr: {
     heroTitle: "Louez votre voiture à Kélibia",
-    heroSub: "La meilleure flotte de véhicules au meilleur prix — disponible 7j/7",
+    heroSub: "La meilleure flotte de véhicules au meilleur prix - disponible 7j/7",
     badge: "Réservation en ligne disponible",
     vehicles: "30+ Véhicules",
     years: "10+ Ans d'expérience",
@@ -80,7 +80,7 @@ const T: Record<LangKey, Record<string, string>> = {
     ctaTitle: "Prêt à prendre la route ?",
     ctaSub: "Réservez maintenant et profitez de votre séjour à Kélibia",
     ctaBtn: "Réservez maintenant",
-    footerDesc: "Location de voitures à Kélibia, Nabeul — Tunisie",
+    footerDesc: "Location de voitures à Kélibia, Nabeul - Tunisie",
     contact: "Contact",
     address: "Adresse",
     addressVal: "Kélibia, Nabeul, Tunisie",
@@ -132,7 +132,7 @@ const T: Record<LangKey, Record<string, string>> = {
   },
   ar: {
     heroTitle: "استأجر سيارتك في قليبية",
-    heroSub: "أفضل أسطول من السيارات بأفضل الأسعار — متاح 7 أيام في الأسبوع",
+    heroSub: "أفضل أسطول من السيارات بأفضل الأسعار - متاح 7 أيام في الأسبوع",
     badge: "الحجز عبر الإنترنت متاح",
     vehicles: "+30 سيارة",
     years: "+10 سنوات خبرة",
@@ -162,7 +162,7 @@ const T: Record<LangKey, Record<string, string>> = {
     ctaTitle: "هل أنت مستعد للانطلاق؟",
     ctaSub: "احجز الآن واستمتع بإقامتك في قليبية",
     ctaBtn: "احجز الآن",
-    footerDesc: "تأجير سيارات في قليبية، نابل — تونس",
+    footerDesc: "تأجير سيارات في قليبية، نابل - تونس",
     contact: "اتصل بنا",
     address: "العنوان",
     addressVal: "قليبية، نابل، تونس",
@@ -214,7 +214,7 @@ const T: Record<LangKey, Record<string, string>> = {
   },
   en: {
     heroTitle: "Rent Your Car in Kélibia",
-    heroSub: "The best fleet of vehicles at the best price — available 7 days a week",
+    heroSub: "The best fleet of vehicles at the best price - available 7 days a week",
     badge: "Online booking available",
     vehicles: "30+ Vehicles",
     years: "10+ Years experience",
@@ -244,7 +244,7 @@ const T: Record<LangKey, Record<string, string>> = {
     ctaTitle: "Ready to hit the road?",
     ctaSub: "Book now and enjoy your stay in Kélibia",
     ctaBtn: "Book now",
-    footerDesc: "Car rental in Kélibia, Nabeul — Tunisia",
+    footerDesc: "Car rental in Kélibia, Nabeul - Tunisia",
     contact: "Contact",
     address: "Address",
     addressVal: "Kélibia, Nabeul, Tunisia",
@@ -379,6 +379,7 @@ export default function Booking() {
 
   const [fleet, setFleet] = useState<FleetCar[]>(DEFAULT_FLEET);
   const [busyRegs, setBusyRegs] = useState<Set<string>>(new Set());
+  const [contractsData, setContractsData] = useState<Record<string, any>>({});
   const [availLoading, setAvailLoading] = useState(false);
   const [depositPct] = useState(30);
   const [dataLoading, setDataLoading] = useState(true);
@@ -388,6 +389,10 @@ export default function Booking() {
   const [dateError, setDateError] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [modalCar, setModalCar] = useState<FleetCar | null>(null);
+  const [notifyModal, setNotifyModal] = useState<{ car: FleetCar; availableFrom: string } | null>(null);
+  const [notifyName, setNotifyName] = useState("");
+  const [notifyPhone, setNotifyPhone] = useState("");
+  const [notifySent, setNotifySent] = useState(false);
 
   const [formName, setFormName] = useState("");
   const [formPhone, setFormPhone] = useState("");
@@ -455,6 +460,7 @@ export default function Booking() {
       ]);
       const contracts = contractsRes.ok ? await contractsRes.json() : null;
       const bookings = bookingsRes.ok ? await bookingsRes.json() : null;
+      if (contracts) setContractsData(contracts);
       const busy = new Set<string>();
 
       console.log("Checking availability for:", pickup, "to", ret);
@@ -508,7 +514,7 @@ export default function Booking() {
     }
   }, [pickupDate, returnDate]);
 
-  // Handle search — scroll immediately, fetch availability in background
+  // Handle search - scroll immediately, fetch availability in background
   const handleSearch = async () => {
     setDateError("");
     if (!pickupDate || !returnDate || pickupDate >= returnDate || pickupDate < today()) {
@@ -523,7 +529,49 @@ export default function Booking() {
     checkAvailability(pickupDate, returnDate);
   };
 
-  // Handle submit — redirect to payment page
+  // Get next available date for a busy car
+  async function getAvailableFrom(registration: string): Promise<string> {
+    const reg = norm(registration);
+    let maxReturn = "";
+
+    // If contractsData not loaded yet, fetch it
+    let data = contractsData;
+    if (Object.keys(data).length === 0) {
+      try {
+        const res = await fetch(`${DB}/contracts.json?orderBy=%22%24key%22&limitToLast=500`);
+        if (res.ok) { data = await res.json(); setContractsData(data); }
+      } catch {}
+    }
+
+    // Check contracts
+    Object.values(data).forEach((item: any) => {
+      if (!item || item._deleted) return;
+      const r = norm(item.registration || item["رقم اللوحة"] || "");
+      if (r !== reg) return;
+      const e = item.returnDate || item["يوم الرجوع"] || "";
+      if (e >= today() && e > maxReturn) maxReturn = e;
+    });
+
+    // Also check online bookings
+    try {
+      const bookingsRes = await fetch(`${DB}/bookings.json`);
+      const bookings = bookingsRes.ok ? await bookingsRes.json() : null;
+      if (bookings) {
+        Object.values(bookings as Record<string, any>).forEach((item: any) => {
+          if (!item) return;
+          if (item.status === "cancelled" || item.status === "rejected") return;
+          const r = norm(item.registration || "");
+          if (r !== reg) return;
+          const e = item.endDate || "";
+          if (e >= today() && e > maxReturn) maxReturn = e;
+        });
+      }
+    } catch {}
+
+    return maxReturn;
+  }
+
+  // Handle submit - redirect to payment page
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
@@ -924,11 +972,23 @@ export default function Booking() {
                             </div>
                           )}
                           <button
-                            disabled={searched && !isAvailable}
-                            onClick={() => { if (isAvailable) setModalCar(car); }}
-                            className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${searched && !isAvailable ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md shadow-green-500/20 hover:shadow-green-500/40"}`}
+                            disabled={!searched}
+                            onClick={async () => {
+                              console.log("Button clicked, isAvailable:", isAvailable, "searched:", searched);
+                              if (isAvailable) {
+                                setModalCar(car);
+                              } else if (searched) {
+                                const availFrom = await getAvailableFrom(car.registration);
+                                setNotifyModal({ car, availableFrom: availFrom });
+                                setNotifyName(""); setNotifyPhone(""); setNotifySent(false);
+                              }
+                            }}
+                            className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${searched && !isAvailable ? "bg-red-50 text-red-500 border border-red-200 hover:bg-red-100 cursor-pointer" : !searched ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md shadow-green-500/20 hover:shadow-green-500/40"}`}
                           >
-                            <Car size={14} /> {t.book}
+                            {searched && !isAvailable
+                              ? <><Bell size={14} /> {lang === "fr" ? "Me notifier" : lang === "ar" ? "أشعرني" : "Notify me"}</>
+                              : <><Car size={14} /> {t.book}</>
+                            }
                           </button>
                         </div>
                       </div>
@@ -1268,6 +1328,105 @@ export default function Booking() {
           </div>
         </div>
       </footer>
+
+      {/* Notify Modal */}
+      {notifyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={e => { if (e.target === e.currentTarget) setNotifyModal(null); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm" dir={isRtl ? "rtl" : "ltr"}>
+            {/* Header */}
+            <div className="bg-red-50 border-b border-red-100 px-5 py-4 rounded-t-2xl flex items-start gap-3">
+              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Bell size={18} className="text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-900">{notifyModal.car.brand} {notifyModal.car.model}</h3>
+                <p className="text-xs text-red-500 mt-0.5">
+                  {lang === "fr" ? "Indisponible pour vos dates" : lang === "ar" ? "غير متاحة في تواريخك" : "Unavailable for your dates"}
+                </p>
+                {notifyModal.availableFrom && (
+                  <p className="text-xs text-green-600 font-semibold mt-1">
+                    {lang === "fr" ? `Disponible à partir du ${notifyModal.availableFrom.split("-").reverse().join("/")}` 
+                    : lang === "ar" ? `متاحة اعتباراً من ${notifyModal.availableFrom.split("-").reverse().join("/")}` 
+                    : `Available from ${notifyModal.availableFrom.split("-").reverse().join("/")}`}
+                  </p>
+                )}
+              </div>
+              <button onClick={() => setNotifyModal(null)} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+            </div>
+
+            {notifySent ? (
+              <div className="p-6 text-center">
+                <CheckCircle size={40} className="text-green-500 mx-auto mb-3" />
+                <p className="font-bold text-gray-900 mb-1">
+                  {lang === "fr" ? "Demande enregistrée !" : lang === "ar" ? "تم تسجيل طلبك!" : "Request registered!"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {lang === "fr" ? "Nous vous contacterons dès que la voiture sera disponible." 
+                  : lang === "ar" ? "سنتصل بك فور توفر السيارة." 
+                  : "We will contact you as soon as the car is available."}
+                </p>
+                <button onClick={() => setNotifyModal(null)}
+                  className="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+                  {lang === "fr" ? "Fermer" : lang === "ar" ? "إغلاق" : "Close"}
+                </button>
+              </div>
+            ) : (
+              <div className="p-5 space-y-3">
+                <p className="text-sm text-gray-600">
+                  {lang === "fr" ? "Laissez vos coordonnées, nous vous contacterons dès que cette voiture sera disponible."
+                  : lang === "ar" ? "اترك بياناتك وسنتصل بك فور توفر هذه السيارة."
+                  : "Leave your details and we will contact you when this car becomes available."}
+                </p>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">
+                    {lang === "fr" ? "Nom *" : lang === "ar" ? "الاسم *" : "Name *"}
+                  </label>
+                  <input value={notifyName} onChange={e => setNotifyName(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">
+                    {lang === "fr" ? "Téléphone *" : lang === "ar" ? "الهاتف *" : "Phone *"}
+                  </label>
+                  <input value={notifyPhone} onChange={e => setNotifyPhone(e.target.value)} type="tel"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setNotifyModal(null)}
+                    className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                    {lang === "fr" ? "Annuler" : lang === "ar" ? "إلغاء" : "Cancel"}
+                  </button>
+                  <button
+                    disabled={!notifyName.trim() || !notifyPhone.trim()}
+                    onClick={async () => {
+                      await fetch(`${DB}/notifications.json`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          clientName: notifyName,
+                          clientPhone: notifyPhone,
+                          registration: notifyModal.car.registration,
+                          brand: notifyModal.car.brand,
+                          model: notifyModal.car.model,
+                          availableFrom: notifyModal.availableFrom,
+                          requestedDates: `${pickupDate} → ${returnDate}`,
+                          lang,
+                          _createdAt: Date.now(),
+                        }),
+                      }).catch(() => {});
+                      setNotifySent(true);
+                    }}
+                    className="flex-1 bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-1">
+                    <Bell size={13} />
+                    {lang === "fr" ? "Me notifier" : lang === "ar" ? "أشعرني" : "Notify me"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Booking Modal */}
       {modalCar && (

@@ -1,4 +1,4 @@
-// SMS Configuration — stored in localStorage
+// SMS Configuration - stored in localStorage
 
 export interface SMSConfig {
   gatewayUrl: string;           // e.g. http://192.168.100.35:8080/send-sms

@@ -301,7 +301,7 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
                     className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-amber-50 text-sm border-b border-slate-50 last:border-0 transition-colors text-start">
                     <span className="font-medium text-amber-600">#{c.contractNumber}</span>
                     <span className="text-slate-600">{c.driverName}</span>
-                    <span className="text-slate-500">{c.brand} {c.model} — {c.registration}</span>
+                    <span className="text-slate-500">{c.brand} {c.model} - {c.registration}</span>
                     <span className="text-green-600 font-medium">{c.totalFacture} TND</span>
                   </button>
                 ))}

@@ -393,7 +393,7 @@ export default function Payment() {
           {submitting
             ? <><Loader2 size={18} className="animate-spin" /> {t.processing}</>
             : ["konnect","flouci","paymee","d17"].includes(method)
-            ? <><CreditCard size={18} /> {t.confirm} — {booking.depositAmount} TND</>
+            ? <><CreditCard size={18} /> {t.confirm} - {booking.depositAmount} TND</>
             : <><CheckCircle size={18} /> {t.confirm}</>}
         </button>
 

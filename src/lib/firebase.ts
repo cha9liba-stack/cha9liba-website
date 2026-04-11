@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getDatabase } from "firebase/database";
 
-// Firebase Web config — apiKey is optional for public read-only databases
+// Firebase Web config - apiKey is optional for public read-only databases
 // The app uses REST API directly for reads/writes, SDK only for realtime listeners
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDummy-placeholder-not-needed-for-rest",
@@ -19,7 +19,7 @@ try {
   db = getDatabase(app);
 } catch (e) {
   console.warn("[Firebase] SDK init failed, REST-only mode:", e);
-  // Create a dummy db object — REST API will be used instead
+  // Create a dummy db object - REST API will be used instead
   db = null as any;
 }
 

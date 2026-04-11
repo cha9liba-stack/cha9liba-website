@@ -16,7 +16,7 @@ import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
 import DeliveryReceipt from "../components/DeliveryReceipt";
 import type { Contract } from "../types";
 
-type SortKey = "contractNumber" | "driverName" | "brand" | "departureDate" | "returnDate" | "totalFacture";
+type SortKey = "contractNumber" | "driverName" | "brand" | "departureDate" | "returnDate" | "totalFacture" | "_createdAt" | "depot" | "resteAPayer";
 type SortDir = "asc" | "desc";
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
@@ -157,7 +157,7 @@ export default function Contracts() {
     result.sort((a, b) => {
       let va = String(a[sortKey] || "");
       let vb = String(b[sortKey] || "");
-      if (sortKey === "contractNumber" || sortKey === "totalFacture") {
+      if (sortKey === "contractNumber" || sortKey === "totalFacture" || sortKey === "_createdAt" || sortKey === "depot" || sortKey === "resteAPayer") {
         const na = parseFloat(va) || 0;
         const nb = parseFloat(vb) || 0;
         return sortDir === "asc" ? na - nb : nb - na;
@@ -189,6 +189,9 @@ export default function Contracts() {
     { key: "brand",          label: isRTL ? "السيارة" : "Véhicule" },
     { key: "departureDate",  label: t("departure_date") },
     { key: "returnDate",     label: t("return_date") },
+    { key: "_createdAt",     label: isRTL ? "تاريخ الإنشاء" : "Créé le" },
+    { key: "depot",          label: isRTL ? "السلفة" : "Avance" },
+    { key: "resteAPayer",    label: isRTL ? "المتبقي" : "Reste" },
     { key: "totalFacture",   label: t("total_invoice") },
   ];
 
@@ -313,15 +316,24 @@ export default function Contracts() {
                     </td>
                     <td className="px-5 py-3 text-slate-500">{c.departureDate}</td>
                     <td className="px-5 py-3 text-slate-500">{c.returnDate}</td>
-                    <td className="px-5 py-3 font-medium text-green-600">{c.totalFacture || "—"} TND</td>
+                    <td className="px-5 py-3 text-slate-500 text-xs">
+                      {(c as any)._createdAt
+                        ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric" })
+                        : "-"}
+                    </td>
+                    <td className="px-5 py-3 text-slate-600">{c.depot || "0"} TND</td>
+                    <td className={`px-5 py-3 font-medium ${parseFloat(c.resteAPayer || "0") > 0 ? "text-red-500" : "text-green-500"}`}>
+                      {c.resteAPayer || "0"} TND
+                    </td>
+                    <td className="px-5 py-3 font-medium text-green-600">{c.totalFacture || "-"} TND</td>
                     <td className="px-5 py-3 text-xs">
-                      <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "—"}</p>
+                      <p className="font-medium text-slate-700">{(c as any)._createdBy || (c as any)._updatedBy || "-"}</p>
                       <p className="text-slate-400">{
                         (c as any)._updatedAt
                           ? new Date((c as any)._updatedAt < 1e12 ? (c as any)._updatedAt * 1000 : (c as any)._updatedAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
                           : (c as any)._createdAt
                           ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
-                          : "—"
+                          : "-"
                       }</p>
                       {(c as any)._updatedBy && (c as any)._updatedBy !== (c as any)._createdBy && (
                         <p className="text-[10px] text-amber-500">✎ {(c as any)._updatedBy}</p>

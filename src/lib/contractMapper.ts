@@ -64,7 +64,7 @@ export function mapFirebaseToContract(id: string, raw: Record<string, any>): Con
     // Other
     city: str(raw["مدينة الخروج"] ?? raw["Ville"]),
     date: str(raw["التاريخ"] ?? raw["Date"]),
-    // Metadata — normalize timestamp: old Python app saves in seconds, new app in milliseconds
+    // Metadata - normalize timestamp: old Python app saves in seconds, new app in milliseconds
     _createdAt: (() => {
       const ts = raw["_created_at"] ?? raw["_createdAt"];
       if (!ts) return undefined;
@@ -147,7 +147,7 @@ export function mapContractToFirebase(contract: Partial<Contract>): Record<strin
   if (contract.city !== undefined) out["مدينة الخروج"] = contract.city;
   if (contract.date !== undefined) out["التاريخ"] = contract.date;
 
-  // Metadata fields — pass through directly
+  // Metadata fields - pass through directly
   if ((contract as any).branchId !== undefined)   out["branchId"]   = (contract as any).branchId;
   if ((contract as any)._createdBy !== undefined) out["_createdBy"] = (contract as any)._createdBy;
   if ((contract as any)._updatedBy !== undefined) out["_updatedBy"] = (contract as any)._updatedBy;

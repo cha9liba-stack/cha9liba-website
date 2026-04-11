@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Cancel Old Bookings</title>
+<style>body{font-family:sans-serif;padding:20px;} button{padding:10px 20px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer;font-size:14px;} #log{margin-top:16px;font-family:monospace;font-size:13px;}</style>
+</head>
+<body>
+<h3>Annuler tous les anciens bookings Firebase</h3>
+<p>Ce script va mettre tous les bookings en statut "cancelled" pour libérer les voitures.</p>
+<button onclick="cancelAll()">Annuler tous les bookings</button>
+<div id="log"></div>
+<script>
+const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+function log(msg) { document.getElementById("log").innerHTML += "<div>" + msg + "</div>"; }
+
+async function cancelAll() {
+  log("Chargement des bookings...");
+  const res = await fetch(`${DB}/bookings.json`);
+  const data = await res.json();
+  if (!data) { log("Aucun booking trouvé."); return; }
+  
+  const entries = Object.entries(data);
+  log(`${entries.length} bookings trouvés.`);
+  
+  let cancelled = 0;
+  for (const [id, b] of entries) {
+    if (b.status !== "cancelled") {
+      await fetch(`${DB}/bookings/${id}.json`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled", _updatedAt: Date.now() })
+      });
+      cancelled++;
+      log(`✅ ${id} → cancelled (${b.clientName || "?"} · ${b.registration || "?"})`);
+    }
+  }
+  log(`<strong>Terminé: ${cancelled} bookings annulés.</strong>`);
+}
+</script>
+</body>
+</html>

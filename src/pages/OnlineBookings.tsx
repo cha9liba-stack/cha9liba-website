@@ -16,7 +16,7 @@ export default function OnlineBookings() {
   const user = useAuthStore(s => s.user);
   const [bookings, setBookings] = useState<OnlineBooking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "pending" | "confirmed" | "rejected">("pending");
+  const [filter, setFilter] = useState<"all" | "pending" | "confirmed" | "rejected" | "cancelled">("pending");
   const [depositPct, setDepositPct] = useState(30);
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -40,6 +40,14 @@ export default function OnlineBookings() {
       body: JSON.stringify({ status, _updatedAt: Date.now(), _confirmedBy: user?.username }),
     });
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  }
+
+  async function deleteBooking(id: string) {
+    if (!confirm("Supprimer cette réservation ?")) return;
+    await fetch(`${DB}/bookings/${id}.json`, {
+      method: "DELETE",
+    });
+    setBookings(prev => prev.filter(b => b.id !== id));
   }
 
   async function saveDepositPct() {
@@ -81,7 +89,7 @@ export default function OnlineBookings() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(["pending", "confirmed", "rejected", "all"] as const).map(f => (
+        {(["pending", "confirmed", "rejected", "cancelled", "all"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${filter === f ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300"}`}>
             {f === "all" ? "Tous" : STATUS_LABELS[f].label}
@@ -133,18 +141,28 @@ export default function OnlineBookings() {
                 </div>
               </div>
 
-              {b.status === "pending" && (
-                <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                  <button onClick={() => updateStatus(b.id!, "confirmed")}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-xl transition-colors">
-                    <Check size={14} /> Confirmer
-                  </button>
-                  <button onClick={() => updateStatus(b.id!, "rejected")}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-xl transition-colors">
-                    <X size={14} /> Refuser
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                {b.status === "pending" && (
+                  <>
+                    <button onClick={() => updateStatus(b.id!, "confirmed")}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-xl transition-colors">
+                      <Check size={14} /> Confirmer
+                    </button>
+                    <button onClick={() => updateStatus(b.id!, "rejected")}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-xl transition-colors">
+                      <X size={14} /> Refuser
+                    </button>
+                    <button onClick={() => updateStatus(b.id!, "cancelled")}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-500 hover:bg-slate-600 text-white text-sm font-medium rounded-xl transition-colors">
+                      <X size={14} /> Annuler
+                    </button>
+                  </>
+                )}
+                <button onClick={() => deleteBooking(b.id!)}
+                  className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-600 text-sm font-medium rounded-xl transition-colors">
+                  Supprimer
+                </button>
+              </div>
             </div>
           ))}
         </div>

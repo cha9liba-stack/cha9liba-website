@@ -111,7 +111,7 @@ export default function Settings() {
     try {
       const merged = await syncFromSheets(contracts);
       setContracts(merged);
-      setMsg(`✓ تمت المزامنة — ${merged.length} عقد`);
+      setMsg(`✓ تمت المزامنة - ${merged.length} عقد`);
     } catch {
       setMsg(t("error_occurred"));
     } finally {
@@ -223,7 +223,7 @@ export default function Settings() {
         {msg && <p className="text-sm text-green-600 mt-2">{msg}</p>}
       </div>
 
-      {/* User management — admin only */}
+      {/* User management - admin only */}
       {user?.role === "admin" && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -290,7 +290,7 @@ export default function Settings() {
                       onChange={e => assignBranch(u.id, e.target.value || null)}
                       className="px-2 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
                     >
-                      <option value="">— Agence libre —</option>
+                      <option value="">- Agence libre -</option>
                       {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                   )}
@@ -309,17 +309,17 @@ export default function Settings() {
         </div>
       )}
 
-      {/* GPS Settings — admin only */}
+      {/* GPS Settings - admin only */}
       {user?.role === "admin" && (
         <GPSSettings DB_URL={DB_URL} />
       )}
 
-      {/* Visibility Settings — admin only */}
+      {/* Visibility Settings - admin only */}
       {user?.role === "admin" && (
         <VisibilitySettings DB_URL={DB_URL} />
       )}
 
-      {/* Contract Settings — admin only */}
+      {/* Contract Settings - admin only */}
       {user?.role === "admin" && (
         <ContractSettings DB_URL={DB_URL} />
       )}

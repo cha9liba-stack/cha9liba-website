@@ -85,7 +85,7 @@ export default function Clients() {
   const contracts = useContractStore(s => s.contracts);
   const [clients, setClients] = useState<Client[]>(loadClients);
 
-  // Load from Firebase on mount — overrides localStorage if Firebase has data
+  // Load from Firebase on mount - overrides localStorage if Firebase has data
   useEffect(() => {
     loadClientsFromFirebase().then(data => {
       if (data && data.length > 0) {
@@ -127,7 +127,7 @@ export default function Clients() {
     setDebts(d); saveDebts(d);
   }
 
-  // Get debt for a contract — reads directly from contract fields
+  // Get debt for a contract - reads directly from contract fields
   function getDebt(contractId: string) {
     // First check manual override in debts store
     if (debts[contractId]) return debts[contractId];
@@ -309,7 +309,7 @@ export default function Clients() {
     alert(`${newClients.length} client(s) importé(s).`);
   }
 
-  // Per-client contract stats — debt from localStorage only (starts at 0)
+  // Per-client contract stats - debt from localStorage only (starts at 0)
   function getClientStats(client: Client) {
     const cc = contracts.filter(c =>
       (client.cin && c.driverCin?.trim().toUpperCase() === client.cin.trim().toUpperCase()) ||
@@ -560,17 +560,17 @@ export default function Clients() {
               <h3 className="font-semibold text-slate-700 text-sm flex items-center gap-2">
                 <User size={14} className="text-slate-400" /> Informations personnelles
               </h3>
-              {[
+              {[/* eslint-disable @typescript-eslint/naming-convention */
                 { icon: CreditCard, label: "CIN", value: selected.cin },
                 { icon: Phone,      label: "Téléphone", value: selected.phone },
                 { icon: MapPin,     label: "Adresse", value: selected.address },
-                { icon: FileText,   label: "Date de naissance", value: selected.dob || "—" },
+                { icon: FileText,   label: "Date de naissance", value: selected.dob || "-" },
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-start gap-2.5">
                   <Icon size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-[10px] text-slate-400">{label}</p>
-                    <p className="text-sm text-slate-700">{value || "—"}</p>
+                    <p className="text-sm text-slate-700">{value || "-"}</p>
                   </div>
                 </div>
               ))}
@@ -590,13 +590,13 @@ export default function Clients() {
                   { icon: Hash,      label: "Matricule fiscal (MF)", value: selected.company.mf },
                   { icon: Phone,     label: "Téléphone", value: selected.company.phone },
                   { icon: MapPin,    label: "Adresse", value: selected.company.address },
-                  { icon: Mail,      label: "Email", value: selected.company.email || "—" },
+                  { icon: Mail,      label: "Email", value: selected.company.email || "-" },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-start gap-2.5">
                     <Icon size={13} className="text-blue-400 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-[10px] text-slate-400">{label}</p>
-                      <p className="text-sm text-slate-700 font-medium">{value || "—"}</p>
+                      <p className="text-sm text-slate-700 font-medium">{value || "-"}</p>
                     </div>
                   </div>
                 ))}
@@ -734,7 +734,7 @@ export default function Clients() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <DollarSign size={15} className="text-amber-500" />
-                Paiement — Contrat #{editDebtContract.contractNumber}
+                Paiement - Contrat #{editDebtContract.contractNumber}
               </h3>
               <button onClick={() => setEditDebtContract(null)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
             </div>
@@ -813,7 +813,7 @@ export default function Clients() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
                 <AlertCircle size={16} className="text-red-500" />
-                Doublons détectés — {duplicateGroups.length} groupe{duplicateGroups.length > 1 ? "s" : ""}
+                Doublons détectés - {duplicateGroups.length} groupe{duplicateGroups.length > 1 ? "s" : ""}
               </h3>
               <button onClick={() => setShowDuplicates(false)} className="text-slate-400 hover:text-slate-600 text-xl">×</button>
             </div>
@@ -825,7 +825,7 @@ export default function Clients() {
                 <div key={gi} className="border border-red-100 rounded-xl overflow-hidden">
                   <div className="bg-red-50 px-4 py-2 flex items-center justify-between">
                     <span className="text-xs font-semibold text-red-700 flex items-center gap-1.5">
-                      <CreditCard size={12} /> CIN: {group[0].cin} — {group.length} entrées
+                      <CreditCard size={12} /> CIN: {group[0].cin} - {group.length} entrées
                     </span>
                     <button
                       onClick={() => { setMergeGroup(group); setShowDuplicates(false); }}
@@ -904,7 +904,7 @@ export default function Clients() {
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
           <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 bg-amber-50 rounded-t-2xl">
             <Bell size={18} className="text-amber-600" />
-            <h3 className="font-bold text-slate-800">Nouvelle alerte — {selected.name}</h3>
+            <h3 className="font-bold text-slate-800">Nouvelle alerte - {selected.name}</h3>
           </div>
           <div className="p-5 space-y-3">
             <div>

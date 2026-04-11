@@ -57,8 +57,8 @@ export default function ContractLookupDialog({ onSelect, onClose }: Props) {
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
                 {isRTL
-                  ? "اختر عقداً لنسخ بياناته — يمكنك تعديل أي حقل بعد الاسترداد"
-                  : "Sélectionnez un contrat pour copier ses données — modifiables après récupération"}
+                  ? "اختر عقداً لنسخ بياناته - يمكنك تعديل أي حقل بعد الاسترداد"
+                  : "Sélectionnez un contrat pour copier ses données - modifiables après récupération"}
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function ContractLookupDialog({ onSelect, onClose }: Props) {
                     <td className="px-4 py-2.5 text-slate-600">{c.brand} {c.model}</td>
                     <td className="px-4 py-2.5 text-slate-500">{c.registration}</td>
                     <td className="px-4 py-2.5 text-slate-500">{c.departureDate}</td>
-                    <td className="px-4 py-2.5 text-green-600 font-medium">{c.totalFacture || "—"}</td>
+                    <td className="px-4 py-2.5 text-green-600 font-medium">{c.totalFacture || "-"}</td>
                     <td className="px-4 py-2.5">
                       <button
                         onClick={() => { onSelect(c); onClose(); }}

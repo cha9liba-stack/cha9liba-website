@@ -54,7 +54,7 @@ async function _send(phone: string, message: string, gatewayUrl: string): Promis
   }
 }
 
-// Auto reminder — called every 5 minutes
+// Auto reminder - called every 5 minutes
 export async function checkAndSendReminders(contracts: Contract[]): Promise<void> {
   const cfg = getSMSConfig();
   const now = new Date();

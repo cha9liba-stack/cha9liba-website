@@ -55,7 +55,7 @@ const DEFAULT_POSITIONS: Record<string, [number, number]> = {
   "Essence":              [646,  2980],
   "Gasoil":               [976,  2983],
   "Taxe2dt":              [1620, 2060], // Taxe Services Location 2dt/j (2026+)
-  "Timbre":               [1900, 2150], // Timbre fiscal 1.000 dt — positioned after the text
+  "Timbre":               [1900, 2150], // Timbre fiscal 1.000 dt - positioned after the text
 };
 
 const POSITIONS_STORAGE_KEY = "palma_field_positions";
@@ -70,7 +70,7 @@ async function persistToFirebase(path: string, data: any) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-  } catch { /* silent — localStorage is the fallback */ }
+  } catch { /* silent - localStorage is the fallback */ }
 }
 
 async function loadFromFirebase(path: string): Promise<any> {
@@ -183,7 +183,7 @@ function contractToLegacy(c: Contract): Record<string, string> {
     "المجموع":              c.somme,
     "مدينة الخروج":         c.city,
     "التاريخ":              c.date,
-    // Taxe 2dt/j — only for 2026+ contracts
+    // Taxe 2dt/j - only for 2026+ contracts
     "Taxe2dt": (() => {
       const year = parseInt((c.departureDate || c.date || "2025").slice(0, 4), 10);
       if (year < 2026) return "";
@@ -193,7 +193,7 @@ function contractToLegacy(c: Contract): Record<string, string> {
       const nj = Math.max(1, Math.ceil((ret.getTime() - dep.getTime()) / 86400000));
       return (nj * 2).toFixed(3);
     })(),
-    // Timbre fiscal — only for 2026+ (old contracts have it embedded in المجموع)
+    // Timbre fiscal - only for 2026+ (old contracts have it embedded in المجموع)
     "Timbre": (() => {
       const year = parseInt((c.departureDate || c.date || "2025").slice(0, 4), 10);
       return year >= 2026 ? "1.000" : "";
@@ -256,7 +256,7 @@ interface Props {
   onClose: () => void;
 }
 
-// Helper: open print window — works in browser and Tauri
+// Helper: open print window - works in browser and Tauri
 async function openPrintWindow(title: string, bodyContent: string) {
   const html = `<!DOCTYPE html><html><head>
     <title>${title}</title>
@@ -316,7 +316,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
   const data = useMemo(() => contractToLegacy(contract), [contract]);
 
-  // Always sync from Firebase — Firebase is the source of truth
+  // Always sync from Firebase - Firebase is the source of truth
   useEffect(() => {
     loadFromFirebase("app_settings/print_settings").then(data => {
       if (data) {
@@ -390,14 +390,14 @@ export default function ContractPreview({ contract, onClose }: Props) {
         const hasArabic = /[\u0600-\u06FF]/.test(val);
 
         if (!hasArabic) {
-          // Pure latin/numeric — draw LTR aligned to the right anchor
+          // Pure latin/numeric - draw LTR aligned to the right anchor
           ctx2.save();
           ctx2.direction = "ltr";
           ctx2.textAlign = "right";
           ctx2.fillText(val, x, y);
           ctx2.restore();
         } else {
-          // Arabic or mixed — always RTL, anchor right
+          // Arabic or mixed - always RTL, anchor right
           ctx2.save();
           ctx2.direction = "rtl";
           ctx2.textAlign = "right";
@@ -567,7 +567,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     }
   }
 
-  // ─── Print data only (no background, no contract number — for pre-printed forms) ──
+  // --- Print data only (no background, no contract number - for pre-printed forms) ---
   async function handlePrintDataOnly() {
     const canvas = document.createElement("canvas");
     canvas.width  = ORIG_W;
@@ -586,14 +586,14 @@ export default function ContractPreview({ contract, onClose }: Props) {
       const hasArabic = /[\u0600-\u06FF]/.test(val);
 
       if (!hasArabic) {
-        // Pure latin/numeric — draw LTR aligned to the right anchor
+        // Pure latin/numeric - draw LTR aligned to the right anchor
         ctx.save();
         ctx.direction = "ltr";
         ctx.textAlign = "right";
         ctx.fillText(val, x, y);
         ctx.restore();
       } else {
-        // Arabic or mixed — always RTL, anchor right
+        // Arabic or mixed - always RTL, anchor right
         ctx.save();
         ctx.direction = "rtl";
         ctx.textAlign = "right";
@@ -603,7 +603,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     }
 
     for (const [field, [x, y]] of Object.entries(positions)) {
-      // Skip contract number — already printed on the pre-printed form
+      // Skip contract number - already printed on the pre-printed form
       if (field === "رقم العقد") continue;
 
       const val = data[field];
@@ -640,7 +640,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
     }
 
     const dataUrl = canvas.toDataURL("image/png");
-    await openPrintWindow(`عقد — بيانات فقط`, `<img src="${dataUrl}" onload="window.print();window.close()"/>`);
+    await openPrintWindow(`عقد - بيانات فقط`, `<img src="${dataUrl}" onload="window.print();window.close()"/>`);
   }
 
   // ─── Print with background ────────────────────────────────────────────────
@@ -676,14 +676,14 @@ export default function ContractPreview({ contract, onClose }: Props) {
         const hasArabic = /[\u0600-\u06FF]/.test(val);
 
         if (!hasArabic) {
-          // Pure latin/numeric — draw LTR aligned to the right anchor
+          // Pure latin/numeric - draw LTR aligned to the right anchor
           ctx1.save();
           ctx1.direction = "ltr";
           ctx1.textAlign = "right";
           ctx1.fillText(val, x, y);
           ctx1.restore();
         } else {
-          // Arabic or mixed — always RTL, anchor right
+          // Arabic or mixed - always RTL, anchor right
           ctx1.save();
           ctx1.direction = "rtl";
           ctx1.textAlign = "right";
@@ -753,7 +753,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         });
         return;
       } catch {
-        // Not in Tauri — try browser
+        // Not in Tauri - try browser
       }
 
       // Browser fallback
@@ -788,7 +788,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
         {/* ── Toolbar ── */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 gap-3 flex-wrap">
           <span className="font-semibold text-slate-700 text-sm">
-            {t("preview")} — #{contract.contractNumber}
+            {t("preview")} - #{contract.contractNumber}
             <span className="ms-2 text-xs text-slate-400">
               {hasTaxe2dt(contract) ? "📋 2026+ (taxe 2dt)" : "📋 2025"}
             </span>
@@ -864,7 +864,7 @@ export default function ContractPreview({ contract, onClose }: Props) {
               <Printer size={15}/>{isRTL ? "طباعة مع الخلفية" : "Imprimer avec fond"}
             </button>
 
-            {/* Print data only — for pre-printed forms */}
+            {/* Print data only - for pre-printed forms */}
             <button onClick={handlePrintDataOnly}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white text-sm rounded-lg transition-colors"
               title={isRTL ? "طباعة على عقد جاهز (بدون خلفية)" : "Imprimer sur formulaire pré-imprimé"}>
@@ -882,8 +882,8 @@ export default function ContractPreview({ contract, onClose }: Props) {
           <div className="px-5 py-2 bg-amber-50 border-b border-amber-100 text-xs text-amber-700 flex items-center gap-2">
             <Move size={13}/>
             {isRTL
-              ? "اضغط على أي نص واسحبه لتغيير موضعه — يُحفظ تلقائياً"
-              : "Cliquez sur un texte et faites-le glisser pour changer sa position — sauvegarde automatique"}
+              ? "اضغط على أي نص واسحبه لتغيير موضعه - يُحفظ تلقائياً"
+              : "Cliquez sur un texte et faites-le glisser pour changer sa position - sauvegarde automatique"}
           </div>
         )}
 

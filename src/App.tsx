@@ -18,6 +18,7 @@ import Statistics from "./pages/Statistics";
 import OnlineBookings from "./pages/OnlineBookings";
 import SousTraitants from "./pages/SousTraitants";
 import GPS from "./pages/GPS";
+import Notifications from "./pages/Notifications";
 import { isSousTraitant } from "./lib/permissions";
 
 const Invoices = lazy(() => import("./pages/Invoices"));
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="settings" element={<STProtectedRoute><Settings /></STProtectedRoute>} />
           <Route path="statistics" element={<STProtectedRoute><Statistics /></STProtectedRoute>} />
           <Route path="online-bookings" element={<STProtectedRoute><OnlineBookings /></STProtectedRoute>} />
+          <Route path="notifications" element={<STProtectedRoute><Notifications /></STProtectedRoute>} />
           <Route path="sous-traitants" element={<STProtectedRoute><SousTraitants /></STProtectedRoute>} />
           <Route path="gps" element={<STProtectedRoute><GPS /></STProtectedRoute>} />
           <Route path="sms-test" element={<SMSTest />} />

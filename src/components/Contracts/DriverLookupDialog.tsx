@@ -32,7 +32,7 @@ export default function DriverLookupDialog({ onSelect, onClose, forDriver2 = fal
         const cin2  = (c.driver2Cin  || "").toLowerCase();
         return name1.includes(q) || cin1.includes(q) || name2.includes(q) || cin2.includes(q);
       });
-      // Deduplicate by CIN — keep most recent
+      // Deduplicate by CIN - keep most recent
       const seen = new Set<string>();
       const deduped = found
         .sort((a, b) => (b._createdAt ?? 0) - (a._createdAt ?? 0))

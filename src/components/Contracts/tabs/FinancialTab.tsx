@@ -117,7 +117,7 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
             {isRTL ? "الملخص التلقائي" : "Récapitulatif automatique"}
             {is2026Plus && nj > 0 && (
               <span className="ms-2 text-amber-600 normal-case font-normal">
-                — {nj}j × 2dt = {fmt(taxe2dt)} TND
+                - {nj}j × 2dt = {fmt(taxe2dt)} TND
               </span>
             )}
           </p>

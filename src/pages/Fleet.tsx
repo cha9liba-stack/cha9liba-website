@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Plus, Trash2, Car, Wrench, CalendarClock, AlertCircle, Bell, X, MessageSquare, Globe, Check } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
@@ -22,7 +22,7 @@ function saveLastContracts(d: Record<string, Contract>) {
   localStorage.setItem(LAST_CONTRACTS_KEY, JSON.stringify(d));
 }
 
-// Manual state overrides per car — historical: each entry has from/to dates
+// Manual state overrides per car - historical: each entry has from/to dates
 const OVERRIDES_KEY = "palma_state_overrides";
 const DB_URL_FLEET = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
 
@@ -58,7 +58,7 @@ interface OverrideEntry {
 type OverrideHistory = Record<string, OverrideEntry[]>;
 
 function loadOverrideHistory(): OverrideHistory {
-  // Don't load from localStorage — always wait for Firebase sync
+  // Don't load from localStorage - always wait for Firebase sync
   // This prevents stale overrides from blocking active contracts
   return {};
 }
@@ -181,6 +181,82 @@ function Modal({ title, onClose, onSave, children }: {
   );
 }
 
+// ─── Notifications Section ────────────────────────────────────────────────────
+const DB_NOTIF = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
+function NotificationsSection({ isRTL }: { isRTL: boolean }) {
+  const [notifs, setNotifs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  function load() {
+    setLoading(true);
+    fetch(`${DB_NOTIF}/notifications.json`)
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          const list = Object.entries(data)
+            .map(([id, v]: any) => ({ ...v, id }))
+            .filter((n: any) => !n.done)
+            .sort((a: any, b: any) => b._createdAt - a._createdAt);
+          setNotifs(list);
+        } else setNotifs([]);
+      }).catch(() => setNotifs([]))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function markDone(id: string) {
+    await fetch(`${DB_NOTIF}/notifications/${id}.json`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: true }),
+    }).catch(() => {});
+    load();
+  }
+
+  if (!loading && notifs.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border-b border-blue-100">
+        <Bell size={14} className="text-blue-600" />
+        <span className="font-semibold text-sm text-blue-700">{isRTL ? "طلبات الإشعار" : "En attente de disponibilité"}</span>
+        <span className="ms-auto bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">{notifs.length}</span>
+        <button onClick={load} className="p-1 hover:bg-blue-100 rounded ms-1">
+          <CalendarClock size={12} className="text-blue-600" />
+        </button>
+      </div>
+      <div className="p-3 space-y-2">
+        {loading
+          ? <p className="text-center text-slate-400 text-xs py-3 animate-pulse">Chargement...</p>
+          : notifs.map(n => (
+            <div key={n.id} className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm text-slate-800">{n.clientName}</p>
+                <p className="text-xs text-slate-500">{n.clientPhone}</p>
+                <p className="text-xs font-medium text-blue-700 mt-0.5">{n.brand} {n.model} · {n.registration}</p>
+                {n.availableFrom && (
+                  <p className="text-xs text-green-600">
+                    {isRTL ? "متاحة من:" : "Dispo. à partir du:"} {n.availableFrom.split("-").reverse().join("/")}
+                  </p>
+                )}
+                {n.requestedDates && (
+                  <p className="text-xs text-slate-400">{isRTL ? "طلب:" : "Demande:"} {n.requestedDates}</p>
+                )}
+              </div>
+              <button onClick={() => markDone(n.id)}
+                className="flex-shrink-0 flex items-center gap-1 px-2 py-1 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg transition-colors">
+                <Check size={11} /> {isRTL ? "تم" : "Traité"}
+              </button>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Fleet() {
   const { i18n } = useTranslation();
@@ -212,7 +288,7 @@ export default function Fleet() {
   function saveCustomState() {
     if (!newStateName.trim()) return;
     const id = "custom_" + Date.now();
-    // Pick a light bg based on color — store as inline style
+    // Pick a light bg based on color - store as inline style
     const next: CustomCarState = { id, label: newStateName.trim(), color: newStateColor, bgClass: "" };
     const updated = [...customStates, next];
     setCustomStates(updated);
@@ -255,7 +331,7 @@ export default function Fleet() {
             migrated[key] = [val as OverrideEntry];
           }
         }
-        // Firebase always wins — overwrite localStorage
+        // Firebase always wins - overwrite localStorage
         localStorage.setItem(OVERRIDES_KEY, JSON.stringify(migrated));
         setOverrideHistory(migrated);
       });
@@ -302,7 +378,7 @@ export default function Fleet() {
     setStateMenu(null);
   }
 
-  // ── Deduplicate by registration — keep only the LATEST active contract per car ──
+  // - Deduplicate by registration - keep only the LATEST active contract per car -
   const rentedCars = useMemo(() => {
     const active = contracts.filter(c =>
       c.departureDate && c.returnDate && isActiveOnDate(c.departureDate, c.returnDate, date)
@@ -371,7 +447,7 @@ export default function Fleet() {
   // ── Fleet status: each car with its current state ──
   type CarState = "rented" | "late" | "maintenance" | "available" | "custom";
 
-  // Build a set of date ranges per car where a contract was active — override is invalid during these
+  // Build a set of date ranges per car where a contract was active - override is invalid during these
   const contractRanges = useMemo(() => {
     const map: Record<string, { dep: string; ret: string }[]> = {};
     for (const c of contracts) {
@@ -389,7 +465,7 @@ export default function Fleet() {
       const contract = rentedCars.find(c => norm(c.registration || "") === key) || null;
       const lastC = lastContractsOnDate[key] || null;
 
-      // User override — contract wins ONLY if override was set BEFORE contract started
+      // User override - contract wins ONLY if override was set BEFORE contract started
       const override = overrides[key];
 
       if (contract) {
@@ -419,7 +495,7 @@ export default function Fleet() {
         return { ...car, state: (isLate ? "late" : "rented") as CarState, contract };
       }
 
-      // No active contract — apply override
+      // No active contract - apply override
       if (override === "available")   return { ...car, state: "available"   as CarState, contract: lastC };
       if (override === "maintenance") return { ...car, state: "maintenance" as CarState, contract: lastC };
       if (override)                   return { ...car, state: "custom"      as CarState, contract: lastC, customStateId: override };
@@ -442,10 +518,11 @@ export default function Fleet() {
   // Sync fleet stats to store so Dashboard can read them
   useEffect(() => {
     setFleetStats({
-      rented:      fleetStatus.filter(c => c.state === "rented").length,
-      late:        fleetStatus.filter(c => c.state === "late").length,
-      available:   fleetStatus.filter(c => c.state === "available").length,
-      maintenance: fleetStatus.filter(c => c.state === "maintenance").length,
+      rented:        fleetStatus.filter(c => c.state === "rented").length,
+      late:          fleetStatus.filter(c => c.state === "late").length,
+      available:     fleetStatus.filter(c => c.state === "available").length,
+      maintenance:   fleetStatus.filter(c => c.state === "maintenance").length,
+      lateContracts: fleetStatus.filter(c => c.state === "late").map(c => c.contract).filter(Boolean) as any,
     });
   }, [fleetStatus]);
 
@@ -503,7 +580,6 @@ export default function Fleet() {
     loadOnlineBookings();
   }
 
-  const [editBooking, setEditBooking] = useState<any | null>(null);
   const [now, setNow] = useState(() => new Date());
 
   // Tick every minute
@@ -551,7 +627,7 @@ export default function Fleet() {
   return (
     <div className="p-5 space-y-5" dir={isRTL ? "rtl" : "ltr"} onClick={() => setStateMenu(null)}>
 
-      {/* ── Return alerts — modal popup ── */}
+      {/* - Return alerts - modal popup - */}
       {alertModalOpen && alertCars.length > 0 && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
@@ -690,7 +766,7 @@ export default function Fleet() {
         <div className="flex items-center gap-2 px-5 py-3 bg-slate-800 border-b border-slate-700">
           <Car size={15} className="text-white" />
           <span className="font-semibold text-sm text-white">
-            {isRTL ? "حالة الأسطول الكامل" : "État complet de la flotte"} — {fmtDate(date)}
+            {isRTL ? "حالة الأسطول الكامل" : "État complet de la flotte"} - {fmtDate(date)}
           </span>
           <span className="ms-auto bg-white/20 text-white text-xs rounded-full px-2 py-0.5">{allCars.length}</span>
         </div>
@@ -778,7 +854,7 @@ export default function Fleet() {
                     <td {...cell("font-semibold")}>{car.brand} {car.model}</td>
                     <td className={`px-3 py-2 font-mono text-sm font-bold tracking-wide`} style={car.state === "custom" ? customStyle : car.state === "late" ? { color: "#b91c1c" } : {}}>{car.registration}</td>
                     {/* Sortie */}
-                    <td {...cell()}>{c ? `${fmtDate(c.departureDate)} ${c.departureTime}` : "—"}</td>
+                    <td {...cell()}>{c ? `${fmtDate(c.departureDate)} ${c.departureTime}` : "-"}</td>
                     {/* Entrée */}
                     <td className="px-3 py-2 font-medium" style={
                       car.state === "custom" ? customStyle :
@@ -786,38 +862,38 @@ export default function Fleet() {
                       car.state === "late" ? { color: "#dc2626", fontWeight: 700 } :
                       isReturningToday ? { color: "#ea580c", fontWeight: 700 } : {}
                     }>
-                      {c ? `${fmtDate(c.returnDate)} ${c.returnTime}` : "—"}
+                      {c ? `${fmtDate(c.returnDate)} ${c.returnTime}` : "-"}
                       {car.state === "late" && " ⚠"}
                     </td>
                     {/* Nom */}
-                    <td {...cell()}>{c?.driverName || "—"}</td>
+                    <td {...cell()}>{c?.driverName || "-"}</td>
                     {/* N TEL */}
-                    <td {...cell()}>{c?.driverPhone || "—"}</td>
+                    <td {...cell()}>{c?.driverPhone || "-"}</td>
                     {/* I = prix/jour */}
                     <td className={`px-3 py-2 text-center font-medium ${textStyle}`}>
-                      {pricePerDay > 0 ? pricePerDay.toFixed(0) : c?.totalPartiel || "—"}
+                      {pricePerDay > 0 ? pricePerDay.toFixed(0) : c?.totalPartiel || "-"}
                     </td>
                     {/* N J */}
-                    <td className={`px-3 py-2 text-center font-bold ${car.state === "late" ? "text-red-700" : textStyle}`}>{nj > 0 ? nj : "—"}</td>
+                    <td className={`px-3 py-2 text-center font-bold ${car.state === "late" ? "text-red-700" : textStyle}`}>{nj > 0 ? nj : "-"}</td>
                     {/* Taxe 2dt/j */}
-                    <td className={`px-3 py-2 font-medium ${textStyle}`}>{nj > 0 ? taxe2d.toFixed(3) : "—"}</td>
+                    <td className={`px-3 py-2 font-medium ${textStyle}`}>{nj > 0 ? taxe2d.toFixed(3) : "-"}</td>
                     {/* Montant T = NJ × (I + 2) */}
                     <td className={`px-3 py-2 font-semibold ${car.state === "late" ? "text-red-700" : car.state === "rented" ? "text-green-700" : textStyle}`}>
-                      {montantT > 0 ? montantT.toFixed(3) : "—"}
+                      {montantT > 0 ? montantT.toFixed(3) : "-"}
                     </td>
                     {/* Avance */}
                     <td className={`px-3 py-2 ${textStyle}`}>{advance > 0 ? advance.toFixed(3) : "0"}</td>
                     {/* Reste = Montant T - Avance */}
                     <td className={`px-3 py-2 font-bold ${(montantT - advance) > 0 ? "text-red-500" : montantT > 0 ? "text-green-600" : textStyle}`}>
-                      {montantT > 0 ? ((montantT - advance) > 0 ? (montantT - advance).toFixed(3) : "✓") : "—"}
+                      {montantT > 0 ? ((montantT - advance) > 0 ? (montantT - advance).toFixed(3) : "✓") : "-"}
                     </td>
                     {/* N°C */}
-                    <td className={`px-3 py-2 font-mono text-amber-600`}>{c?.contractNumber ? `#${c.contractNumber}` : "—"}</td>
+                    <td className={`px-3 py-2 font-mono text-amber-600`}>{c?.contractNumber ? `#${c.contractNumber}` : "-"}</td>
                     {/* Km Départ */}
-                    <td className={`px-3 py-2 ${textStyle} opacity-80`}>{c?.departureKm || "—"}</td>
+                    <td className={`px-3 py-2 ${textStyle} opacity-80`}>{c?.departureKm || "-"}</td>
                     {/* Km Entrée */}
-                    <td className={`px-3 py-2 ${textStyle} opacity-80`}>{c?.returnKm || "—"}</td>
-                    {/* État — clickable to change */}
+                    <td className={`px-3 py-2 ${textStyle} opacity-80`}>{c?.returnKm || "-"}</td>
+                    {/* Etat - clickable to change */}
                     <td className="px-3 py-2 relative">
                       <button
                         onClick={e => { e.stopPropagation(); if (!isST) setStateMenu(stateMenu === car.registration ? null : car.registration); }}
@@ -933,6 +1009,9 @@ export default function Fleet() {
         </div>
       )}
 
+      {/* ── Notifications (clients waiting for a car) ── */}
+      <NotificationsSection isRTL={isRTL} />
+
       {/* ── Sections: Reservations + Unpaid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
@@ -975,7 +1054,7 @@ export default function Fleet() {
                         )}
                       </div>
                       <div className="text-end flex-shrink-0">
-                        <p className="text-xs font-bold text-green-700">{b.depositAmount ? `${b.depositAmount} TND` : "—"}</p>
+                        <p className="text-xs font-bold text-green-700">{b.depositAmount ? `${b.depositAmount} TND` : "-"}</p>
                         <p className="text-[10px] text-slate-400">{b.totalAmount ? `Total: ${b.totalAmount} TND` : ""}</p>
                         <button onClick={() => deleteOnlineBooking(b.id)}
                           className="text-slate-300 hover:text-red-500 mt-1 block ms-auto"><Trash2 size={12} /></button>
@@ -993,7 +1072,7 @@ export default function Fleet() {
                         <p className="text-xs text-slate-400">{r.startDate} → {r.endDate}</p>
                       </div>
                       <div className="text-end flex-shrink-0 ms-2">
-                        <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
+                        <p className="text-xs font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "-"}</p>
                         <button onClick={() => { setRes(p => { const u = p.filter(x => x.id !== r.id); save(K.res, u); return u; }); }}
                           className="text-slate-300 hover:text-red-500 mt-1"><Trash2 size={12} /></button>
                       </div>
@@ -1039,7 +1118,7 @@ export default function Fleet() {
             {unpaid.length > 0 && (
               <div className="bg-purple-100 rounded-lg px-3 py-2 flex justify-between text-xs font-bold">
                 <span className="text-purple-700">{isRTL ? "الإجمالي الباقي" : "Total restant"}</span>
-                <span className="text-red-600">{totalUnpaid.toFixed(3)} TND</span>
+                <span className="text-red-600">{unpaid.reduce((s, u) => s + parseFloat(u.rest || "0"), 0).toFixed(3)} TND</span>
               </div>
             )}
           </div>
@@ -1159,7 +1238,7 @@ export default function Fleet() {
         }
 
         if (isRes) {
-          // Reservations — show resOnDate list
+          // Reservations - show resOnDate list
           return (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -1177,7 +1256,7 @@ export default function Fleet() {
                           <p className="text-sm text-slate-500">{r.brand} {r.registration} · {r.phone}</p>
                           <p className="text-xs text-slate-400">{r.startDate} → {r.endDate}</p>
                         </div>
-                        <p className="font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "—"}</p>
+                        <p className="font-bold text-amber-700">{r.advance ? `${r.advance} TND` : "-"}</p>
                       </div>
                     ))
                   }
@@ -1226,8 +1305,8 @@ export default function Fleet() {
                             <>
                               <div className="min-w-[140px]">
                                 <p className="text-xs text-slate-400 mb-0.5">Client</p>
-                                <p className="font-semibold text-slate-800 text-sm">{c.driverName || "—"}</p>
-                                <p className="text-sm text-slate-500">{c.driverPhone || "—"}</p>
+                                <p className="font-semibold text-slate-800 text-sm">{c.driverName || "-"}</p>
+                                <p className="text-sm text-slate-500">{c.driverPhone || "-"}</p>
                               </div>
                               <div className="min-w-[130px]">
                                 <p className="text-xs text-slate-400 mb-0.5">{isAvail ? "Dernier contrat" : "Retour prévu"}</p>
@@ -1236,7 +1315,7 @@ export default function Fleet() {
                               </div>
                               <div className="min-w-[100px]">
                                 <p className="text-xs text-slate-400 mb-0.5">N°C</p>
-                                <p className="font-mono text-amber-600 text-sm">{c.contractNumber ? `#${c.contractNumber}` : "—"}</p>
+                                <p className="font-mono text-amber-600 text-sm">{c.contractNumber ? `#${c.contractNumber}` : "-"}</p>
                                 <p className="font-bold text-green-600 text-sm">{parseFloat(c.totalFacture||"0").toFixed(3)}</p>
                               </div>
                               {c.driverPhone && !isAvail && !isMaint && (
@@ -1365,7 +1444,7 @@ function FleetManagerModal({ cars, contracts, onSave, onClose, isRTL }: {
         {/* Suggestions */}
         {suggestions.length > 0 && list.length === 0 && (
           <div className="px-5 py-2 bg-blue-50 border-b border-blue-100">
-            <p className="text-xs text-blue-600 mb-2">{isRTL ? "اقتراحات من العقود الأخيرة — اضغط لإضافة:" : "Suggestions des contrats récents — cliquez pour ajouter:"}</p>
+            <p className="text-xs text-blue-600 mb-2">{isRTL ? "اقتراحات من العقود الأخيرة - اضغط لإضافة:" : "Suggestions des contrats récents - cliquez pour ajouter:"}</p>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map(s => (
                 <button key={s.registration} onClick={() => setList(p => [...p, s])}

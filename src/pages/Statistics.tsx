@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useContractStore } from "../store/useContractStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
-import { TrendingUp, DollarSign, FileText, Car, Building2 } from "lucide-react";
+import { TrendingUp, DollarSign, FileText, Car, Building2, Calendar } from "lucide-react";
 
 function today() { return new Date().toISOString().split("T")[0]; }
 
@@ -17,7 +17,9 @@ export default function Statistics() {
 
   const [branches, setBranches] = useState<{id: string; name: string}[]>([]);
   const [branchFilter, setBranchFilter] = useState<string>("all");
-  const [period, setPeriod] = useState<"month" | "year" | "all">("month");
+  const [period, setPeriod] = useState<"month" | "year" | "all" | "custom">("month");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -60,10 +62,15 @@ export default function Statistics() {
         const d = new Date(c.departureDate || "");
         return d.getFullYear() === thisYear;
       });
+    } else if (period === "custom" && customFrom && customTo) {
+      base = base.filter(c => {
+        const d = c.departureDate || "";
+        return d >= customFrom && d <= customTo;
+      });
     }
 
     return base;
-  }, [contracts, effectiveBranch, period]);
+  }, [contracts, effectiveBranch, period, customFrom, customTo]);
 
   // Monthly breakdown for chart
   const monthly = useMemo(() => {
@@ -100,6 +107,25 @@ export default function Statistics() {
   const avgPerContract = totalContracts > 0 ? totalRevenue / totalContracts : 0;
   const maxMonthly = Math.max(...monthly.map(m => m.revenue), 1);
 
+  // Today's revenue
+  const todayStr = today();
+  const todayContracts = contracts
+    .filter(c => !c._deleted && !isSTContract(c) && (effectiveBranch === "all" || (c as any).branchId === effectiveBranch))
+    .filter(c => {
+      const createdDate = (c as any)._createdAt
+        ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toISOString().split("T")[0]
+        : "";
+      return createdDate === todayStr && !(c as any).ownerId;
+    });
+
+  console.log("Today's contracts:", todayContracts.length);
+  console.log("Today's contracts details:");
+  todayContracts.forEach(c => {
+    console.log(`- Contract #${c.contractNumber}: totalFacture=${c.totalFacture}, depot=${c.depot}, _createdAt=${(c as any)._createdAt}`);
+  });
+
+  const todayRevenue = todayContracts.reduce((s, c) => s + parseFloat(c.depot || "0"), 0);
+
   const t = today();
   const activeNow = contracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t &&
     (effectiveBranch === "all" || (c as any).branchId === effectiveBranch)).length;
@@ -113,7 +139,7 @@ export default function Statistics() {
           Statistiques
         </h1>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Branch filter — admin only */}
+          {/* Branch filter - admin only */}
           {isAdmin && (
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
               <Building2 size={14} className="text-slate-400" />
@@ -125,22 +151,43 @@ export default function Statistics() {
             </div>
           )}
           {/* Period filter */}
-          <div className="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            {([["month", "Ce mois"], ["year", "Cette année"], ["all", "Tout"]] as const).map(([val, lbl]) => (
-              <button key={val} onClick={() => setPeriod(val)}
-                className={`px-3 py-2 text-xs font-medium transition-colors ${period === val ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
-                {lbl}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <div className="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              {([["month", "Ce mois"], ["year", "Cette année"], ["all", "Tout"], ["custom", "Personnalisé"]] as const).map(([val, lbl]) => (
+                <button key={val} onClick={() => setPeriod(val)}
+                  className={`px-3 py-2 text-xs font-medium transition-colors ${period === val ? "bg-amber-500 text-white" : "text-slate-600 hover:bg-slate-50"}`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+            {period === "custom" && (
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+                <Calendar size={14} className="text-slate-400" />
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={e => setCustomFrom(e.target.value)}
+                  className="text-xs text-slate-700 border-none outline-none bg-transparent"
+                />
+                <span className="text-slate-400">→</span>
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={e => setCustomTo(e.target.value)}
+                  className="text-xs text-slate-700 border-none outline-none bg-transparent"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
           ...(isAdmin ? [
             { label: "Revenus", value: `${totalRevenue.toFixed(0)} TND`, color: "bg-green-500", icon: DollarSign },
+            { label: "Revenus aujourd'hui", value: `${todayRevenue.toFixed(0)} TND`, color: "bg-emerald-500", icon: DollarSign },
           ] : []),
           { label: "Contrats", value: totalContracts, color: "bg-blue-500", icon: FileText },
           ...(isAdmin ? [
@@ -156,11 +203,11 @@ export default function Statistics() {
         ))}
       </div>
 
-      {/* Monthly chart — 12 months (admin only) */}
+      {/* Monthly chart - 12 months (admin only) */}
       {isAdmin && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <h2 className="font-semibold text-slate-700 text-sm mb-4 flex items-center gap-2">
-            <TrendingUp size={15} className="text-amber-500" /> Revenus — 12 derniers mois
+            <TrendingUp size={15} className="text-amber-500" /> Revenus - 12 derniers mois
           </h2>
           <div className="flex items-end gap-2 h-40">
             {monthly.map(m => (
@@ -209,7 +256,7 @@ export default function Statistics() {
                       <td className="px-5 py-3 text-end text-slate-600">{c.count}</td>
                       <td className="px-5 py-3 text-end text-slate-600">{c.days}</td>
                       <td className="px-5 py-3 text-end font-bold text-green-600">{c.revenue.toFixed(3)}</td>
-                      <td className="px-5 py-3 text-end text-slate-500">{c.days > 0 ? (c.revenue / c.days).toFixed(1) : "—"}</td>
+                      <td className="px-5 py-3 text-end text-slate-500">{c.days > 0 ? (c.revenue / c.days).toFixed(1) : "-"}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -238,7 +238,7 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
         <div className="flex items-center gap-1.5 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-1.5">
           <Search size={11} />
           <span className="font-medium">{matched.brand} {matched.model}</span>
-          <span className="text-green-500">— {matched.category}</span>
+          <span className="text-green-500">- {matched.category}</span>
           <span className="text-green-400 ms-1">
             {isRTL ? "✓ تم ملء البيانات تلقائياً" : "✓ Données remplies automatiquement"}
           </span>
@@ -255,8 +255,8 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
             </p>
             <p>
               {isRTL
-                ? `عقد رقم ${conflict.contractNumber} — ${conflict.driverName} — حتى ${conflict.returnDate}`
-                : `Contrat N° ${conflict.contractNumber} — ${conflict.driverName} — jusqu'au ${conflict.returnDate}`}
+                ? `عقد رقم ${conflict.contractNumber} - ${conflict.driverName} - حتى ${conflict.returnDate}`
+                : `Contrat N° ${conflict.contractNumber} - ${conflict.driverName} - jusqu'au ${conflict.returnDate}`}
             </p>
           </div>
         </div>

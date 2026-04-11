@@ -246,7 +246,7 @@ export default function ContractModal({ contract, onClose }: Props) {
       }
 
       if (contract?.id) {
-        // Keep original branchId — don't change it on edit
+        // Keep original branchId - don't change it on edit
         const originalBranchId = (contract as any).branchId;
         await updateContract(contract.id, { ...data, branchId: originalBranchId, _updatedBy: user?.username || "unknown", _updatedAt: Date.now() } as Partial<Contract>);
         upsertContract({ ...data, id: contract.id, branchId: originalBranchId, _updatedBy: user?.username || "unknown", _updatedAt: Date.now() } as Contract);
@@ -277,10 +277,10 @@ export default function ContractModal({ contract, onClose }: Props) {
                 return e;
               });
             } else if (raw && typeof raw === "object") {
-              // Old format: single object {state, from} — close it
+              // Old format: single object {state, from} - close it
               history[reg] = [{ ...raw, to: prevStr }];
             } else {
-              // No override — nothing to do
+              // No override - nothing to do
               delete history[reg];
             }
 

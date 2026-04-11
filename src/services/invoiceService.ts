@@ -1,4 +1,4 @@
-// Firebase imports removed — using REST API directly
+// Firebase imports removed - using REST API directly
 import type { Invoice } from "../types/invoice";
 
 const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";

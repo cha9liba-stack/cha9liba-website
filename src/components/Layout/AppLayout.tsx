@@ -8,6 +8,7 @@ import { useContractStore } from "../../store/useContractStore";
 import { useFleetStats } from "../../hooks/useFleetStats";
 import { useAuthStore } from "../../store/useAuthStore";
 import BranchSelectModal from "../BranchSelectModal";
+import DailySummaryModal from "../DailySummaryModal";
 
 export default function AppLayout() {
   const { i18n } = useTranslation();
@@ -82,6 +83,7 @@ export default function AppLayout() {
         )}
         <Outlet />
       </main>
+      <DailySummaryModal />
     </div>
   );
 }

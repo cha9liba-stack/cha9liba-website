@@ -15,6 +15,7 @@ import {
   MapPin,
   BarChart2,
   Navigation,
+  Bell,
 } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
@@ -41,8 +42,9 @@ export default function Sidebar() {
     { to: "/app/fleet",          icon: Gauge,      label: isRTL ? "الأسطول اليومي" : "Flotte",           hidden: false },
     { to: "/app/vehicles",       icon: Car,        label: isRTL ? "السيارات"       : "Véhicules",         hidden: isST },
     { to: "/app/clients",        icon: Users,      label: isRTL ? "العملاء"        : "Clients",           hidden: isST },
-    { to: "/app/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
     { to: "/app/online-bookings", icon: Car,       label: isRTL ? "حجوزات الإنترنت" : "Réservations web",  hidden: isST },
+    { to: "/app/notifications",  icon: Bell,       label: isRTL ? "إشعارات التوفر"  : "Notifications",     hidden: isST },
+    { to: "/app/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
     { to: "/app/gps",            icon: Navigation, label: "GPS",                                           hidden: isST },
   ].filter(i => !i.hidden);
 

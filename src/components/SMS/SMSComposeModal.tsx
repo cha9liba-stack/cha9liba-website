@@ -32,7 +32,7 @@ export default function SMSComposeModal({ contract, onClose }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div>
             <h2 className="font-bold text-slate-800">Envoyer SMS</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{contract.driverName} — {contract.driverPhone}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{contract.driverName} - {contract.driverPhone}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
         </div>

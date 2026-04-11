@@ -95,7 +95,7 @@ export async function fbUpdateContract(id: string, data: Partial<Contract>): Pro
 }
 
 export async function fbDeleteContract(id: string): Promise<void> {
-  await restDelete(`${CONTRACTS_PATH}/${id}`);
+  await restPatch(`${CONTRACTS_PATH}/${id}`, { _deleted: true, status: "cancelled", _updated_at: Date.now() });
 }
 
 // ─── Filter: exclude "virtual" contracts (number doesn't start with 0) ────────

@@ -155,7 +155,7 @@ export default function Vehicles() {
         // Only last vidange, and only if urgent (≤ 200 km remaining)
         const maxNextKm = Math.max(...docs.filter((x: any) => x.type === "vidange" && x.nextVidangeKm).map((x: any) => x.nextVidangeKm || 0));
         if (d.nextVidangeKm !== maxNextKm) return false;
-        // Need current km — use profile.kilometrage as fallback
+        // Need current km - use profile.kilometrage as fallback
         const curKm = profile?.kilometrage || 0;
         const remaining = d.nextVidangeKm - curKm;
         return remaining <= 200; // only alert if ≤ 200 km
@@ -173,7 +173,7 @@ export default function Vehicles() {
     return { totalRevenue, totalDays, totalExpenses, urgentDocs, expiredDocs, contractCount: carContracts.length };
   }
 
-  // Current status — reads overrides history like Fleet does
+  // Current status - reads overrides history like Fleet does
   function getCarStatus(registration: string): "rented" | "late" | "available" | "maintenance" | "custom" {
     const t = today();
     const key = norm(registration);
