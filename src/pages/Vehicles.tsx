@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
+import { safeGetItem, safeSetItem } from "../lib/localStorageUtils";
 import { Car, ChevronRight, AlertTriangle, Search, X } from "lucide-react";
 import type { CarProfile } from "../types";
 
@@ -8,7 +9,7 @@ import type { CarProfile } from "../types";
 const PROFILES_KEY = "palma_car_profiles";
 
 function loadProfiles(): Record<string, CarProfile> {
-  try { return JSON.parse(localStorage.getItem(PROFILES_KEY) || "{}"); } catch { return {}; }
+  return safeGetItem<Record<string, CarProfile>>(PROFILES_KEY, {});
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -69,15 +70,15 @@ export default function Vehicles() {
       .then(data => {
         if (data) {
           setProfiles(data);
-          localStorage.setItem("palma_car_profiles", JSON.stringify(data));
+          safeSetItem("palma_car_profiles", data);
         }
       }).catch(() => {});
   }, []);
   const [overrideHistory, setOverrideHistory] = useState<Record<string, any[]>>(() => {
-    try { return JSON.parse(localStorage.getItem("palma_state_overrides") || "{}"); } catch { return {}; }
+    return safeGetItem<Record<string, any[]>>("palma_state_overrides", {});
   });
   const [customStates, setCustomStates] = useState<any[]>(() => {
-    try { return JSON.parse(localStorage.getItem("palma_custom_states") || "[]"); } catch { return []; }
+    return safeGetItem<any[]>("palma_custom_states", []);
   });
 
   // Sync overrides and custom states from Firebase
@@ -85,13 +86,13 @@ export default function Vehicles() {
     const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
     fetch(`${DB}/app_settings/overrides.json`).then(r => r.json()).then(data => {
       if (data && typeof data === "object") {
-        localStorage.setItem("palma_state_overrides", JSON.stringify(data));
+        safeSetItem("palma_state_overrides", data);
         setOverrideHistory(data);
       }
     }).catch(() => {});
     fetch(`${DB}/app_settings/custom_states.json`).then(r => r.json()).then(data => {
       if (Array.isArray(data) && data.length > 0) {
-        localStorage.setItem("palma_custom_states", JSON.stringify(data));
+        safeSetItem("palma_custom_states", data);
         setCustomStates(data);
       }
     }).catch(() => {});

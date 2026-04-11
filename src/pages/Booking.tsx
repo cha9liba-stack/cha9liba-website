@@ -1,11 +1,10 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Shield, Route, Headphones, BadgeDollarSign, Phone, Mail, MapPin,
+  Shield, Route, Headphones, Phone, Mail, MapPin,
   Calendar, Search, Car, Users, Clock, Star, ChevronRight, X,
   CheckCircle, Loader2, Fuel, User, FileText, MessageSquare, Menu, Bell
 } from "lucide-react";
-import type { OnlineBooking } from "../types";
 
 const norm = (s: string) => String(s || "").replace(/\s+/g, "").toUpperCase();
 const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
@@ -463,8 +462,6 @@ export default function Booking() {
       if (contracts) setContractsData(contracts);
       const busy = new Set<string>();
 
-      console.log("Checking availability for:", pickup, "to", ret);
-
       // Check contracts
       if (contracts) {
         Object.values(contracts as Record<string, any>).forEach(item => {
@@ -472,7 +469,6 @@ export default function Booking() {
           // Exclude cancelled contracts (both English and Arabic)
           const status = item.status || item["حالة"] || "";
           if (status === "cancelled" || status === "rejected" || status === "ملغى" || status === "مرفوض") {
-            console.log("Skipping cancelled contract:", item.registration, "status:", status);
             return;
           }
           const reg = norm(item.registration || item["رقم اللوحة"] || "");
@@ -480,7 +476,6 @@ export default function Booking() {
           const s = item.departureDate || item["يوم الانطلاق"] || "";
           const e = item.returnDate || item["يوم الرجوع"] || "";
           if (reg && s && e && datesOverlap(pickup, ret, s, e)) {
-            console.log("Contract makes car busy:", reg, "from", s, "to", e);
             busy.add(reg);
           }
         });

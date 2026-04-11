@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Printer, ZoomIn, ZoomOut, Settings2, Move, Lock, RotateCcw } from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 import type { Contract } from "../../types";
 
 // ─── Default field positions (from field_positions.json) ─────────────────────
@@ -226,7 +227,6 @@ const DEFAULT_SETTINGS: PrintSettings = {
 const ORIG_W = 2480;
 const ORIG_H = 3508;
 const HIT_RADIUS = 60;
-const TEMPLATE_OFFSET_Y = -150;  // Move template UP to hide white space
 const BG_OFFSET_Y = 80;          // Move background DOWN
 
 /** Choose template based on contract year: 2026+ uses new template with 2dt tax */
@@ -745,7 +745,6 @@ export default function ContractPreview({ contract, onClose }: Props) {
 
       // Try Tauri invoke first (desktop app)
       try {
-        const { invoke } = await import("@tauri-apps/api/core");
         const base64 = pdf.output("datauristring").split(",")[1];
         await invoke("save_and_open_pdf", {
           base64Data: base64,

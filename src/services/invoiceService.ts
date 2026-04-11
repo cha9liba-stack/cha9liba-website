@@ -3,13 +3,30 @@ import type { Invoice } from "../types/invoice";
 
 const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
 const PATH   = "invoices";
+const FETCH_TIMEOUT = 30000; // 30 seconds
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${FETCH_TIMEOUT}ms`);
+    }
+    throw error;
+  }
+}
 
 async function restGet(path: string) {
-  const res = await fetch(`${DB_URL}/${path}.json`);
+  const res = await fetchWithTimeout(`${DB_URL}/${path}.json`);
   return res.ok ? res.json() : null;
 }
 async function restPost(path: string, data: any): Promise<string> {
-  const res = await fetch(`${DB_URL}/${path}.json`, {
+  const res = await fetchWithTimeout(`${DB_URL}/${path}.json`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -18,7 +35,7 @@ async function restPost(path: string, data: any): Promise<string> {
   return json.name;
 }
 async function restDelete(path: string) {
-  await fetch(`${DB_URL}/${path}.json`, { method: "DELETE" });
+  await fetchWithTimeout(`${DB_URL}/${path}.json`, { method: "DELETE" });
 }
 
 export async function getAllInvoices(): Promise<Invoice[]> {

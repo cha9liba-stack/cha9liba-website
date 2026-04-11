@@ -8,7 +8,7 @@ import { logAction } from "../services/auditService";
 import { useAuthStore } from "../store/useAuthStore";
 import ContractModal from "../components/Contracts/ContractModal";
 import ContractPreview from "../components/Contracts/ContractPreview";
-import { sendSMS, buildReturnReminderMessage, openWhatsAppReminder } from "../services/smsService";
+import { openWhatsAppReminder } from "../services/smsService";
 import { useSMSReminder } from "../hooks/useSMSReminder";
 import SMSComposeModal from "../components/SMS/SMSComposeModal";
 import SMSSettingsModal from "../components/SMS/SMSSettingsModal";
@@ -43,8 +43,7 @@ export default function Contracts() {
   const [archiveContracts, setArchiveContracts] = useState<Contract[]>([]);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
-  const [smsSending, setSmsSending] = useState<string | null>(null);
-  const [smsResult, setSmsResult] = useState<{ id: string; ok: boolean } | null>(null);
+  const smsSending: string | null = null;
   const [smsComposeContract, setSmsComposeContract] = useState<Contract | null>(null);
   const [showSMSSettings, setShowSMSSettings] = useState(false);
   const [showDelivery, setShowDelivery] = useState(false);
@@ -94,26 +93,6 @@ export default function Contracts() {
       setSortKey(key);
       setSortDir("asc");
     }
-  }
-
-  async function handleSendSMS(contract: Contract) {
-    if (!contract.driverPhone) return;
-    const id = contract.id ?? contract.contractNumber;
-    setSmsSending(id);
-    const msg = buildReturnReminderMessage(
-      contract.driverName,
-      contract.brand,
-      contract.registration,
-      contract.returnDate,
-      contract.returnTime
-    );
-    const result = await sendSMS(contract.driverPhone, msg);
-    setSmsResult({ id, ok: result.success });
-    setSmsSending(null);
-    if (!result.success) {
-      alert(`SMS échoué: ${result.error}\nVérifiez que l'app SMS Gateway est active sur votre téléphone (192.168.100.35:8080)`);
-    }
-    setTimeout(() => setSmsResult(null), 3000);
   }
 
   // Helper: get owner name for a contract

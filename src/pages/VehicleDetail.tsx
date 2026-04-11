@@ -9,11 +9,6 @@ import {
 import type { CarProfile, CarDocument, CarExpense } from "../types";
 import { getOdometerForReg } from "../services/gpsService";
 
-// Safe GPS wrapper — won't crash in browser mode
-async function safeGetOdometer(reg: string): Promise<number | null> {
-  try { return await getOdometerForReg(reg); } catch { return null; }
-}
-
 const PROFILES_KEY = "palma_car_profiles";
 const DB_URL_PROFILES = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
 
@@ -285,13 +280,6 @@ export default function VehicleDetail() {
     ];
     return Math.max(...candidates) || undefined;
   }, [carContracts, profile.kilometrage, gpsKm]);
-  function docStatus(d: CarDocument): "expired" | "urgent" | "ok" {
-    if (d.type === "vidange") return "ok"; // handled separately in render
-    const days = daysUntil(d.expiryDate);
-    if (days < 0) return "expired";
-    if (days <= 30) return "urgent";
-    return "ok";
-  }
 
   // Add/Edit document modal state
   const [showDocModal, setShowDocModal] = useState(false);
@@ -520,8 +508,6 @@ export default function VehicleDetail() {
                 : (profile.documents || []).length === 0
                 ? <p className="text-center text-slate-400 text-xs py-4">Aucun document ajouté</p>
                 : (profile.documents || []).map(doc => {
-                  const status = docStatus(doc);
-
                   // ── VIDANGE ──────────────────────────────────────────────
                   if (doc.type === "vidange") {
                     // Find the last vidange (highest nextVidangeKm)
@@ -533,7 +519,7 @@ export default function VehicleDetail() {
                     let rowStyle: string;
                     let textStyle: string;
                     let iconColor: string;
-                    let badgeEl: JSX.Element;
+                    let badgeEl: React.ReactNode;
 
                     if (!isLast) {
                       rowStyle = "bg-green-50 border-green-200";

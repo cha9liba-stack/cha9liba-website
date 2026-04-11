@@ -57,6 +57,7 @@ export function mapFirebaseToContract(id: string, raw: Record<string, any>): Con
     totalFacture:    str(raw["TOTAL FACTURE"]),
     plusMoinsDivers: str(raw["Plus ou moins divers"]),
     depot:           str(raw["ضمان الايداع"] ?? raw["Dépôt garantie"]),
+    depotGarantie:   str(raw["ضمان الايداع"] ?? raw["Dépôt garantie"]),
     prep:            str(raw["prep"]),
     total:           str(raw["الجملة"] ?? raw["Total"]),
     somme:           str(raw["المجموع"] ?? raw["Somme"]),

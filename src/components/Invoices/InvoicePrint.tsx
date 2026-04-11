@@ -19,7 +19,6 @@ const CO = {
   ig:     "palma_car",
 };
 
-const THEAD = "#e8f0fe";
 const BG    = "1px solid #1a56db";
 const B     = "1px solid #bbb";
 
@@ -61,7 +60,6 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   const isFacture = invType === "facture";
   const typeLabel = { facture: "Facture", bon: "Bon de livraison", devis: "Devis" }[invType] || "Facture";
   const fmt = (n: number) => n.toFixed(3);
-  const emptyRows = Math.max(0, 8 - lines.length);
 
   // ── Generate QR code ───────────────────────────────────────────────────────
   const [qrDataUrl, setQrDataUrl] = useState<string>("");

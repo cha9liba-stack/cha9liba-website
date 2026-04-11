@@ -6,21 +6,73 @@ import type { Contract } from "../types";
 
 const CONTRACTS_PATH = "contracts";
 const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+const FETCH_TIMEOUT = 30000; // 30 seconds
 
 function isOnline(): boolean {
   return navigator.onLine;
 }
 
+// ─── Data Validation ─────────────────────────────────────────────────────────────
+
+export function validateContract(contract: Partial<Contract>): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  // Required fields
+  if (!contract.contractNumber?.trim()) errors.push("contractNumber is required");
+  if (!contract.brand?.trim()) errors.push("brand is required");
+  if (!contract.model?.trim()) errors.push("model is required");
+  if (!contract.registration?.trim()) errors.push("registration is required");
+  if (!contract.departureDate?.trim()) errors.push("departureDate is required");
+  if (!contract.returnDate?.trim()) errors.push("returnDate is required");
+  if (!contract.departureTime?.trim()) errors.push("departureTime is required");
+  if (!contract.returnTime?.trim()) errors.push("returnTime is required");
+
+  // Driver info
+  if (!contract.driverName?.trim()) errors.push("driverName is required");
+  if (!contract.driverPhone?.trim()) errors.push("driverPhone is required");
+  if (!contract.driverCin?.trim()) errors.push("driverCin is required");
+
+  // Date validation
+  if (contract.departureDate && contract.returnDate) {
+    if (contract.departureDate > contract.returnDate) {
+      errors.push("departureDate must be before returnDate");
+    }
+  }
+
+  // Phone validation (basic)
+  if (contract.driverPhone && !/^\d[\d\s\-\+\(\)]{7,}$/.test(contract.driverPhone)) {
+    errors.push("driverPhone is invalid");
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
 // ─── REST API fallback (works without apiKey when DB rules allow) ─────────────
 
+async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${FETCH_TIMEOUT}ms`);
+    }
+    throw error;
+  }
+}
+
 async function restGet(path: string): Promise<any> {
-  const res = await fetch(`${DB_URL}/${path}.json`);
+  const res = await fetchWithTimeout(`${DB_URL}/${path}.json`);
   if (!res.ok) throw new Error(`REST GET failed: ${res.status}`);
   return res.json();
 }
 
 async function restPost(path: string, data: any): Promise<string> {
-  const res = await fetch(`${DB_URL}/${path}.json`, {
+  const res = await fetchWithTimeout(`${DB_URL}/${path}.json`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -31,7 +83,7 @@ async function restPost(path: string, data: any): Promise<string> {
 }
 
 async function restPatch(path: string, data: any): Promise<void> {
-  const res = await fetch(`${DB_URL}/${path}.json`, {
+  const res = await fetchWithTimeout(`${DB_URL}/${path}.json`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -40,7 +92,7 @@ async function restPatch(path: string, data: any): Promise<void> {
 }
 
 async function restDelete(path: string): Promise<void> {
-  const res = await fetch(`${DB_URL}/${path}.json`, { method: "DELETE" });
+  const res = await fetchWithTimeout(`${DB_URL}/${path}.json`, { method: "DELETE" });
   if (!res.ok) throw new Error(`REST DELETE failed: ${res.status}`);
 }
 
@@ -106,11 +158,11 @@ export function isRealContract(c: Contract): boolean {
 
 // ─── Unified API ──────────────────────────────────────────────────────────────
 
-export async function getAllContracts(): Promise<Contract[]> {
+export async function getAllContracts(limit?: number): Promise<Contract[]> {
   if (isOnline()) {
     try {
-      // Load recent contracts fast (last 300)
-      const recent = await fbGetRecentContracts(300);
+      // Load recent contracts fast (default: last 300)
+      const recent = await fbGetRecentContracts(limit || 300);
       // Merge with local cache (which may have older contracts)
       const cached = await localGetAll<Contract>("contracts");
       const recentIds = new Set(recent.map(c => c.id));
@@ -127,37 +179,64 @@ export async function getAllContracts(): Promise<Contract[]> {
   return localGetAll<Contract>("contracts");
 }
 
+export async function getPaginatedContracts(page: number = 1, pageSize: number = 50): Promise<{ contracts: Contract[]; total: number }> {
+  const all = await getAllContracts();
+  const filtered = all.filter(c => !c._deleted);
+  const total = filtered.length;
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const contracts = filtered.slice(start, end);
+  return { contracts, total };
+}
+
 export async function insertContract(contract: Omit<Contract, "id">): Promise<string> {
+  const validation = validateContract(contract);
+  if (!validation.valid) {
+    throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+  }
+
   const now = Date.now();
+  const tempId = `temp_${now}`;
+  
+  // Optimistic update: add to local cache immediately
+  const tempContract = { ...contract, id: tempId, _createdAt: now, _updatedAt: now };
+  await localPut("contracts", tempContract);
+  
   if (isOnline()) {
     try {
       const id = await fbInsertContract(contract);
+      // Replace temp ID with real ID
       await localPut("contracts", { ...contract, id, _createdAt: now, _updatedAt: now });
       return id;
     } catch (e) {
-      console.error("[Firebase] insertContract failed:", e);
-      throw new Error("Échec de la sauvegarde. Vérifiez votre connexion internet.");
+      console.error("[Firebase] insertContract failed, keeping local copy:", e);
+      // Keep the local copy with temp ID for later sync
+      return tempId;
     }
   }
-  const tempId = `local_${now}`;
-  await localPut("contracts", { ...contract, id: tempId, _createdAt: now, _updatedAt: now });
+  
   return tempId;
 }
 
 export async function updateContract(id: string, data: Partial<Contract>): Promise<void> {
   const updated = { ...data, _updatedAt: Date.now() };
+  
+  // Optimistic update: update local cache immediately
+  const all = await localGetAll<Contract>("contracts");
+  const existing = all.find((c) => c.id === id);
+  if (existing) {
+    const merged = { ...existing, ...updated };
+    await localPut("contracts", merged);
+  }
+  
   if (isOnline()) {
     try {
       await fbUpdateContract(id, updated);
     } catch (e) {
-      console.error("[Firebase] updateContract failed:", e);
+      console.error("[Firebase] updateContract failed, keeping local copy:", e);
+      // Keep the local update for later sync
       throw new Error("Échec de la mise à jour. Vérifiez votre connexion internet.");
     }
-  }
-  const all = await localGetAll<Contract>("contracts");
-  const existing = all.find((c) => c.id === id);
-  if (existing) {
-    await localPut("contracts", { ...existing, ...updated });
   }
 }
 
