@@ -8,6 +8,7 @@ import {
   insertContract,
   updateContract,
   isDuplicateContractNumber,
+  checkCarAvailability,
 } from "../../services/contractService";
 import { logAction } from "../../services/auditService";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -233,6 +234,24 @@ export default function ContractModal({ contract, onClose }: Props) {
       const isDup = await isDuplicateContractNumber(data.contractNumber, contract?.id);
       if (isDup) { setError(t("duplicate_number")); setSaving(false); return; }
 
+      // Check car availability (no overlapping contracts)
+      if (data.registration && data.departureDate && data.returnDate) {
+        const avail = await checkCarAvailability(
+          data.registration,
+          data.departureDate,
+          data.returnDate,
+          contract?.id
+        );
+        if (!avail.available && avail.conflictContract) {
+          const c = avail.conflictContract;
+          setError(
+            `⚠️ ${data.registration} est déjà louée du ${c.departureDate} au ${c.returnDate} (Contrat #${c.contractNumber} - ${c.driverName})`
+          );
+          setSaving(false);
+          return;
+        }
+      }
+
       const paid  = parseFloat(data.depot  || "0");
       const somme = parseFloat(data.somme  || "0");
       const reste = Math.max(0, somme - paid);
@@ -309,12 +328,18 @@ export default function ContractModal({ contract, onClose }: Props) {
 
   async function openPreviewWithCheck() {
     const data = getValues();
-    // For new contracts, check duplicate before allowing preview/print
     if (!contract) {
       const isDup = await isDuplicateContractNumber(data.contractNumber, undefined);
-      if (isDup) {
-        setError(t("duplicate_number"));
-        return;
+      if (isDup) { setError(t("duplicate_number")); return; }
+
+      // Check car availability before preview too
+      if (data.registration && data.departureDate && data.returnDate) {
+        const avail = await checkCarAvailability(data.registration, data.departureDate, data.returnDate, undefined);
+        if (!avail.available && avail.conflictContract) {
+          const c = avail.conflictContract;
+          setError(`⚠️ ${data.registration} est déjà louée du ${c.departureDate} au ${c.returnDate} (Contrat #${c.contractNumber})`);
+          return;
+        }
       }
     }
     setError("");

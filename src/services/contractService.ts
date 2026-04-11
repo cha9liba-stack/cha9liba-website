@@ -168,6 +168,29 @@ export async function isDuplicateContractNumber(
   );
 }
 
+// ─── Check if a car is available for a given period ──────────────────────────
+export async function checkCarAvailability(
+  registration: string,
+  departureDate: string,
+  returnDate: string,
+  excludeId?: string
+): Promise<{ available: boolean; conflictContract?: Contract }> {
+  const all = await getAllContracts();
+  const reg = registration.replace(/\s+/g, "").toUpperCase();
+
+  const conflict = all.find(c => {
+    if (c._deleted) return false;
+    if (c.id === excludeId) return false;
+    if ((c.registration || "").replace(/\s+/g, "").toUpperCase() !== reg) return false;
+    // Check date overlap: A overlaps B if A.start < B.end AND A.end > B.start
+    return departureDate < c.returnDate && returnDate > c.departureDate;
+  });
+
+  return conflict
+    ? { available: false, conflictContract: conflict }
+    : { available: true };
+}
+
 // ─── Realtime polling (replaces onValue since we use REST) ───────────────────
 
 export function subscribeToContracts(
