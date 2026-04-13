@@ -129,7 +129,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-auto p-6 bg-slate-100">
-          <div ref={ref} style={{ background: "#fff", padding: "15px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "13px", minHeight: "100vh" }}>
+          <div ref={ref} style={{ background: "#fff", padding: "15px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "13px", minHeight: "100vh", position: "relative" }}>
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px" }}>
               <tbody><tr>
@@ -213,6 +213,35 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Aucune ligne</td>
                   </tr>
                 )}
+</tbody>
+            </table>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", flex: 1 }}>
+              <tbody>
+                {lines.length < 15 && Array.from({ length: 15 - lines.length }).map((_, i) => (
+                  <tr key={`empty-${i}`}>
+                    {isDevis ? (
+                      <>
+                        <td style={{ border: B, padding: "10px 12px", height: "35px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ border: B, padding: "10px 12px", height: "35px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                      </>
+                    )}
+                  </tr>
+                ))}
+                <tr>
+                  <td colSpan={5} style={{ border: "none", height: "20px" }}></td>
+                </tr>
               </tbody>
             </table>
 
@@ -229,7 +258,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <img src={qrDataUrl} alt="QR" style={{ width: "100px", height: "100px", borderRadius: "4px" }}/>
                   )}
                 </td>
-<td style={{ width: "45%", verticalAlign: "top" }}>
+                <td style={{ width: "45%", verticalAlign: "top" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", background: "#f1f5f9", borderRadius: "6px", overflow: "hidden" }}>
                     <tbody>
                       {!isDevis && (
@@ -266,8 +295,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ marginTop: "auto", paddingTop: "10px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "2px solid #2d7a2d", fontSize: "12px", whiteSpace: "nowrap" }}>
-              MF: {CO.mf} | RIB: {CO.rib} | Email: {CO.email} | Tel: {CO.tel} | Instagram: {CO.ig}
+            <div style={{ position: "absolute", bottom: "10px", left: "15px", right: "15px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "2px solid #2d7a2d", paddingTop: "8px", fontSize: "11px", whiteSpace: "nowrap" }}>
+              MF: {CO.mf} | RIB: {CO.rib} | {CO.email} | {CO.tel} | Instagram: {CO.ig}
             </div>
 
           </div>
