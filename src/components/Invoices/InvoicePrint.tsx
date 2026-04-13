@@ -100,10 +100,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   }
 
   const cell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <td style={{ border: B, padding: "14px 16px", fontSize: "14px", ...style }}>{content}</td>;
+    <td style={{ border: B, padding: "10px 12px", fontSize: "13px", ...style }}>{content}</td>;
 
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <th style={{ border: BG, padding: "12px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "14px", ...style }}>{content}</th>;
+    <th style={{ border: BG, padding: "8px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "13px", ...style }}>{content}</th>;
 
   const nameFontSize = client.name.length > 25 ? Math.max(12, 18 - Math.floor((client.name.length - 25) / 4)) : 18;
   const addrFontSize = client.address.length > 35 ? Math.max(12, 16 - Math.floor((client.address.length - 35) / 5)) : 16;
@@ -213,23 +213,23 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Aucune ligne</td>
                   </tr>
                 )}
-                {lines.length < 20 && Array.from({ length: 20 - lines.length }).map((_, i) => (
+                {lines.length < 15 && Array.from({ length: 15 - lines.length }).map((_, i) => (
                   <tr key={`empty-${i}`}>
                     {isDevis ? (
                       <>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
                       </>
                     ) : (
                       <>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "14px 16px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
                       </>
                     )}
                   </tr>
