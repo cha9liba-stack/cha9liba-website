@@ -149,7 +149,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameAr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrAr}</div>
                   <div style={{ fontSize: "14px", whiteSpace: "nowrap" }}>البريد الإلكتروني: {CO.email} | الهاتف: {CO.telAr}</div>
-                  <div style={{ fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>{CO.mf}</div>
+                  <div style={{ fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
