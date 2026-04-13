@@ -136,8 +136,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 <td style={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
                   <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameFr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "14px" }}>Email: {CO.email}</div>
-                  <div style={{ fontSize: "14px" }}>Tel: {CO.tel}</div>
+                  <div style={{ fontSize: "14px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "14px" }}>{CO.tel}</div>
                   <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
@@ -149,8 +149,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 <td style={{ textAlign: "right", verticalAlign: "top", whiteSpace: "nowrap" }}>
                   <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameAr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "14px" }}>البريد الإلكتروني: {CO.email}</div>
-                  <div style={{ fontSize: "14px" }}>الهاتف: {CO.telAr}</div>
+                  <div style={{ fontSize: "14px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "14px" }}>{CO.telAr}</div>
                   <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
