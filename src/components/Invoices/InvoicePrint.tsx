@@ -216,32 +216,29 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 </tbody>
             </table>
 
-            <table style={{ width: "100%", borderCollapse: "collapse", flex: 1 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #1a56db" }}>
               <tbody>
                 {lines.length < 15 && Array.from({ length: 15 - lines.length }).map((_, i) => (
                   <tr key={`empty-${i}`}>
                     {isDevis ? (
                       <>
-                        <td style={{ border: B, padding: "10px 12px", height: "35px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", height: "35px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
                       </>
                     ) : (
                       <>
-                        <td style={{ border: B, padding: "10px 12px", height: "35px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
-                        <td style={{ border: B, padding: "10px 12px" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", height: "35px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
                       </>
                     )}
                   </tr>
                 ))}
-                <tr>
-                  <td colSpan={5} style={{ border: "none", height: "20px" }}></td>
-                </tr>
               </tbody>
             </table>
 
