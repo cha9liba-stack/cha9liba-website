@@ -162,7 +162,7 @@ export function isRealContract(c: Contract): boolean {
 // Cache for contracts to avoid re-fetching
 let contractsCache: Contract[] | null = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 60000; // 1 minute cache
+const CACHE_DURATION = 300000; // 5 minutes cache
 
 export async function getAllContracts(forceRefresh = false): Promise<Contract[]> {
   // Return cached data if available and fresh
@@ -170,20 +170,21 @@ export async function getAllContracts(forceRefresh = false): Promise<Contract[]>
     return contractsCache;
   }
 
+  // First, return local data immediately for fast load
+  const localContracts = await localGetAll<Contract>("contracts");
+  if (!contractsCache) {
+    contractsCache = localContracts;
+    cacheTimestamp = Date.now();
+  }
+
+  // Then fetch from Firebase in background if online
   if (isOnline()) {
     try {
       // Load only recent contracts (300) for faster load
       const recentFromFirebase = await fbGetRecentContracts(300);
       
-      // Merge with existing contracts from localStorage for full search capability
-      const localContracts = await localGetAll<Contract>("contracts");
-      const localMap = new Map(localContracts.map(c => [c.id, c]));
-      
-      // Combine: use recent from Firebase, but keep all local for search
-      const allFromFirebase = fbGetAllContracts ? await fbGetAllContracts() : recentFromFirebase;
-      const merged = forceRefresh 
-        ? allFromFirebase 
-        : [...recentFromFirebase];
+      // Use recent from Firebase for faster load
+      const merged = [...recentFromFirebase];
       
       // Add any contracts from localStorage that aren't in Firebase (offline-created)
       localContracts.forEach(c => {
@@ -204,12 +205,7 @@ export async function getAllContracts(forceRefresh = false): Promise<Contract[]>
     }
   }
   
-  const localContracts = await localGetAll<Contract>("contracts");
-  if (!contractsCache) {
-    contractsCache = localContracts;
-    cacheTimestamp = Date.now();
-  }
-  return localContracts;
+  return contractsCache || localContracts;
 }
 
 // Clear cache when contracts are updated
