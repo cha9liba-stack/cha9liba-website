@@ -228,36 +228,36 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <img src={qrDataUrl} alt="QR" style={{ width: "60px", height: "60px", borderRadius: "4px" }}/>
                   )}
                 </td>
-                <td style={{ width: "45%", verticalAlign: "top" }}>
+<td style={{ width: "45%", verticalAlign: "top" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", background: "#f1f5f9", borderRadius: "6px", overflow: "hidden" }}>
                     <tbody>
                       {!isDevis && (
                         <>
                           <tr>
-                            <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>MONTANT HT</td>
-                            <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(montantHT)}</td>
+                            <td style={{ border: B, padding: "8px 12px", fontSize: "14px" }}>MONTANT HT</td>
+                            <td style={{ border: B, padding: "8px 12px", textAlign: "right", fontWeight: "bold", fontSize: "14px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(montantHT)}</td>
                           </tr>
                           <tr>
-                            <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>TVA (19%)</td>
-                            <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tva)}</td>
+                            <td style={{ border: B, padding: "8px 12px", fontSize: "14px" }}>TVA (19%)</td>
+                            <td style={{ border: B, padding: "8px 12px", textAlign: "right", fontWeight: "bold", fontSize: "14px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tva)}</td>
                           </tr>
                         </>
                       )}
                       {tsl2dj > 0 && (
                         <tr>
-                          <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>TSL 2 D/J</td>
-                          <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tsl2dj)}</td>
+                          <td style={{ border: B, padding: "8px 12px", fontSize: "14px" }}>TSL 2 D/J</td>
+                          <td style={{ border: B, padding: "8px 12px", textAlign: "right", fontWeight: "bold", fontSize: "14px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tsl2dj)}</td>
                         </tr>
                       )}
                       {isFacture && timbre > 0 && (
                         <tr>
-                          <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>Timbre</td>
-                          <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(timbre)}</td>
+                          <td style={{ border: B, padding: "8px 12px", fontSize: "14px" }}>Timbre</td>
+                          <td style={{ border: B, padding: "8px 12px", textAlign: "right", fontWeight: "bold", fontSize: "14px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(timbre)}</td>
                         </tr>
                       )}
                       <tr style={{ background: "#1a56db" }}>
-                        <td style={{ border: BG, padding: "8px", fontWeight: "bold", fontSize: "14px", color: "white" }}>TOTAL TTC</td>
-                        <td style={{ border: BG, padding: "8px", textAlign: "right", fontWeight: "bold", fontSize: "16px", color: "white" }}>{fmt(totalTTC)}</td>
+                        <td style={{ border: BG, padding: "10px", fontWeight: "bold", fontSize: "16px", color: "white" }}>TOTAL TTC</td>
+                        <td style={{ border: BG, padding: "10px", textAlign: "right", fontWeight: "bold", fontSize: "16px", color: "white" }}>{fmt(totalTTC)}</td>
                       </tr>
                     </tbody>
                   </table>
