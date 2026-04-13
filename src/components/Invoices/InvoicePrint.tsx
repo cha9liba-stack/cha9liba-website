@@ -127,52 +127,36 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-auto p-6 bg-slate-100">
-          <div ref={ref} style={{ background: "#fff", padding: "15px", width: "100%", maxWidth: "750px", margin: "0 auto", fontFamily: "Arial,sans-serif", fontSize: "13px" }}>
+          <div ref={ref} style={{ background: "#fff", padding: "10px", width: "100%", maxWidth: "700px", margin: "0 auto", fontFamily: "Arial,sans-serif", fontSize: "12px" }}>
 
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "12px" }}>
               <tbody><tr>
-                <td style={{ verticalAlign: "top", paddingRight: "15px" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "5px" }}>{CO.nameFr}</div>
-                  <div style={{ fontWeight: "bold", fontSize: "16px", marginBottom: "2px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "13px", marginBottom: "1px" }}>Email: {CO.email}</div>
-                  <div style={{ fontSize: "13px", marginBottom: "1px" }}>Tel: {CO.tel}</div>
-                  <div style={{ fontSize: "13px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                <td style={{ verticalAlign: "top" }}>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "20px" }}>{CO.nameFr}</div>
+                  <div style={{ fontSize: "12px" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize: "11px" }}>Email: {CO.email} | Tel: {CO.tel}</div>
+                  <div style={{ fontSize: "11px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "100px", objectFit: "contain", display: "block", margin: "0 auto" }}
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "70px", objectFit: "contain", display: "block", margin: "0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
+                  <div style={{ fontWeight: "bold", fontSize: "16px", marginTop: "3px" }}>N° {invNum}</div>
+                  <div style={{ fontSize: "12px" }}>Kélibia le: {invDate}</div>
                 </td>
-                <td style={{ verticalAlign: "top", textAlign: "right", paddingLeft: "15px" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "5px" }}>{CO.nameAr}</div>
-                  <div style={{ fontWeight: "bold", fontSize: "16px", marginBottom: "2px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "13px", marginBottom: "1px" }}>Email: {CO.email}</div>
-                  <div style={{ fontSize: "13px", marginBottom: "1px" }}>Tel: {CO.telAr}</div>
-                  <div style={{ fontSize: "13px", fontWeight: "bold" }}>{CO.mf}</div>
+                <td style={{ textAlign: "right", verticalAlign: "top" }}>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "20px" }}>{CO.nameAr}</div>
+                  <div style={{ fontSize: "12px" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize: "11px" }}>Tel: {CO.telAr}</div>
+                  <div style={{ fontSize: "11px", fontWeight: "bold" }}>{CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f8fafc", borderRadius: "8px", padding: "15px", marginBottom: "20px", border: "1px solid #e2e8f0" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody><tr>
-                  <td style={{ padding: "8px 12px", borderRight: "1px solid #e2e8f0" }}>
-                    <div style={{ fontSize: "13px", color: "#64748b", fontWeight: "600", marginBottom: "4px" }}>Nom du client:</div>
-                    <div style={{ fontWeight: "bold", fontSize: "18px" }}>{client.name}</div>
-                  </td>
-                  <td style={{ padding: "8px 12px", borderRight: "1px solid #e2e8f0" }}>
-                    <div style={{ fontSize: "13px", color: "#64748b", fontWeight: "600", marginBottom: "4px" }}>MF:</div>
-                    <div style={{ fontWeight: "bold", fontSize: "15px" }}>{client.mf || "—"}</div>
-                  </td>
-                  <td style={{ padding: "8px 12px", borderRight: "1px solid #e2e8f0" }}>
-                    <div style={{ fontSize: "13px", color: "#64748b", fontWeight: "600", marginBottom: "4px" }}>Adresse:</div>
-                    <div style={{ fontSize: "14px" }}>{client.address || "—"}</div>
-                  </td>
-                  <td style={{ padding: "8px 12px" }}>
-                    <div style={{ fontSize: "13px", color: "#64748b", fontWeight: "600", marginBottom: "4px" }}>Tel:</div>
-                    <div style={{ fontSize: "15px" }}>{client.phone || "—"}</div>
-                  </td>
-                </tr></tbody>
-              </table>
+            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "10px 15px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "12px" }}>
+              <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> {client.name}
+              {client.mf && <span style={{ marginLeft: "15px" }}>MF: {client.mf}</span>}
+              {client.address && <span style={{ marginLeft: "15px" }}>Adresse: {client.address}</span>}
+              {client.phone && <span style={{ marginLeft: "15px" }}>Tel: {client.phone}</span>}
             </div>
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px", border: "1px solid #1a56db" }}>
@@ -229,47 +213,47 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody><tr>
-                <td style={{ width: "55%", verticalAlign: "top", paddingRight: "15px" }}>
+                <td style={{ width: "55%", verticalAlign: "top", paddingRight: "10px" }}>
                   {words && (
-                    <div style={{ background: "#f0fdf4", padding: "12px", borderRadius: "8px", border: "1px solid #bbf7d0", marginBottom: "10px" }}>
-                      <div style={{ fontSize: "13px", color: "#166534", marginBottom: "4px" }}>Arrêté la présente {typeLabel} à la somme de:</div>
-                      <div style={{ fontStyle: "italic", fontWeight: "bold", fontSize: "16px", color: "#166534" }}>{words}</div>
+                    <div style={{ background: "#f0fdf4", padding: "8px", borderRadius: "4px", border: "1px solid #bbf7d0", marginBottom: "8px" }}>
+                      <div style={{ fontSize: "11px", color: "#166534" }}>Arrêté la présente {typeLabel} à la somme de:</div>
+                      <div style={{ fontStyle: "italic", fontWeight: "bold", fontSize: "13px", color: "#166534" }}>{words}</div>
                     </div>
                   )}
                   {qrDataUrl && (
-                    <img src={qrDataUrl} alt="QR" style={{ width: "90px", height: "90px", borderRadius: "4px" }}/>
+                    <img src={qrDataUrl} alt="QR" style={{ width: "60px", height: "60px", borderRadius: "4px" }}/>
                   )}
                 </td>
                 <td style={{ width: "45%", verticalAlign: "top" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", background: "#f8fafc", borderRadius: "8px", overflow: "hidden" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", background: "#f1f5f9", borderRadius: "6px", overflow: "hidden" }}>
                     <tbody>
                       {!isDevis && (
                         <>
                           <tr>
-                            <td style={{ border: B, padding: "10px 12px", fontSize: "15px" }}>MONTANT HT</td>
-                            <td style={{ border: B, padding: "10px 12px", textAlign: "right", fontWeight: "bold", fontSize: "15px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(montantHT)}</td>
+                            <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>MONTANT HT</td>
+                            <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(montantHT)}</td>
                           </tr>
                           <tr>
-                            <td style={{ border: B, padding: "10px 12px", fontSize: "15px" }}>TVA (19%)</td>
-                            <td style={{ border: B, padding: "10px 12px", textAlign: "right", fontWeight: "bold", fontSize: "15px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tva)}</td>
+                            <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>TVA (19%)</td>
+                            <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tva)}</td>
                           </tr>
                         </>
                       )}
                       {tsl2dj > 0 && (
                         <tr>
-                          <td style={{ border: B, padding: "10px 12px", fontSize: "15px" }}>TSL 2 D/J</td>
-                          <td style={{ border: B, padding: "10px 12px", textAlign: "right", fontWeight: "bold", fontSize: "15px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tsl2dj)}</td>
+                          <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>TSL 2 D/J</td>
+                          <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(tsl2dj)}</td>
                         </tr>
                       )}
                       {isFacture && timbre > 0 && (
                         <tr>
-                          <td style={{ border: B, padding: "10px 12px", fontSize: "15px" }}>Timbre</td>
-                          <td style={{ border: B, padding: "10px 12px", textAlign: "right", fontWeight: "bold", fontSize: "15px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(timbre)}</td>
+                          <td style={{ border: B, padding: "6px 8px", fontSize: "12px" }}>Timbre</td>
+                          <td style={{ border: B, padding: "6px 8px", textAlign: "right", fontWeight: "bold", fontSize: "12px", background: "#e0e7ff", color: "#1e40af" }}>{fmt(timbre)}</td>
                         </tr>
                       )}
                       <tr style={{ background: "#1a56db" }}>
-                        <td style={{ border: BG, padding: "12px", fontWeight: "bold", fontSize: "18px", color: "white" }}>TOTAL TTC</td>
-                        <td style={{ border: BG, padding: "12px", textAlign: "right", fontWeight: "bold", fontSize: "20px", color: "white" }}>{fmt(totalTTC)} TND</td>
+                        <td style={{ border: BG, padding: "8px", fontWeight: "bold", fontSize: "14px", color: "white" }}>TOTAL TTC</td>
+                        <td style={{ border: BG, padding: "8px", textAlign: "right", fontWeight: "bold", fontSize: "16px", color: "white" }}>{fmt(totalTTC)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -277,7 +261,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ marginTop: "20px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "3px solid #2d7a2d", paddingTop: "10px", fontSize: "12px", whiteSpace: "nowrap" }}>
+            <div style={{ marginTop: "12px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "2px solid #2d7a2d", paddingTop: "6px", fontSize: "10px", whiteSpace: "nowrap" }}>
               MF: {CO.mf} | RIB: {CO.rib} | Email: {CO.email} | Tel: {CO.tel} | Instagram: {CO.ig}
             </div>
 
