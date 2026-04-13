@@ -243,6 +243,18 @@ export default function Dashboard() {
     return map;
   }, [contracts, t]);
 
+  // Last contract per car (for available modal)
+  const lastContractMap = useMemo(() => {
+    const map = new Map<string, Contract>();
+    for (const c of contracts) {
+      if (!c.registration || c._deleted) continue;
+      const key = norm(c.registration);
+      const ex = map.get(key);
+      if (!ex || c.departureDate > ex.departureDate) map.set(key, c);
+    }
+    return map;
+  }, [contracts]);
+
   const lateCount   = fleetStats.late;
   const activeCount = allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t).length;
   const vis = useVisibility();
@@ -617,31 +629,60 @@ export default function Dashboard() {
                 : <table className="w-full text-sm min-w-[800px]">
                     <thead className="sticky top-0 bg-slate-50">
                       <tr className="text-slate-400 text-xs uppercase">
-                        <th className="px-3 py-3 text-start">#</th>
-                        <th className="px-3 py-3 text-start">Véhicule</th>
-                        <th className="px-3 py-3 text-start">Série</th>
-                        <th className="px-3 py-3 text-start">État</th>
+                        <th className="px-4 py-3 text-start"></th>
+                        <th className="px-4 py-3 text-start">Véhicule</th>
+                        <th className="px-4 py-3 text-start">Client</th>
+                        <th className="px-4 py-3 text-start">Dernier contrat</th>
+                        <th className="px-4 py-3 text-start">N°C</th>
+                        <th className="px-4 py-3 text-start">État</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-50">
                       {fleetCars.filter((_car, idx) => {
                         return fleetStatus[idx]?.state === "available";
-                      }).map((car, i) => (
-                        <tr key={car.registration} className="hover:bg-green-50 transition-colors">
-                          <td className="px-3 py-2.5 text-slate-400 text-sm">{i + 1}</td>
-                          <td className="px-3 py-2.5">
-                            <p className="font-semibold text-slate-800">{car.brand} {car.model}</p>
-                            {car.color && <p className="text-xs text-slate-400">{car.color}</p>}
-                          </td>
-                          <td className="px-3 py-2.5 font-mono text-sm font-bold text-slate-600">{car.registration}</td>
-                          <td className="px-3 py-2.5">
-                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                              Disponible
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      }).map((car) => {
+                        const last = lastContractMap.get(norm(car.registration));
+                        return (
+                          <tr key={car.registration} className="hover:bg-green-50 transition-colors cursor-pointer"
+                            onClick={() => navigate(`/app/vehicles/${encodeURIComponent(car.registration)}`)}>
+                            <td className="px-4 py-3">
+                              <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center">
+                                <Car size={16} className="text-slate-400" />
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="font-bold text-slate-800">{car.brand} {car.model}</p>
+                              <p className="text-xs font-mono text-slate-400">{car.registration}</p>
+                            </td>
+                            <td className="px-4 py-3">
+                              {last ? (
+                                <>
+                                  <p className="text-sm font-medium text-slate-700">{last.driverName}</p>
+                                  <p className="text-xs text-slate-400">{last.driverPhone}</p>
+                                </>
+                              ) : <span className="text-xs text-slate-300">—</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              {last ? (
+                                <>
+                                  <p className="text-sm font-bold text-slate-700">{last.returnDate?.split("-").reverse().join("-")}</p>
+                                  <p className="text-xs text-slate-400">{last.returnTime}</p>
+                                </>
+                              ) : <span className="text-xs text-slate-300">—</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              {last && <p className="text-xs font-mono text-amber-600">#{last.contractNumber}</p>}
+                              {last && <p className="text-sm font-bold text-green-600">{parseFloat(last.totalFacture || "0").toFixed(3)}</p>}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                Disponible
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
               }
