@@ -100,10 +100,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   }
 
   const cell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <td style={{ border: B, padding: "6px 8px", fontSize: "12px", ...style }}>{content}</td>;
+    <td style={{ border: B, padding: "10px 12px", fontSize: "14px", ...style }}>{content}</td>;
 
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <th style={{ border: BG, padding: "8px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "13px", ...style }}>{content}</th>;
+    <th style={{ border: BG, padding: "10px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "14px", ...style }}>{content}</th>;
 
   const nameFontSize = client.name.length > 25 ? Math.max(10, 16 - Math.floor((client.name.length - 25) / 4)) : 16;
   const addrFontSize = client.address.length > 35 ? Math.max(10, 14 - Math.floor((client.address.length - 35) / 5)) : 14;
