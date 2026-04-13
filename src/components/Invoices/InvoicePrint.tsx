@@ -155,11 +155,12 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "12px 20px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "14px", width: "100%" }}>
-              <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> {client.name}
-              {client.mf && <span style={{ marginLeft: "20px" }}>MF: {client.mf}</span>}
-              {client.address && <span style={{ marginLeft: "20px" }}>Adresse: {client.address}</span>}
-              {client.phone && <span style={{ marginLeft: "20px" }}>Tel: {client.phone}</span>}
+            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "8px 12px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "11px", display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "15px", width: "100%", boxSizing: "border-box" }}>
+              <span style={{ fontWeight: "bold", color: "#1e40af", whiteSpace: "nowrap" }}>Client:</span>
+              <span style={{ whiteSpace: "nowrap" }}>{client.name}</span>
+              {client.mf && <span style={{ whiteSpace: "nowrap" }}>MF: {client.mf}</span>}
+              {client.address && <span style={{ whiteSpace: "nowrap" }}>Adresse: {client.address}</span>}
+              {client.phone && <span style={{ whiteSpace: "nowrap" }}>Tel: {client.phone}</span>}
             </div>
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid #1a56db" }}>
