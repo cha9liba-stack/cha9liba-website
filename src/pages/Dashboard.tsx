@@ -8,7 +8,7 @@ import { config } from "../lib/config";
 import type { Contract } from "../types";
 import {
   FileText, TrendingUp, Clock, AlertTriangle,
-  CheckCircle, ArrowUpRight, DollarSign, Building2
+  CheckCircle, ArrowUpRight, DollarSign, Building2, Car
 } from "lucide-react";
 
 function today() { return new Date().toISOString().split("T")[0]; }
@@ -299,6 +299,16 @@ export default function Dashboard() {
     return { monthlyRevenue, yearRevenue, monthly, urgentDocs };
   }, [branchContracts, carProfiles]);
 
+  // Unpaid stats
+  const unpaidStats = useMemo(() => {
+    const unpaid = branchContracts.filter(c => {
+      const reste = parseFloat(c.resteAPayer || "0");
+      return reste > 0 && !c._deleted;
+    });
+    const total = unpaid.reduce((s, c) => s + parseFloat(c.resteAPayer || "0"), 0);
+    return { count: unpaid.length, total };
+  }, [branchContracts]);
+
   // Revenue detail for modal
   const revenueDetail = useMemo(() => {
     const now = new Date();
@@ -375,6 +385,20 @@ export default function Dashboard() {
       label: "Total contrats", value: allVisibleContracts.filter(c => !c._deleted).length,
       color: "bg-blue-500", icon: FileText, sub: "tous les contrats",
     },
+    // New advanced KPIs
+    ...(isAdmin ? [
+      {
+        key: "available" as const,
+        label: "Véhicules disponibles", value: fleetStats.available,
+        color: "bg-emerald-500", icon: Car, sub: "prêts à louer",
+      },
+      {
+        key: "unpaid" as const,
+        label: "Montant impayé", value: `${unpaidStats.total.toFixed(0)} TND`,
+        color: "bg-orange-500", icon: DollarSign, sub: `${unpaidStats.count} contrats`,
+        adminOnly: false,
+      },
+    ] : []),
   ];
 
   return (

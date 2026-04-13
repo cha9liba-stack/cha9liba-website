@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Search, Edit2, Trash2, RefreshCw, Eye, ChevronUp, ChevronDown, ChevronsUpDown, MessageSquare, Truck } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, RefreshCw, Eye, ChevronUp, ChevronDown, ChevronsUpDown, MessageSquare, Truck, Receipt } from "lucide-react";
 import { useContractStore } from "../store/useContractStore";
 import { deleteContract, getAllContracts, subscribeToContracts, isRealContract } from "../services/contractService";
 import { isSousTraitant } from "../lib/permissions";
@@ -14,6 +14,7 @@ import SMSComposeModal from "../components/SMS/SMSComposeModal";
 import SMSSettingsModal from "../components/SMS/SMSSettingsModal";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
 import DeliveryReceipt from "../components/DeliveryReceipt";
+import PaymentModal from "../components/Contracts/PaymentModal";
 import type { Contract } from "../types";
 
 type SortKey = "contractNumber" | "driverName" | "brand" | "departureDate" | "returnDate" | "totalFacture" | "_createdAt" | "depot" | "resteAPayer";
@@ -47,6 +48,7 @@ export default function Contracts() {
   const [smsComposeContract, setSmsComposeContract] = useState<Contract | null>(null);
   const [showSMSSettings, setShowSMSSettings] = useState(false);
   const [showDelivery, setShowDelivery] = useState(false);
+  const [paymentContract, setPaymentContract] = useState<Contract | null>(null);
 
   const isST = isSousTraitant(user);
   const stRegs = useSousTraitantCars();
@@ -358,6 +360,13 @@ export default function Contracts() {
                             </svg>
                           </button>
                         )}
+                        <button 
+                          onClick={() => setPaymentContract(c)}
+                          className={`p-1.5 rounded-lg transition-colors ${parseFloat(c.resteAPayer || '0') > 0 ? 'text-red-400 hover:text-red-500 hover:bg-red-50' : 'text-green-400 hover:text-green-500 hover:bg-green-50'}`}
+                          title={isRTL ? "إدارة المدفوعات" : "Gérer les paiements"}
+                        >
+                          <Receipt size={15} />
+                        </button>
                         {!isST && (
                           <button onClick={() => openEdit(c)}
                             className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title={t("edit")}>
@@ -473,6 +482,20 @@ export default function Contracts() {
       {smsComposeContract && <SMSComposeModal contract={smsComposeContract} onClose={() => setSmsComposeContract(null)} />}
       {showSMSSettings && <SMSSettingsModal onClose={() => setShowSMSSettings(false)} />}
       {showDelivery && <DeliveryReceipt onClose={() => setShowDelivery(false)} />}
+      {paymentContract && (
+        <PaymentModal 
+          contract={paymentContract} 
+          onClose={() => setPaymentContract(null)} 
+          onPaymentAdded={() => {
+            // Refresh contracts to update remaining amounts
+            getAllContracts().then(data => {
+              const real = data.filter(isRealContract);
+              const visible = isST ? real.filter(c => c._createdBy === user?.username) : real;
+              setContracts(visible);
+            });
+          }}
+        />
+      )}
 
       {confirmDeleteId && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

@@ -24,6 +24,7 @@ import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { useState } from "react";
 import { isSousTraitant } from "../../lib/permissions";
 import { useEffect } from "react";
+import RemindersBell from "../RemindersBell";
 
 export default function Sidebar() {
   const { t, i18n } = useTranslation();
@@ -100,22 +101,25 @@ export default function Sidebar() {
         dir={isRTL ? "rtl" : "ltr"}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-700">
-          <img
-            src="/logo.png"
-            alt="logo"
-            className="w-9 h-9 rounded-xl object-contain bg-white p-0.5"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-          <div>
-            <p className="font-bold text-sm leading-tight">{t("app_title")}</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-400" : "bg-red-400"}`} />
-              <span className="text-xs text-slate-400">
-                {isOnline ? t("online") : t("offline")}
-              </span>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="logo"
+              className="w-9 h-9 rounded-xl object-contain bg-white p-0.5"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+            <div>
+              <p className="font-bold text-sm leading-tight">{t("app_title")}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-400" : "bg-red-400"}`} />
+                <span className="text-xs text-slate-400">
+                  {isOnline ? t("online") : t("offline")}
+                </span>
+              </div>
             </div>
           </div>
+          {!isST && <RemindersBell />}
         </div>
 
         {/* Nav */}

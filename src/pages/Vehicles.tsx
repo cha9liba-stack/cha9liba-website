@@ -2,9 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import { safeGetItem, safeSetItem } from "../lib/localStorageUtils";
-import { Car, ChevronRight, AlertTriangle, Search, X } from "lucide-react";
+import { Car, ChevronRight, AlertTriangle, Search, X, Wrench } from "lucide-react";
 import { config, FLEET_CARS } from "../lib/config";
 import type { CarProfile } from "../types";
+import MaintenanceModal from "../components/Vehicles/MaintenanceModal";
 
 const DB = config.firebase.databaseUrl;
 
@@ -38,6 +39,7 @@ export default function Vehicles() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [profiles, setProfiles] = useState<Record<string, CarProfile>>(loadProfiles);
+  const [maintenanceCar, setMaintenanceCar] = useState<{ registration: string; brand: string; model: string; kilometrage?: number } | null>(null);
 
   // Load profiles from Firebase to get latest documents
   useEffect(() => {
@@ -318,13 +320,32 @@ export default function Vehicles() {
 
                 <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>{stats.totalDays} jours loués</span>
-                  <ChevronRight size={14} className="text-slate-300 group-hover:text-amber-500 transition-colors" />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMaintenanceCar({ registration: car.registration, brand: car.brand, model: car.model, kilometrage: profile?.kilometrage });
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                      title="Maintenance"
+                    >
+                      <Wrench size={14} />
+                    </button>
+                    <ChevronRight size={14} className="text-slate-300 group-hover:text-amber-500 transition-colors" />
+                  </div>
                 </div>
               </div>
             </button>
           );
         })}
       </div>
+
+      {maintenanceCar && (
+        <MaintenanceModal 
+          car={maintenanceCar} 
+          onClose={() => setMaintenanceCar(null)} 
+        />
+      )}
     </div>
   );
 }

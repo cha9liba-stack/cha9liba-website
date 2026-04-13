@@ -208,6 +208,28 @@ export interface SousTraitant {
 
 export type BookingStatus = "pending" | "confirmed" | "rejected" | "cancelled";
 
+export interface Payment {
+  id: string;
+  contractId: string;
+  contractNumber: string;
+  amount: number;
+  method: "cash" | "card" | "check" | "transfer" | "other";
+  type: "deposit" | "partial" | "final" | "other";
+  date: string; // YYYY-MM-DD
+  time?: string; // HH:MM
+  notes?: string;
+  receivedBy: string; // username
+  _createdAt: number;
+}
+
+export interface ContractPaymentSummary {
+  total: number;
+  paid: number;
+  remaining: number;
+  payments: Payment[];
+  lastPaymentDate?: string;
+}
+
 export interface OnlineBooking {
   id?: string;
   // Vehicle
