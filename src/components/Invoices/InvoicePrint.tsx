@@ -133,12 +133,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px" }}>
               <tbody><tr>
-                <td style={{ verticalAlign: "top" }}>
+                <td style={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
                   <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameFr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "14px" }}>Email: {CO.email}</div>
-                  <div style={{ fontSize: "14px" }}>Tel: {CO.tel}</div>
-                  <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div style={{ fontSize: "14px", whiteSpace: "nowrap" }}>Email: {CO.email} | Tel: {CO.tel}</div>
+                  <div style={{ fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                   <img src="/invoice_logo.png" alt="Palma" style={{ height: "150px", objectFit: "contain", display: "block", margin: "0 auto" }}
@@ -146,21 +145,21 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontWeight: "bold", fontSize: "22px", marginTop: "8px" }}>N° {invNum}</div>
                   <div style={{ fontSize: "16px" }}>Kélibia le: {invDate}</div>
                 </td>
-                <td style={{ textAlign: "right", verticalAlign: "top" }}>
+                <td style={{ textAlign: "right", verticalAlign: "top", whiteSpace: "nowrap" }}>
                   <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameAr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "14px" }}>Tel: {CO.telAr}</div>
-                  <div style={{ fontSize: "14px", fontWeight: "bold" }}>{CO.mf}</div>
+                  <div style={{ fontSize: "14px", whiteSpace: "nowrap" }}>البريد الإلكتروني: {CO.email} | الهاتف: {CO.telAr}</div>
+                  <div style={{ fontSize: "14px", fontWeight: "bold", whiteSpace: "nowrap" }}>{CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "8px 12px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "11px", display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "15px", width: "100%", boxSizing: "border-box" }}>
-              <span style={{ fontWeight: "bold", color: "#1e40af", whiteSpace: "nowrap" }}>Client:</span>
-              <span style={{ whiteSpace: "nowrap" }}>{client.name}</span>
-              {client.mf && <span style={{ whiteSpace: "nowrap" }}>MF: {client.mf}</span>}
-              {client.address && <span style={{ whiteSpace: "nowrap" }}>Adresse: {client.address}</span>}
-              {client.phone && <span style={{ whiteSpace: "nowrap" }}>Tel: {client.phone}</span>}
+            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "8px 12px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "12px", display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "15px", width: "100%", boxSizing: "border-box", whiteSpace: "nowrap" }}>
+              <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span>
+              <span>{client.name}</span>
+              {client.mf && <span>MF: {client.mf}</span>}
+              {client.address && <span>Adresse: {client.address}</span>}
+              {client.phone && <span>Tel: {client.phone}</span>}
             </div>
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid #1a56db" }}>
