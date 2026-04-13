@@ -159,19 +159,63 @@ export function isRealContract(c: Contract): boolean {
 
 // ─── Unified API ──────────────────────────────────────────────────────────────
 
-export async function getAllContracts(limit?: number): Promise<Contract[]> {
+// Cache for contracts to avoid re-fetching
+let contractsCache: Contract[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 60000; // 1 minute cache
+
+export async function getAllContracts(forceRefresh = false): Promise<Contract[]> {
+  // Return cached data if available and fresh
+  if (!forceRefresh && contractsCache && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
+    return contractsCache;
+  }
+
   if (isOnline()) {
     try {
-      // Load all contracts from Firebase (not just recent)
-      const allFromFirebase = await fbGetAllContracts();
-      // Update local cache with fresh data from Firebase
-      localBulkPut("contracts", allFromFirebase).catch(() => {});
-      return allFromFirebase;
+      // Load only recent contracts (300) for faster load
+      const recentFromFirebase = await fbGetRecentContracts(300);
+      
+      // Merge with existing contracts from localStorage for full search capability
+      const localContracts = await localGetAll<Contract>("contracts");
+      const localMap = new Map(localContracts.map(c => [c.id, c]));
+      
+      // Combine: use recent from Firebase, but keep all local for search
+      const allFromFirebase = fbGetAllContracts ? await fbGetAllContracts() : recentFromFirebase;
+      const merged = forceRefresh 
+        ? allFromFirebase 
+        : [...recentFromFirebase];
+      
+      // Add any contracts from localStorage that aren't in Firebase (offline-created)
+      localContracts.forEach(c => {
+        if (!merged.find(m => m.id === c.id)) {
+          merged.push(c);
+        }
+      });
+
+      // Update cache
+      contractsCache = merged;
+      cacheTimestamp = Date.now();
+      
+      // Update local cache with fresh data
+      localBulkPut("contracts", merged).catch(() => {});
+      return merged;
     } catch (e) {
       console.warn("[Firebase] getAllContracts failed, using local cache:", e);
     }
   }
-  return localGetAll<Contract>("contracts");
+  
+  const localContracts = await localGetAll<Contract>("contracts");
+  if (!contractsCache) {
+    contractsCache = localContracts;
+    cacheTimestamp = Date.now();
+  }
+  return localContracts;
+}
+
+// Clear cache when contracts are updated
+export function clearContractsCache(): void {
+  contractsCache = null;
+  cacheTimestamp = 0;
 }
 
 export async function getPaginatedContracts(page: number = 1, pageSize: number = 50): Promise<{ contracts: Contract[]; total: number }> {
@@ -281,8 +325,9 @@ export function subscribeToContracts(
   callback: (contracts: Contract[]) => void
 ): () => void {
   let active = true;
+  let pollInterval: ReturnType<typeof setTimeout> | null = null;
 
-  // Try Firebase SDK realtime first
+  // Try Firebase SDK realtime first (preferred method)
   try {
     const contractsRef = ref(firebaseDb, CONTRACTS_PATH);
     const handler = onValue(
@@ -293,6 +338,9 @@ export function subscribeToContracts(
         const contracts = Object.entries(raw)
           .filter(([, v]) => v && !v._deleted)
           .map(([id, v]) => mapFirebaseToContract(id, v));
+        // Update cache
+        contractsCache = contracts;
+        cacheTimestamp = Date.now();
         callback(contracts);
         localBulkPut("contracts", contracts);
       },
@@ -304,21 +352,30 @@ export function subscribeToContracts(
     return () => {
       active = false;
       off(contractsRef, "value", handler);
+      if (pollInterval) clearTimeout(pollInterval);
     };
   } catch {
     startPolling();
-    return () => { active = false; };
+    return () => { 
+      active = false; 
+      if (pollInterval) clearTimeout(pollInterval);
+    };
   }
 
   function startPolling() {
     const poll = async () => {
       if (!active) return;
       try {
+        // Use recent contracts only for polling (faster)
         const contracts = await fbGetRecentContracts(300);
+        // Update cache
+        contractsCache = contracts;
+        cacheTimestamp = Date.now();
         callback(contracts);
         await localBulkPut("contracts", contracts);
       } catch {/* silent */}
-      if (active) setTimeout(poll, 15000);
+      // Poll every 30 seconds (reduced from 15)
+      if (active) pollInterval = setTimeout(poll, 30000);
     };
     poll();
   }

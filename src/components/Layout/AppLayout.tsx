@@ -10,6 +10,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import BranchSelectModal from "../BranchSelectModal";
 import DailySummaryModal from "../DailySummaryModal";
+import { config } from "../../lib/config";
 
 export default function AppLayout() {
   const { i18n } = useTranslation();
@@ -32,7 +33,7 @@ export default function AppLayout() {
 
   // Load contract settings from Firebase
   useEffect(() => {
-    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/app_settings/contract_settings.json")
+    fetch(`${config.firebase.databaseUrl}/${config.firebase.paths.contractSettings}.json`)
       .then(r => r.json())
       .then(data => { if (data) setContractSettings(data); })
       .catch(() => {});
@@ -46,7 +47,7 @@ export default function AppLayout() {
   useEffect(() => {
     if (user && user.role !== "admin" && !selectedBranch && (user as any).branchId) {
       // Auto-assign from user profile
-      fetch(`https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/branches/${(user as any).branchId}.json`)
+      fetch(`${config.firebase.databaseUrl}/${config.firebase.paths.branches}/${(user as any).branchId}.json`)
         .then(r => r.json())
         .then(data => {
           if (data) setSelectedBranch({ id: (user as any).branchId, name: data.name });
