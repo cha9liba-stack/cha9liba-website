@@ -105,8 +105,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
     <th style={{ border: BG, padding: "10px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "14px", ...style }}>{content}</th>;
 
-  const nameFontSize = client.name.length > 25 ? Math.max(10, 16 - Math.floor((client.name.length - 25) / 4)) : 16;
-  const addrFontSize = client.address.length > 35 ? Math.max(10, 14 - Math.floor((client.address.length - 35) / 5)) : 14;
+  const nameFontSize = client.name.length > 25 ? Math.max(12, 18 - Math.floor((client.name.length - 25) / 4)) : 18;
+  const addrFontSize = client.address.length > 35 ? Math.max(12, 16 - Math.floor((client.address.length - 35) / 5)) : 16;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -155,11 +155,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "10px 15px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "13px" }}>
+            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "12px 20px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "14px", width: "100%" }}>
               <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> {client.name}
-              {client.mf && <span style={{ marginLeft: "10px" }}>MF: {client.mf}</span>}
-              {client.address && <span style={{ marginLeft: "10px" }}>Adresse: {client.address}</span>}
-              {client.phone && <span style={{ marginLeft: "10px" }}>Tel: {client.phone}</span>}
+              {client.mf && <span style={{ marginLeft: "20px" }}>MF: {client.mf}</span>}
+              {client.address && <span style={{ marginLeft: "20px" }}>Adresse: {client.address}</span>}
+              {client.phone && <span style={{ marginLeft: "20px" }}>Tel: {client.phone}</span>}
             </div>
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid #1a56db" }}>
