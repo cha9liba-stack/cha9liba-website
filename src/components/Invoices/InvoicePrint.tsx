@@ -100,10 +100,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   }
 
   const cell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <td style={{ border: B, padding: "1px 3px", fontSize: "10px", ...style }}>{content}</td>;
+    <td style={{ border: B, padding: "6px 8px", fontSize: "12px", ...style }}>{content}</td>;
 
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <th style={{ border: BG, background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", ...style }}>{content}</th>;
+    <th style={{ border: BG, padding: "8px", background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "13px", ...style }}>{content}</th>;
 
   const nameFontSize = client.name.length > 25 ? Math.max(10, 16 - Math.floor((client.name.length - 25) / 4)) : 16;
   const addrFontSize = client.address.length > 35 ? Math.max(10, 14 - Math.floor((client.address.length - 35) / 5)) : 14;
@@ -129,56 +129,57 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-auto p-6 bg-slate-100">
-          <div ref={ref} style={{ background: "#fff", padding: "4px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "11px" }}>
+          <div ref={ref} style={{ background: "#fff", padding: "15px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "13px", minHeight: "100vh" }}>
 
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "4px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px" }}>
               <tbody><tr>
                 <td style={{ verticalAlign: "top" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "18px" }}>{CO.nameFr}</div>
-                  <div style={{ fontSize: "11px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "10px" }}>Email: {CO.email} | Tel: {CO.tel}</div>
-                  <div style={{ fontSize: "10px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameFr}</div>
+                  <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize: "14px" }}>Email: {CO.email}</div>
+                  <div style={{ fontSize: "14px" }}>Tel: {CO.tel}</div>
+                  <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "60px", objectFit: "contain", display: "block", margin: "0 auto" }}
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "100px", objectFit: "contain", display: "block", margin: "0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
-                  <div style={{ fontWeight: "bold", fontSize: "14px", marginTop: "2px" }}>N° {invNum}</div>
-                  <div style={{ fontSize: "11px" }}>Kélibia le: {invDate}</div>
+                  <div style={{ fontWeight: "bold", fontSize: "20px", marginTop: "5px" }}>N° {invNum}</div>
+                  <div style={{ fontSize: "15px" }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "top" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "18px" }}>{CO.nameAr}</div>
-                  <div style={{ fontSize: "11px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "10px" }}>Tel: {CO.telAr}</div>
-                  <div style={{ fontSize: "10px", fontWeight: "bold" }}>{CO.mf}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameAr}</div>
+                  <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize: "14px" }}>Tel: {CO.telAr}</div>
+                  <div style={{ fontSize: "14px", fontWeight: "bold" }}>{CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f1f5f9", borderRadius: "3px", padding: "4px 8px", marginBottom: "4px", border: "1px solid #cbd5e1", fontSize: "10px" }}>
+            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "10px 15px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "13px" }}>
               <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> {client.name}
               {client.mf && <span style={{ marginLeft: "10px" }}>MF: {client.mf}</span>}
               {client.address && <span style={{ marginLeft: "10px" }}>Adresse: {client.address}</span>}
               {client.phone && <span style={{ marginLeft: "10px" }}>Tel: {client.phone}</span>}
             </div>
 
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px", border: "1px solid #1a56db" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid #1a56db" }}>
               <thead>
                 <tr>
                   {isDevis ? (
                     <>
-                      {hcell("Date", { width: "12%", fontSize: "10px", padding: "3px" })}
-                      {hcell("Désignation", { width: "46%", textAlign: "center", fontSize: "10px", padding: "3px" })}
-                      {hcell("J", { width: "6%", textAlign: "center", fontSize: "10px", padding: "3px" })}
-                      {hcell("Prix", { width: "16%", textAlign: "right", fontSize: "10px", padding: "3px" })}
-                      {hcell("Montant", { width: "20%", textAlign: "right", fontSize: "10px", padding: "3px" })}
+                      {hcell("Date", { width: "12%" })}
+                      {hcell("Désignation", { width: "46%" })}
+                      {hcell("Jours", { width: "8%", textAlign: "center" })}
+                      {hcell("Prix/Jour", { width: "14%", textAlign: "right" })}
+                      {hcell("Montant", { width: "20%", textAlign: "right" })}
                     </>
                   ) : (
                     <>
-                      {hcell("N° C", { width: "10%", fontSize: "10px", padding: "3px" })}
-                      {hcell("Date", { width: "12%", fontSize: "10px", padding: "3px" })}
-                      {hcell("Désignation", { width: "42%", textAlign: "center", fontSize: "10px", padding: "3px" })}
-                      {hcell("J", { width: "6%", textAlign: "center", fontSize: "10px", padding: "3px" })}
-                      {hcell("Montant", { width: "20%", textAlign: "right", fontSize: "10px", padding: "3px" })}
+                      {hcell("N° Contrat", { width: "14%" })}
+                      {hcell("Date", { width: "14%" })}
+                      {hcell("Désignation", { width: "36%" })}
+                      {hcell("Jours", { width: "10%", textAlign: "center" })}
+                      {hcell("Montant", { width: "16%", textAlign: "right" })}
                     </>
                   )}
                 </tr>
@@ -263,7 +264,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ marginTop: "4px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "1px solid #2d7a2d", paddingTop: "2px", fontSize: "9px", whiteSpace: "nowrap" }}>
+            <div style={{ marginTop: "auto", paddingTop: "10px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "2px solid #2d7a2d", fontSize: "12px", whiteSpace: "nowrap" }}>
               MF: {CO.mf} | RIB: {CO.rib} | Email: {CO.email} | Tel: {CO.tel} | Instagram: {CO.ig}
             </div>
 
