@@ -170,17 +170,17 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   {isDevis ? (
                     <>
                       {hcell("Date", { width: "12%" })}
-                      {hcell("Désignation", { width: "46%" })}
-                      {hcell("Jours", { width: "8%", textAlign: "center" })}
+                      {hcell("Désignation", { width: "48%" })}
+                      {hcell("Jours", { width: "6%", textAlign: "center" })}
                       {hcell("Prix/Jour", { width: "14%", textAlign: "right" })}
                       {hcell("Montant", { width: "20%", textAlign: "right" })}
                     </>
                   ) : (
                     <>
-                      {hcell("N° Contrat", { width: "14%" })}
-                      {hcell("Date", { width: "14%" })}
-                      {hcell("Désignation", { width: "36%" })}
-                      {hcell("Jours", { width: "10%", textAlign: "center" })}
+                      {hcell("N° Contrat", { width: "12%" })}
+                      {hcell("Date", { width: "12%" })}
+                      {hcell("Désignation", { width: "42%" })}
+                      {hcell("Jours", { width: "8%", textAlign: "center" })}
                       {hcell("Montant", { width: "16%", textAlign: "right" })}
                     </>
                   )}
