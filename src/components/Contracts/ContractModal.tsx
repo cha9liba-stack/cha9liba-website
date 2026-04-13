@@ -104,6 +104,7 @@ export default function ContractModal({ contract, onClose }: Props) {
   const clientDebtRef = useRef<{ total: number; paid: number; reste: number } | null>(null);
   const [debtConfirmPending, setDebtConfirmPending] = useState(false);
   const [printWithoutSaveWarning, setPrintWithoutSaveWarning] = useState(false);
+  const [overrideAvailability, setOverrideAvailability] = useState(false);
 
   const { register, handleSubmit, watch, setValue, getValues, formState: { errors } } =
     useForm<FormData>({
@@ -261,7 +262,7 @@ export default function ContractModal({ contract, onClose }: Props) {
       if (isDup) { setError(t("duplicate_number")); setSaving(false); return; }
 
       // Check car availability (no overlapping contracts)
-      if (data.registration && data.departureDate && data.returnDate) {
+      if (data.registration && data.departureDate && data.returnDate && !overrideAvailability) {
         const avail = await checkCarAvailability(
           data.registration,
           data.departureDate,
@@ -475,7 +476,7 @@ export default function ContractModal({ contract, onClose }: Props) {
 
             {/* Footer */}
             <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
-              <div className="flex-1">
+              <div className="flex-1 space-y-2">
                 {error && <p className="text-sm text-red-500">{error}</p>}
                 {bannedWarning && (
                   <div className="flex items-center gap-2 bg-red-100 border border-red-300 rounded-lg px-3 py-2">
@@ -487,7 +488,7 @@ export default function ContractModal({ contract, onClose }: Props) {
                   </div>
                 )}
                 {clientDebt && (
-                  <div className="flex items-center gap-2 bg-red-100 border border-red-300 rounded-lg px-3 py-2 mt-2">
+                  <div className="flex items-center gap-2 bg-red-100 border border-red-300 rounded-lg px-3 py-2">
                     <span className="text-red-600 text-lg">💰</span>
                     <div>
                       <p className="text-sm font-bold text-red-700">Dette client</p>
@@ -495,6 +496,15 @@ export default function ContractModal({ contract, onClose }: Props) {
                     </div>
                   </div>
                 )}
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer hover:text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={overrideAvailability}
+                    onChange={(e) => setOverrideAvailability(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
+                  />
+                  <span>{isRTL ? "تجاوز التحقق من توفر السيارة" : "Ignorer la vérification de disponibilité"}</span>
+                </label>
               </div>
               <div className="flex gap-3 ms-auto">
                 <button
