@@ -116,7 +116,7 @@ export default function Dashboard() {
   const { setContracts } = useContractStore();
   const fleetStats = useContractStore(s => s.fleetStats);
   const navigate = useNavigate();
-  const [modal, setModal] = useState<"active" | "late" | "total" | "revenue" | null>(null);
+  const [modal, setModal] = useState<"active" | "late" | "total" | "revenue" | "unpaid" | "available" | null>(null);
   const user = useAuthStore(s => s.user);
   const selectedBranch = useAuthStore(s => s.selectedBranch);
   const isAdmin = user?.role === "admin";
@@ -231,6 +231,17 @@ export default function Dashboard() {
       return { state: "available" };
     });
   }, [fleetCars, contracts, overrides, t]);
+
+  const activeMap = useMemo(() => {
+    const map = new Map<string, Contract>();
+    const active = contracts.filter(c => c.departureDate && c.returnDate && c.departureDate <= t && c.returnDate >= t && !c._deleted);
+    for (const c of active) {
+      const key = norm(c.registration || "");
+      const ex = map.get(key);
+      if (!ex || c.departureDate > ex.departureDate) map.set(key, c);
+    }
+    return map;
+  }, [contracts, t]);
 
   const lateCount   = fleetStats.late;
   const activeCount = allVisibleContracts.filter(c => !c._deleted && c.departureDate <= t && c.returnDate >= t).length;
@@ -363,7 +374,7 @@ export default function Dashboard() {
 
   const maxRevenue = Math.max(...stats.monthly.map(m => m.revenue), 1);
 
-  const kpiCards = [
+  const kpiCards: { key: string; label: string; value: any; color: string; icon: any; sub: string; adminOnly?: boolean; clickable?: boolean }[] = [
     {
       key: "active" as const,
       label: "Contrats actifs", value: activeCount,
@@ -391,12 +402,14 @@ export default function Dashboard() {
         key: "available" as const,
         label: "Véhicules disponibles", value: fleetStats.available,
         color: "bg-emerald-500", icon: Car, sub: "prêts à louer",
+        clickable: true,
       },
       {
         key: "unpaid" as const,
         label: "Montant impayé", value: `${unpaidStats.total.toFixed(0)} TND`,
         color: "bg-orange-500", icon: DollarSign, sub: `${unpaidStats.count} contrats`,
         adminOnly: false,
+        clickable: true,
       },
     ] : []),
   ];
@@ -435,15 +448,15 @@ export default function Dashboard() {
 
       {/* â”€â”€ KPI Cards â”€â”€ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpiCards.filter(c => !c.adminOnly || isAdmin).map(({ key, label, value, color, icon: Icon, sub }) => (
+        {kpiCards.filter(c => !c.adminOnly || isAdmin).map(({ key, label, value, color, icon: Icon, sub, clickable }) => (
           <div
             key={label}
-            onClick={() => key && setModal(key)}
-            className={`bg-white rounded-2xl border border-slate-100 shadow-sm p-4 ${key ? "cursor-pointer hover:shadow-md hover:border-slate-200 transition-all" : ""}`}
+            onClick={() => clickable && key && setModal(key as any)}
+            className={`bg-white rounded-2xl border border-slate-100 shadow-sm p-4 ${clickable && key ? "cursor-pointer hover:shadow-md hover:border-slate-200 transition-all" : ""}`}
           >
             <div className="flex items-center justify-between mb-3">
               <div className={`${color} rounded-xl p-2`}><Icon size={16} className="text-white" /></div>
-              {key && <ArrowUpRight size={14} className="text-slate-300" />}
+              {clickable && key && <ArrowUpRight size={14} className="text-slate-300" />}
             </div>
             <p className="text-2xl font-bold text-slate-800">{value}</p>
             <p className="text-xs font-medium text-slate-600 mt-0.5">{label}</p>
@@ -582,6 +595,62 @@ export default function Dashboard() {
       )}
       {modal === "total" && (
         <DetailModal title="Tous les contrats" contracts={allVisibleContracts.filter(c => !c._deleted)} color="bg-blue-500" onClose={() => setModal(null)} showPrices={isAdmin || vis.showPrices} />
+      )}
+
+      {modal === "unpaid" && (
+        <DetailModal title="Montant impayé" contracts={branchContracts.filter(c => !c._deleted && parseFloat(c.resteAPayer || "0") > 0)} color="bg-orange-500" onClose={() => setModal(null)} showPrices={isAdmin || vis.showPrices} />
+      )}
+
+      {modal === "available" && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 bg-emerald-500 rounded-t-2xl">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                Véhicules disponibles
+                <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{fleetStats.available}</span>
+              </h3>
+              <button onClick={() => setModal(null)} className="text-white/70 hover:text-white text-xl">×</button>
+            </div>
+            <div className="flex-1 overflow-y-auto overflow-x-auto">
+              {fleetCars.length === 0
+                ? <p className="text-center text-slate-400 py-10 text-sm">Aucun véhicule</p>
+                : <table className="w-full text-sm min-w-[800px]">
+                    <thead className="sticky top-0 bg-slate-50">
+                      <tr className="text-slate-400 text-xs uppercase">
+                        <th className="px-3 py-3 text-start">#</th>
+                        <th className="px-3 py-3 text-start">Véhicule</th>
+                        <th className="px-3 py-3 text-start">Série</th>
+                        <th className="px-3 py-3 text-start">État</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {fleetCars.filter((_car, idx) => {
+                        return fleetStatus[idx]?.state === "available";
+                      }).map((car, i) => (
+                        <tr key={car.registration} className="hover:bg-green-50 transition-colors">
+                          <td className="px-3 py-2.5 text-slate-400 text-sm">{i + 1}</td>
+                          <td className="px-3 py-2.5">
+                            <p className="font-semibold text-slate-800">{car.brand} {car.model}</p>
+                            {car.color && <p className="text-xs text-slate-400">{car.color}</p>}
+                          </td>
+                          <td className="px-3 py-2.5 font-mono text-sm font-bold text-slate-600">{car.registration}</td>
+                          <td className="px-3 py-2.5">
+                            <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                              Disponible
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+              }
+            </div>
+            <div className="px-5 py-3 border-t border-slate-100 flex justify-end">
+              <button onClick={() => setModal(null)} className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg">Fermer</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Revenue detail modal */}
