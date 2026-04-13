@@ -55,10 +55,10 @@ function DetailModal({ title, contracts, color, onClose, showPrices = true }: {
 
 
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-auto">
           {displayed.length === 0
             ? <p className="text-center text-slate-400 py-10 text-sm">Aucun contrat</p>
-            : <table className="w-full text-sm">
+            : <table className="w-full text-sm min-w-[800px]">
                 <thead className="sticky top-0 bg-slate-50">
                   <tr className="text-slate-400 text-xs uppercase">
                     <th className="px-4 py-2.5 text-start">N°</th>

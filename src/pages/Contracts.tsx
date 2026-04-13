@@ -175,30 +175,30 @@ export default function Contracts() {
   ];
 
   return (
-    <div className="p-6 space-y-5" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="p-4 md:p-6 space-y-4 md:space-y-5" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-slate-800">{t("contracts")}</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-lg md:text-xl font-bold text-slate-800">{t("contracts")}</h1>
+        <div className="flex items-center gap-2 flex-wrap">
           {!isST && (
             <button onClick={() => setShowArchive(p => !p)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${showArchive ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"}`}>
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors border ${showArchive ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"}`}>
               📁 Archives {archiveContracts.length > 0 && <span className="bg-slate-500 text-white text-xs px-1.5 py-0.5 rounded-full">{archiveContracts.length}</span>}
             </button>
           )}
           <button onClick={openNew}
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            <Plus size={16} />{t("new_contract")}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors">
+            <Plus size={14} />{t("new_contract")}
           </button>
           <button onClick={() => setShowDelivery(true)}
-            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors"
             title="Bon de livraison">
-            <Truck size={15} />
+            <Truck size={14} />
           </button>
           <button onClick={() => setShowSMSSettings(true)}
-            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors"
             title="Paramètres SMS">
-            <MessageSquare size={15} />
+            <MessageSquare size={14} />
           </button>
         </div>
       </div>
@@ -270,7 +270,7 @@ export default function Contracts() {
           <p className="text-center text-slate-400 py-16 text-sm">{t("no_results")}</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[1000px]">
               <thead>
                 <tr className="text-slate-500 text-xs uppercase bg-slate-50 border-b border-slate-100">
                   {cols.map(({ key, label }) => (
