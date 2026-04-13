@@ -161,17 +161,11 @@ export function isRealContract(c: Contract): boolean {
 export async function getAllContracts(limit?: number): Promise<Contract[]> {
   if (isOnline()) {
     try {
-      // Load recent contracts fast (default: last 300)
-      const recent = await fbGetRecentContracts(limit || 300);
-      // Merge with local cache (which may have older contracts)
-      const cached = await localGetAll<Contract>("contracts");
-      const recentIds = new Set(recent.map(c => c.id));
-      // Keep cached contracts not in recent (older ones), plus all recent
-      const older = cached.filter(c => !recentIds.has(c.id!) && !c._deleted);
-      const merged = [...recent, ...older];
-      // Update cache in background
-      localBulkPut("contracts", recent).catch(() => {});
-      return merged;
+      // Load all contracts from Firebase (not just recent)
+      const allFromFirebase = await fbGetAllContracts();
+      // Update local cache with fresh data from Firebase
+      localBulkPut("contracts", allFromFirebase).catch(() => {});
+      return allFromFirebase;
     } catch (e) {
       console.warn("[Firebase] getAllContracts failed, using local cache:", e);
     }
