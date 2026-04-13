@@ -171,7 +171,6 @@ export default function Contracts() {
 
   function openNew() { setEditingContract(null); setModalOpen(true); }
   function openEdit(c: Contract) {
-    console.log("Opening contract:", c.contractNumber, c.id);
     setEditingContract(c);
     setModalOpen(true);
   }

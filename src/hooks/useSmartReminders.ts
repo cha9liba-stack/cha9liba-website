@@ -17,8 +17,7 @@ interface Reminder {
   dismissed: boolean;
 }
 
-const REMINDERS_KEY = "palma_smart_reminders";
-const CHECK_INTERVAL_MS = 60 * 1000; // every 1 minute
+const CHECK_INTERVAL_MS = 60 * 1000;
 
 function getToday(): string {
   return new Date().toISOString().split("T")[0];
@@ -36,18 +35,6 @@ function daysBetween(date1: string, date2: string): number {
   return Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function loadReminders(): Reminder[] {
-  try {
-    return JSON.parse(localStorage.getItem(REMINDERS_KEY) || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveReminders(reminders: Reminder[]): void {
-  localStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
-}
-
 export function useSmartReminders(contracts: Contract[]) {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -55,71 +42,60 @@ export function useSmartReminders(contracts: Contract[]) {
   const generateReminders = useCallback((contracts: Contract[]) => {
     const today = getToday();
     const newReminders: Reminder[] = [];
-    const existingReminders = loadReminders();
-    const existingMap = new Map(existingReminders.map(r => [r.id, r]));
 
-    // Check contracts for reminders
+    // Filter to only TODAY-related contracts
     contracts.forEach(contract => {
       if (contract._deleted) return;
 
       const contractId = contract.id || contract.contractNumber;
-      
-      // 1. Return in 1-3 days reminder
       const daysToReturn = daysBetween(today, contract.returnDate);
-      if (daysToReturn > 0 && daysToReturn <= 3) {
-        const id = `return_${contractId}_${contract.returnDate}`;
-        if (!existingMap.has(id)) {
-          newReminders.push({
-            id,
-            type: "return_reminder",
-            priority: daysToReturn === 1 ? "high" : "medium",
-            title: daysToReturn === 1 
-              ? "Retour demain!" 
-              : `Retour dans ${daysToReturn} jours`,
-            message: `${contract.driverName} - ${contract.brand} ${contract.model} (${contract.registration})`,
-            contractId: contract.id,
-            contractNumber: contract.contractNumber,
-            driverName: contract.driverName,
-            driverPhone: contract.driverPhone,
-            date: contract.returnDate,
-            createdAt: Date.now(),
-            dismissed: false,
-          });
-        }
+      
+      // 1. Return TODAY only
+      if (daysToReturn === 0) {
+        newReminders.push({
+          id: `return_today_${contractId}`,
+          type: "return_reminder",
+          priority: "high",
+          title: "Retour aujourd'hui!",
+          message: `${contract.driverName} - ${contract.brand} ${contract.model} (${contract.registration})`,
+          contractId: contract.id,
+          contractNumber: contract.contractNumber,
+          driverName: contract.driverName,
+          driverPhone: contract.driverPhone,
+          date: contract.returnDate,
+          createdAt: Date.now(),
+          dismissed: false,
+        });
+      }
+      // 2. Return TOMORROW only (not 1-3 days)
+      else if (daysToReturn === 1) {
+        newReminders.push({
+          id: `return_tomorrow_${contractId}`,
+          type: "return_reminder",
+          priority: "high",
+          title: "Retour demain!",
+          message: `${contract.driverName} - ${contract.brand} ${contract.model} (${contract.registration})`,
+          contractId: contract.id,
+          contractNumber: contract.contractNumber,
+          driverName: contract.driverName,
+          driverPhone: contract.driverPhone,
+          date: contract.returnDate,
+          createdAt: Date.now(),
+          dismissed: false,
+        });
       }
 
-      // 2. Overdue contracts
-      if (daysToReturn < 0) {
-        const id = `overdue_${contractId}`;
-        if (!existingMap.has(id)) {
-          newReminders.push({
-            id,
-            type: "overdue",
-            priority: "high",
-            title: "عقود متأخرة",
-            message: `${contract.driverName} - متأخر ${Math.abs(daysToReturn)} يوم`,
-            contractId: contract.id,
-            contractNumber: contract.contractNumber,
-            driverName: contract.driverName,
-            driverPhone: contract.driverPhone,
-            date: contract.returnDate,
-            createdAt: Date.now(),
-            dismissed: false,
-          });
-        }
-      }
-
-      // 3. Payment due (remaining amount)
+      // 3. Payment due - only for TODAY active contracts
       const resteAPayer = parseFloat(contract.resteAPayer || "0");
       if (resteAPayer > 0) {
-        const id = `payment_${contractId}`;
-        if (!existingMap.has(id)) {
+        const isActiveToday = contract.departureDate <= today && contract.returnDate >= today;
+        if (isActiveToday) {
           newReminders.push({
-            id,
+            id: `payment_${contractId}`,
             type: "payment_due",
             priority: "high",
-            title: "دفعة مستحقة",
-            message: `المتبقي: ${resteAPayer.toFixed(3)} TND`,
+            title: "Paiement dû",
+            message: `${resteAPayer.toFixed(3)} TND - ${contract.driverName}`,
             contractId: contract.id,
             contractNumber: contract.contractNumber,
             driverName: contract.driverName,
@@ -132,16 +108,7 @@ export function useSmartReminders(contracts: Contract[]) {
       }
     });
 
-    // Auto-dismiss old reminders (older than 7 days)
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const filtered = existingReminders.filter(r => 
-      !r.dismissed && r.createdAt > sevenDaysAgo
-    );
-
-    const allReminders = [...filtered, ...newReminders];
-    saveReminders(allReminders);
-    
-    return allReminders;
+    return newReminders;
   }, []);
 
   useEffect(() => {
@@ -169,14 +136,12 @@ export function useSmartReminders(contracts: Contract[]) {
     const updated = reminders.map(r => 
       r.id === id ? { ...r, dismissed: true } : r
     );
-    saveReminders(updated);
     setReminders(updated);
     setUnreadCount(updated.filter(r => !r.dismissed).length);
   }, [reminders]);
 
   const dismissAll = useCallback(() => {
     const updated = reminders.map(r => ({ ...r, dismissed: true }));
-    saveReminders(updated);
     setReminders(updated);
     setUnreadCount(0);
   }, [reminders]);

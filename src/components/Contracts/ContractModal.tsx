@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { X, Eye, History, AlertTriangle, Printer } from "lucide-react";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -94,6 +94,18 @@ export default function ContractModal({ contract, onClose }: Props) {
   const user = useAuthStore((s) => s.user);
   const selectedBranch = useAuthStore((s) => s.selectedBranch);
   const { upsertContract } = useContractStore();
+
+  // Calculate next contract number (only contracts starting with 0)
+  const nextContractNumber = useMemo(() => {
+    if (contract) return contract.contractNumber;
+    const contracts = useContractStore.getState().contracts;
+    const numbers = contracts
+      .filter(c => c.contractNumber && c.contractNumber.startsWith("0") && /^\d+$/.test(c.contractNumber))
+      .map(c => parseInt(c.contractNumber, 10));
+    const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 300000;
+    return String(maxNumber + 1).padStart(7, "0");
+  }, [contract]);
+
   const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -116,6 +128,7 @@ export default function ContractModal({ contract, onClose }: Props) {
             const today = now.toISOString().split("T")[0];
             const time = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
             return {
+              contractNumber: nextContractNumber,
               date: today,
               departureDate: today,
               departureTime: time,

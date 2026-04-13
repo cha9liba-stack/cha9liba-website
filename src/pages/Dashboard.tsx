@@ -391,22 +391,26 @@ export default function Dashboard() {
       key: "active" as const,
       label: "Contrats actifs", value: activeCount,
       color: "bg-green-500", icon: CheckCircle, sub: "en cours aujourd'hui",
+      clickable: true,
     },
     {
       key: "late" as const,
       label: "En retard", value: lateCount,
       color: "bg-red-500", icon: AlertTriangle, sub: "retour dépassé",
+      clickable: true,
     },
     {
       key: "revenue" as const,
       label: "Revenus du mois", value: `${stats.monthlyRevenue.toFixed(0)} TND`,
       color: "bg-amber-500", icon: TrendingUp, sub: "mois en cours",
       adminOnly: true,
+      clickable: true,
     },
     {
       key: "total" as const,
       label: "Total contrats", value: allVisibleContracts.filter(c => !c._deleted).length,
       color: "bg-blue-500", icon: FileText, sub: "tous les contrats",
+      clickable: true,
     },
     // New advanced KPIs
     ...(isAdmin ? [

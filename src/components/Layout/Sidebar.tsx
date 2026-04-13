@@ -99,9 +99,10 @@ export default function Sidebar() {
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col w-64 min-h-screen bg-slate-900 text-white ${isRTL ? "border-l" : "border-r"} border-slate-700 transition-transform duration-300 ${isMobile ? (isOpen ? "translate-x-0" : "-translate-x-full") : "translate-x-0"}`}
         dir={isRTL ? "rtl" : "ltr"}
+        style={{ overflow: "visible" }}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700" style={{ overflow: "visible" }}>
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
@@ -119,7 +120,11 @@ export default function Sidebar() {
               </div>
             </div>
           </div>
-          {!isST && <RemindersBell />}
+          {!isST && (
+            <div className="relative">
+              <RemindersBell />
+            </div>
+          )}
         </div>
 
         {/* Nav */}

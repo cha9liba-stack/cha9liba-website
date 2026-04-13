@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { Bell, X, AlertTriangle, Clock, CreditCard, ChevronRight, Check, CheckCheck } from "lucide-react";
 import { useSmartReminders, formatReminderMessage } from "../hooks/useSmartReminders";
@@ -51,10 +52,14 @@ export default function RemindersBell() {
   }
 
   return (
-    <>
+    <div className="relative">
       {/* Bell Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className={`relative p-2 rounded-lg transition-colors ${
           hasHighPriority 
             ? "text-red-500 hover:bg-red-50" 
@@ -73,17 +78,16 @@ export default function RemindersBell() {
         )}
       </button>
 
-      {/* Dropdown Panel */}
-      {isOpen && (
+      {/* Dropdown Panel - using portal to render outside sidebar */}
+      {isOpen && createPortal(
         <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 z-40" 
-            onClick={() => setIsOpen(false)} 
-          />
-          
           {/* Panel */}
-          <div className={`absolute ${isRTL ? "left-0" : "right-0"} top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden`}>
+          <div className="fixed bg-white rounded-xl shadow-2xl border border-slate-100 z-[100] overflow-hidden"
+            style={{ 
+              left: "270px", 
+              top: "75px",
+              width: "320px"
+            }}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
               <div className="flex items-center gap-2">
@@ -226,8 +230,9 @@ export default function RemindersBell() {
               )}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
-    </>
+    </div>
   );
 }
