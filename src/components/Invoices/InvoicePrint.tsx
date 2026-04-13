@@ -83,7 +83,9 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
       <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        @page{margin:3mm;size:A4;padding:0}
+        @page{margin:2mm;size:A4}
+        body{padding:0}
+        .inv-wrap{padding:4px!important}
         table{width:100%;border-collapse:collapse;table-layout:fixed}
         td,th{overflow:hidden}
         .blue-val{color:#1a56db!important;font-weight:bold}
@@ -98,7 +100,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   }
 
   const cell = (content: React.ReactNode, style?: React.CSSProperties) =>
-    <td style={{ border: B, padding: "2px 4px", ...style }}>{content}</td>;
+    <td style={{ border: B, padding: "1px 3px", fontSize: "10px", ...style }}>{content}</td>;
 
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
     <th style={{ border: BG, background: "#1a56db", color: "white", textAlign: "left", fontWeight: "bold", ...style }}>{content}</th>;
@@ -127,32 +129,32 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         </div>
 
         <div className="flex-1 overflow-auto p-6 bg-slate-100">
-          <div ref={ref} style={{ background: "#fff", padding: "8px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "12px" }}>
+          <div ref={ref} style={{ background: "#fff", padding: "4px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "11px" }}>
 
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "8px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "4px" }}>
               <tbody><tr>
                 <td style={{ verticalAlign: "top" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "22px" }}>{CO.nameFr}</div>
-                  <div style={{ fontSize: "13px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "12px" }}>Email: {CO.email} | Tel: {CO.tel}</div>
-                  <div style={{ fontSize: "12px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "18px" }}>{CO.nameFr}</div>
+                  <div style={{ fontSize: "11px" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize: "10px" }}>Email: {CO.email} | Tel: {CO.tel}</div>
+                  <div style={{ fontSize: "10px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "80px", objectFit: "contain", display: "block", margin: "0 auto" }}
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "60px", objectFit: "contain", display: "block", margin: "0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
-                  <div style={{ fontWeight: "bold", fontSize: "18px", marginTop: "4px" }}>N° {invNum}</div>
-                  <div style={{ fontSize: "13px" }}>Kélibia le: {invDate}</div>
+                  <div style={{ fontWeight: "bold", fontSize: "14px", marginTop: "2px" }}>N° {invNum}</div>
+                  <div style={{ fontSize: "11px" }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "top" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "22px" }}>{CO.nameAr}</div>
-                  <div style={{ fontSize: "13px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "12px" }}>Tel: {CO.telAr}</div>
-                  <div style={{ fontSize: "12px", fontWeight: "bold" }}>{CO.mf}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "18px" }}>{CO.nameAr}</div>
+                  <div style={{ fontSize: "11px" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize: "10px" }}>Tel: {CO.telAr}</div>
+                  <div style={{ fontSize: "10px", fontWeight: "bold" }}>{CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f1f5f9", borderRadius: "4px", padding: "6px 10px", marginBottom: "8px", border: "1px solid #cbd5e1", fontSize: "11px" }}>
+            <div style={{ background: "#f1f5f9", borderRadius: "3px", padding: "4px 8px", marginBottom: "4px", border: "1px solid #cbd5e1", fontSize: "10px" }}>
               <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> {client.name}
               {client.mf && <span style={{ marginLeft: "10px" }}>MF: {client.mf}</span>}
               {client.address && <span style={{ marginLeft: "10px" }}>Adresse: {client.address}</span>}
@@ -261,7 +263,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ marginTop: "8px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "2px solid #2d7a2d", paddingTop: "4px", fontSize: "10px", whiteSpace: "nowrap" }}>
+            <div style={{ marginTop: "4px", textAlign: "center", fontWeight: "bold", color: "#2d7a2d", borderTop: "1px solid #2d7a2d", paddingTop: "2px", fontSize: "9px", whiteSpace: "nowrap" }}>
               MF: {CO.mf} | RIB: {CO.rib} | Email: {CO.email} | Tel: {CO.tel} | Instagram: {CO.ig}
             </div>
 
