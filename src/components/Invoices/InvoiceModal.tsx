@@ -5,7 +5,7 @@ import { useContractStore } from "../../store/useContractStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import {
   insertInvoice, getNextInvoiceNumber,
-  calcInvoiceTotals, amountInWords
+  calcInvoiceTotals, amountInWords, updateInvoice
 } from "../../services/invoiceService";
 import type { Invoice, InvoiceLine, InvoiceType } from "../../types/invoice";
 
@@ -24,11 +24,12 @@ function loadCompanies(): Company[] {
 function saveCompanies(d: Company[]) { localStorage.setItem(COMPANIES_KEY, JSON.stringify(d)); }
 
 interface Props {
+  invoice?: Invoice;
   onSave: (inv: Invoice) => void;
   onClose: () => void;
 }
 
-export default function InvoiceModal({ onSave, onClose }: Props) {
+export default function InvoiceModal({ invoice, onSave, onClose }: Props) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const contracts = useContractStore(s => s.contracts);
@@ -53,8 +54,22 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
-    getNextInvoiceNumber().then(setNumber);
-  }, []);
+    getNextInvoiceNumber().then(n => {
+      if (invoice) {
+        setType(invoice.type);
+        setNumber(invoice.number || "");
+        setDate(invoice.date || n);
+        setClientName(invoice.client?.name || "");
+        setClientMF(invoice.client?.mf || "");
+        setClientAddress(invoice.client?.address || "");
+        setClientPhone(invoice.client?.phone || "");
+        setLines(invoice.lines || []);
+        setSelectedCompanyId(invoice.companyId || null);
+      } else {
+        setNumber(n);
+      }
+    });
+  }, [invoice]);
 
   function selectCompany(c: Company) {
     setSelectedCompanyId(c.id);
@@ -141,18 +156,29 @@ export default function InvoiceModal({ onSave, onClose }: Props) {
   async function handleSave() {
     if (!clientName || lines.length === 0) return;
     setSaving(true);
-    try {
-      const invoice: Omit<Invoice, "id"> = {
-        number, date, type,
+try {
+      setSaving(true);
+      const invoice: Invoice = {
+        id: invoice?.id,
+        type,
+        number,
+        date,
         client: { name: clientName, mf: clientMF, address: clientAddress, phone: clientPhone },
+        companyId: selectedCompanyId,
         lines,
         ...totals,
         amountInWords: amountInWords(totals.totalTTC),
-        _createdAt: Date.now(),
-        _createdBy: user?.username,
+        _createdAt: invoice?._createdAt || Date.now(),
+        _createdBy: invoice?._createdBy || user?.username,
       };
-      const id = await insertInvoice(invoice);
-      onSave({ ...invoice, id });
+      
+      if (invoice.id) {
+        await updateInvoice(invoice.id, invoice);
+        onSave(invoice);
+      } else {
+        const id = await insertInvoice(invoice);
+        onSave({ ...invoice, id });
+      }
     } finally {
       setSaving(false);
     }

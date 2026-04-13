@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Printer, Trash2, Search, FileText, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { Plus, Printer, Trash2, Search, FileText, RefreshCw, ChevronUp, ChevronDown, ChevronsUpDown, Edit2 } from "lucide-react";
 import { getAllInvoices, deleteInvoice } from "../services/invoiceService";
 import type { Invoice } from "../types/invoice";
 
@@ -26,6 +26,7 @@ export default function Invoices() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [editInvoice, setEditInvoice] = useState<Invoice | null>(null);
   const [printInvoice, setPrintInvoice] = useState<Invoice | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +152,13 @@ export default function Invoices() {
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => setEditInvoice(inv)}
+                          className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                          title={isRTL ? "تعديل" : "Modifier"}
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                        <button
                           onClick={() => setPrintInvoice(inv)}
                           className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
                         >
@@ -177,6 +185,13 @@ export default function Invoices() {
         <LazyInvoiceModal
           onSave={(inv: Invoice) => { setInvoices(prev => [inv, ...prev]); setModalOpen(false); }}
           onClose={() => setModalOpen(false)}
+        />
+      )}
+      {editInvoice && (
+        <LazyInvoiceModal
+          invoice={editInvoice}
+          onSave={(inv: Invoice) => { setInvoices(prev => prev.map(i => i.id === inv.id ? inv : i)); setEditInvoice(null); }}
+          onClose={() => setEditInvoice(null)}
         />
       )}
       {printInvoice && (

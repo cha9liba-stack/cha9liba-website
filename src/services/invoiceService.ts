@@ -111,6 +111,10 @@ export async function insertInvoice(invoice: Omit<Invoice, "id">): Promise<strin
   return restPost(PATH, payload);
 }
 
+export async function updateInvoice(id: string, invoice: Partial<Invoice>): Promise<void> {
+  await restPatch(`${PATH}/${id}`, { ...invoice, _updatedAt: Date.now() });
+}
+
 export async function deleteInvoice(id: string): Promise<void> {
   await restDelete(`${PATH}/${id}`);
 }
