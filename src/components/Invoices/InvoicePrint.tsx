@@ -215,26 +215,26 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 )}
 </tbody>
             </table>
-
+            
             <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #1a56db" }}>
               <tbody>
                 {lines.length < 15 && Array.from({ length: 15 - lines.length }).map((_, i) => (
                   <tr key={`empty-${i}`}>
                     {isDevis ? (
                       <>
-                        <td style={{ border: B, padding: "8px 12px", height: "35px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", height: "28px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
                       </>
                     ) : (
                       <>
-                        <td style={{ border: B, padding: "8px 12px", height: "35px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: B, padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", height: "28px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
+                        <td style={{ border: "1px solid #bbb", padding: "8px 12px", background: "#fafafa" }}></td>
                       </>
                     )}
                   </tr>
@@ -242,7 +242,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tbody>
             </table>
 
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "15px" }}>
               <tbody><tr>
                 <td style={{ width: "55%", verticalAlign: "top", paddingRight: "10px" }}>
                   {words && (
