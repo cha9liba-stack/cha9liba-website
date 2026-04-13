@@ -141,7 +141,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "100px", objectFit: "contain", display: "block", margin: "0 auto" }}
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "120px", objectFit: "contain", display: "block", margin: "0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
                   <div style={{ fontWeight: "bold", fontSize: "20px", marginTop: "5px" }}>N° {invNum}</div>
                   <div style={{ fontSize: "15px" }}>Kélibia le: {invDate}</div>
@@ -225,7 +225,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     </div>
                   )}
                   {qrDataUrl && (
-                    <img src={qrDataUrl} alt="QR" style={{ width: "60px", height: "60px", borderRadius: "4px" }}/>
+                    <img src={qrDataUrl} alt="QR" style={{ width: "80px", height: "80px", borderRadius: "4px" }}/>
                   )}
                 </td>
 <td style={{ width: "45%", verticalAlign: "top" }}>
