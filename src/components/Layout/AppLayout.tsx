@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, WifiOff, Wifi } from "lucide-react";
 import Sidebar from "./Sidebar";
 import { getAllContracts, subscribeToContracts, isRealContract } from "../../services/contractService";
 import { useContractStore } from "../../store/useContractStore";
 import { useFleetStats } from "../../hooks/useFleetStats";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import BranchSelectModal from "../BranchSelectModal";
 import DailySummaryModal from "../DailySummaryModal";
 
@@ -18,6 +19,7 @@ export default function AppLayout() {
   const setContractSettings = useContractStore((s) => s.setContractSettings);
   const [loading, setLoading] = useState(contracts.length === 0);
   const [isMobile, setIsMobile] = useState(false);
+  const isOnline = useOnlineStatus();
 
   useEffect(() => {
     const handleResize = () => {
@@ -85,7 +87,13 @@ export default function AppLayout() {
       {needsBranchSelect && <BranchSelectModal onSelect={setSelectedBranch} />}
       <Sidebar />
       <main className={`flex-1 overflow-auto relative ${isMobile ? 'pt-16 px-2' : ''}`}>
-        {loading && (
+        {!isOnline && (
+          <div className={`absolute flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-full px-3 py-1.5 shadow-sm text-xs text-red-600 z-50 ${isMobile ? 'top-16 start-2 end-2' : 'top-3 start-4'}`}>
+            <WifiOff size={12} />
+            {isRTL ? "غير متصل بالإنترنت - البيانات المحلية معروضة" : "Hors ligne - Affichage des données locales"}
+          </div>
+        )}
+        {isOnline && loading && (
           <div className={`absolute flex items-center gap-1.5 bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-sm text-xs text-slate-500 z-10 ${isMobile ? 'top-20 end-2' : 'top-3 end-4'}`}>
             <RefreshCw size={12} className="animate-spin text-amber-500" />
             {isRTL ? "جاري تحميل البيانات..." : "Chargement..."}

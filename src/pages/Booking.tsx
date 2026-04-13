@@ -5,45 +5,15 @@ import {
   Calendar, Search, Car, Users, Clock, Star, ChevronRight, X,
   CheckCircle, Loader2, Fuel, User, FileText, MessageSquare, Menu, Bell
 } from "lucide-react";
+import { config, FLEET_CARS } from "../lib/config";
 
 const norm = (s: string) => String(s || "").replace(/\s+/g, "").toUpperCase();
-const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+const DB = config.firebase.databaseUrl;
 
 interface FirebaseCarProfile { photo?: string; dailyPrice?: number; color?: string; year?: number; category?: string; }
 interface FleetCar { registration: string; brand: string; model: string; fuelType: "Essence" | "Gasoil"; seats: number; photo?: string; dailyPrice: number; color?: string; year?: number; category?: string; }
 
-const DEFAULT_FLEET: FleetCar[] = [
-  { registration:"7468TU245", brand:"Kia", model:"Stonic", fuelType:"Essence", seats:5, dailyPrice:80 },
-  { registration:"9192TU234", brand:"Renault", model:"Clio", fuelType:"Essence", seats:5, dailyPrice:70 },
-  { registration:"5605TU236", brand:"Hyundai", model:"I20", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"5606TU236", brand:"Hyundai", model:"I20", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"8305TU238", brand:"Kia", model:"Rio", fuelType:"Essence", seats:5, dailyPrice:70 },
-  { registration:"4485TU240", brand:"VW", model:"Virtus", fuelType:"Essence", seats:5, dailyPrice:90 },
-  { registration:"4486TU240", brand:"VW", model:"Virtus", fuelType:"Essence", seats:5, dailyPrice:90 },
-  { registration:"2526TU242", brand:"MG", model:"ZS", fuelType:"Essence", seats:5, dailyPrice:95 },
-  { registration:"2532TU242", brand:"MG", model:"ZS", fuelType:"Essence", seats:5, dailyPrice:95 },
-  { registration:"1389TU244", brand:"Seat", model:"Ibiza", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"1162TU245", brand:"Renault", model:"Clio", fuelType:"Essence", seats:5, dailyPrice:70 },
-  { registration:"2504TU246", brand:"Hyundai", model:"I20", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"2508TU246", brand:"Hyundai", model:"I20", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"4912TU246", brand:"Kia", model:"Stonic", fuelType:"Essence", seats:5, dailyPrice:80 },
-  { registration:"203TU248", brand:"Seat", model:"Ibiza", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"201TU248", brand:"Seat", model:"Ibiza", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"1958TU248", brand:"Mahindra", model:"XUV", fuelType:"Gasoil", seats:7, dailyPrice:110 },
-  { registration:"1959TU248", brand:"Mahindra", model:"KUV300", fuelType:"Gasoil", seats:6, dailyPrice:100 },
-  { registration:"1945TU251", brand:"Suzuki", model:"Swift", fuelType:"Essence", seats:5, dailyPrice:70 },
-  { registration:"5941TU251", brand:"Renault", model:"Clio", fuelType:"Essence", seats:5, dailyPrice:70 },
-  { registration:"5943TU251", brand:"Renault", model:"Clio", fuelType:"Essence", seats:5, dailyPrice:70 },
-  { registration:"7138TU251", brand:"Seat", model:"Ibiza", fuelType:"Essence", seats:5, dailyPrice:75 },
-  { registration:"7057TU252", brand:"Kia", model:"Picanto", fuelType:"Essence", seats:5, dailyPrice:65 },
-  { registration:"9601TU252", brand:"Skoda", model:"Kushaq", fuelType:"Essence", seats:5, dailyPrice:95 },
-  { registration:"9603TU252", brand:"Skoda", model:"Kushaq", fuelType:"Essence", seats:5, dailyPrice:95 },
-  { registration:"3541TU253", brand:"VW", model:"Virtus", fuelType:"Essence", seats:5, dailyPrice:90 },
-  { registration:"7378TU254", brand:"VW", model:"T-Cross", fuelType:"Essence", seats:5, dailyPrice:100 },
-  { registration:"7379TU254", brand:"VW", model:"T-Cross", fuelType:"Essence", seats:5, dailyPrice:100 },
-  { registration:"7360TU255", brand:"Citroen", model:"Berlingo", fuelType:"Gasoil", seats:5, dailyPrice:90 },
-  { registration:"6155TU259", brand:"Seat", model:"Ibiza", fuelType:"Essence", seats:5, dailyPrice:75 },
-];
+const DEFAULT_FLEET: FleetCar[] = FLEET_CARS;
 
 type LangKey = "fr" | "ar" | "en";
 const T: Record<LangKey, Record<string, string>> = {

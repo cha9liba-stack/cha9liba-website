@@ -259,8 +259,8 @@ export default function Contracts() {
         </select>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      {/* Table - Desktop */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hidden md:block">
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-slate-400">
             <RefreshCw size={18} className="animate-spin" />
@@ -377,6 +377,65 @@ export default function Contracts() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="flex items-center justify-center py-16 gap-2 text-slate-400">
+            <RefreshCw size={18} className="animate-spin" />
+            <span className="text-sm">{t("loading")}</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-slate-400 py-16 text-sm">{t("no_results")}</p>
+        ) : (
+          paginated.map((c) => (
+            <div key={c.id} className="bg-white rounded-xl border border-slate-100 shadow-sm p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold text-amber-600">#{c.contractNumber}</p>
+                  <p className="text-sm text-slate-700 font-medium">{c.driverName}</p>
+                  <p className="text-xs text-slate-500">{c.brand} {c.model}</p>
+                  <p className="text-xs font-mono text-slate-400">{c.registration}</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => setPreviewContract(c)} className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg">
+                    <Eye size={16} />
+                  </button>
+                  {!isST && (
+                    <button onClick={() => openEdit(c)} className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg">
+                      <Edit2 size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-slate-50 rounded-lg p-2">
+                  <p className="text-slate-400">Départ</p>
+                  <p className="font-medium text-slate-700">{c.departureDate}</p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2">
+                  <p className="text-slate-400">Retour</p>
+                  <p className="font-medium text-slate-700">{c.returnDate}</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-2">
+                  <p className="text-slate-400">Avance</p>
+                  <p className="font-medium text-green-600">{c.depot || "0"} TND</p>
+                </div>
+                <div className={`${parseFloat(c.resteAPayer || "0") > 0 ? "bg-red-50" : "bg-green-50"} rounded-lg p-2`}>
+                  <p className="text-slate-400">Reste</p>
+                  <p className={`font-medium ${parseFloat(c.resteAPayer || "0") > 0 ? "text-red-600" : "text-green-600"}`}>{c.resteAPayer || "0"} TND</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getOwnerName(c) === "Palma Rent A Car" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                  {getOwnerName(c)}
+                </span>
+                <p className="text-slate-400">{(c as any)._createdBy || "-"}</p>
+              </div>
+            </div>
+          ))
         )}
       </div>
 

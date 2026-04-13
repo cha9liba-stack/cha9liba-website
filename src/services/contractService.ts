@@ -2,11 +2,12 @@ import { ref, onValue, off } from "firebase/database";
 import { db as firebaseDb } from "../lib/firebase";
 import { localGetAll, localPut, localDelete, localBulkPut } from "../lib/db";
 import { mapFirebaseToContract, mapContractToFirebase } from "../lib/contractMapper";
+import { config } from "../lib/config";
 import type { Contract } from "../types";
 
-const CONTRACTS_PATH = "contracts";
-const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
-const FETCH_TIMEOUT = 30000; // 30 seconds
+const CONTRACTS_PATH = config.firebase.paths.contracts;
+const DB_URL = config.firebase.databaseUrl;
+const FETCH_TIMEOUT = 30000;
 
 function isOnline(): boolean {
   return navigator.onLine;

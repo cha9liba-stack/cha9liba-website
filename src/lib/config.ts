@@ -1,0 +1,66 @@
+const DB_URL = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+
+export const config = {
+  firebase: {
+    databaseUrl: DB_URL,
+    paths: {
+      contracts: "contracts",
+      clients: "clients",
+      carProfiles: "car_profiles",
+      bookings: "bookings",
+      sousTraitants: "sous_traitants",
+      branches: "branches",
+      contractDebts: "contract_debts",
+      appSettings: "app_settings",
+      contractSettings: "app_settings/contract_settings",
+      overrides: "app_settings/overrides",
+      customStates: "app_settings/custom_states",
+      bookingSettings: "booking_settings",
+      users: "users",
+    },
+  },
+  storage: {
+    clients: "palma_clients",
+    debts: "palma_contract_debts",
+    carProfiles: "palma_car_profiles",
+    fleetCars: "palma_fleet_cars",
+    stateOverrides: "palma_state_overrides",
+    customStates: "palma_custom_states",
+    maintenance: "palma_maint",
+  },
+};
+
+export const FLEET_CARS = [
+  { registration: "7468TU245", brand: "Kia",        model: "Stonic D",    fuelType: "Essence" as const, seats: 5, dailyPrice: 80 },
+  { registration: "9192TU234", brand: "Renault",    model: "Clio Bleu",  fuelType: "Essence" as const, seats: 5, dailyPrice: 70 },
+  { registration: "5605TU236", brand: "Hyundai",    model: "I20 Noir",   fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "5606TU236", brand: "Hyundai",    model: "I20 Blanc",  fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "8305TU238", brand: "Kia",        model: "Rio",        fuelType: "Essence" as const, seats: 5, dailyPrice: 70 },
+  { registration: "4485TU240", brand: "Volkswagen", model: "Virtus Blanc", fuelType: "Essence" as const, seats: 5, dailyPrice: 90 },
+  { registration: "4486TU240", brand: "Volkswagen", model: "Virtus Blanc", fuelType: "Essence" as const, seats: 5, dailyPrice: 90 },
+  { registration: "2526TU242", brand: "MG",         model: "ZS B",       fuelType: "Essence" as const, seats: 5, dailyPrice: 95 },
+  { registration: "2532TU242", brand: "MG",         model: "ZS G",       fuelType: "Essence" as const, seats: 5, dailyPrice: 95 },
+  { registration: "1389TU244", brand: "Seat",       model: "Ibiza",      fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "1162TU245", brand: "Renault",    model: "Clio Blanc", fuelType: "Essence" as const, seats: 5, dailyPrice: 70 },
+  { registration: "2504TU246", brand: "Hyundai",    model: "I20 G",      fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "2508TU246", brand: "Hyundai",    model: "I20 B",      fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "4912TU246", brand: "Kia",       model: "Stonic B",   fuelType: "Essence" as const, seats: 5, dailyPrice: 80 },
+  { registration: "203TU248",  brand: "Seat",       model: "Ibiza N",    fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "201TU248",  brand: "Seat",       model: "Ibiza B",    fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "1958TU248", brand: "Mahindra",   model: "XUV R",      fuelType: "Gasoil" as const, seats: 7, dailyPrice: 110 },
+  { registration: "1959TU248", brand: "Mahindra",   model: "KUV300 B",   fuelType: "Gasoil" as const, seats: 6, dailyPrice: 100 },
+  { registration: "1945TU251", brand: "Suzuki",     model: "Swift R",   fuelType: "Essence" as const, seats: 5, dailyPrice: 70 },
+  { registration: "5941TU251", brand: "Renault",    model: "Clio Noir", fuelType: "Essence" as const, seats: 5, dailyPrice: 70 },
+  { registration: "5943TU251", brand: "Renault",    model: "Clio Gris C", fuelType: "Essence" as const, seats: 5, dailyPrice: 70 },
+  { registration: "7138TU251", brand: "Seat",       model: "Ibiza N",    fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+  { registration: "7057TU252", brand: "Kia",        model: "Picanto",   fuelType: "Essence" as const, seats: 5, dailyPrice: 65 },
+  { registration: "9601TU252", brand: "Skoda",      model: "Kushaq B",  fuelType: "Essence" as const, seats: 5, dailyPrice: 95 },
+  { registration: "9603TU252", brand: "Skoda",      model: "Kushaq Bleu", fuelType: "Essence" as const, seats: 5, dailyPrice: 95 },
+  { registration: "3541TU253", brand: "Volkswagen", model: "Virtus Gris", fuelType: "Essence" as const, seats: 5, dailyPrice: 90 },
+  { registration: "7378TU254", brand: "Volkswagen", model: "T-Cross",   fuelType: "Essence" as const, seats: 5, dailyPrice: 100 },
+  { registration: "7379TU254", brand: "Volkswagen", model: "T-Cross",   fuelType: "Essence" as const, seats: 5, dailyPrice: 100 },
+  { registration: "7360TU255", brand: "Citroen",    model: "Berlingo",  fuelType: "Gasoil" as const, seats: 5, dailyPrice: 90 },
+  { registration: "6155TU259", brand: "Seat",        model: "Ibiza N",   fuelType: "Essence" as const, seats: 5, dailyPrice: 75 },
+];
+
+export default config;

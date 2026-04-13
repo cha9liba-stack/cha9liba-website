@@ -4,6 +4,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
 import { useVisibility } from "../hooks/useVisibility";
 import { subscribeToContracts, isRealContract } from "../services/contractService";
+import { config } from "../lib/config";
 import type { Contract } from "../types";
 import {
   FileText, TrendingUp, Clock, AlertTriangle,
@@ -125,7 +126,7 @@ export default function Dashboard() {
     try { return JSON.parse(localStorage.getItem("palma_car_profiles") || "{}"); } catch { return {}; }
   });
   useEffect(() => {
-    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/car_profiles.json")
+    fetch(`${config.firebase.databaseUrl}/${config.firebase.paths.carProfiles}.json`)
       .then(r => r.json())
       .then(data => {
         if (data) {
@@ -141,7 +142,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!isAdmin) return;
-    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/branches.json")
+    fetch(`${config.firebase.databaseUrl}/${config.firebase.paths.branches}.json`)
       .then(r => r.json())
       .then(data => {
         if (data) setBranches(Object.entries(data).map(([id, v]: any) => ({ id, name: v.name })));

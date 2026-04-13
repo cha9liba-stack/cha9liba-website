@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useContractStore } from "../store/useContractStore";
 import { safeGetItem, safeSetItem } from "../lib/localStorageUtils";
 import { Car, ChevronRight, AlertTriangle, Search, X } from "lucide-react";
+import { config, FLEET_CARS } from "../lib/config";
 import type { CarProfile } from "../types";
+
+const DB = config.firebase.databaseUrl;
 
 // ─── localStorage for profiles ────────────────────────────────────────────────
 const PROFILES_KEY = "palma_car_profiles";
@@ -23,38 +26,11 @@ function daysBetween(a: string, b: string) {
 }
 
 // ─── Default fleet ────────────────────────────────────────────────────────────
-const DEFAULT_FLEET = [
-  { registration: "7468TU245", brand: "Kia",        model: "Stonic D" },
-  { registration: "9192TU234", brand: "Renault",     model: "Clio Bleu" },
-  { registration: "5605TU236", brand: "Hyundai",     model: "I20 Noir" },
-  { registration: "5606TU236", brand: "Hyundai",     model: "I20 Blanc" },
-  { registration: "8305TU238", brand: "Kia",         model: "Rio" },
-  { registration: "4485TU240", brand: "Volkswagen",  model: "Virtus Blanc" },
-  { registration: "4486TU240", brand: "Volkswagen",  model: "Virtus Blanc" },
-  { registration: "2526TU242", brand: "MG",          model: "ZS B" },
-  { registration: "2532TU242", brand: "MG",          model: "ZS G" },
-  { registration: "1389TU244", brand: "Seat",        model: "Ibiza" },
-  { registration: "1162TU245", brand: "Renault",     model: "Clio Blanc" },
-  { registration: "2504TU246", brand: "Hyundai",     model: "I20 G" },
-  { registration: "2508TU246", brand: "Hyundai",     model: "I20 B" },
-  { registration: "4912TU246", brand: "Kia",         model: "Stonic B" },
-  { registration: "203TU248",  brand: "Seat",        model: "Ibiza N" },
-  { registration: "201TU248",  brand: "Seat",        model: "Ibiza B" },
-  { registration: "1958TU248", brand: "Mahindra",    model: "XUV R" },
-  { registration: "1959TU248", brand: "Mahindra",    model: "KUV300 B" },
-  { registration: "1945TU251", brand: "Suzuki",      model: "Swift R" },
-  { registration: "5941TU251", brand: "Renault",     model: "Clio Noir" },
-  { registration: "5943TU251", brand: "Renault",     model: "Clio Gris C" },
-  { registration: "7138TU251", brand: "Seat",        model: "Ibiza N" },
-  { registration: "7057TU252", brand: "Kia",         model: "Picanto" },
-  { registration: "9601TU252", brand: "Skoda",       model: "Kushaq B" },
-  { registration: "9603TU252", brand: "Skoda",       model: "Kushaq Bleu" },
-  { registration: "3541TU253", brand: "Volkswagen",  model: "Virtus Gris" },
-  { registration: "7378TU254", brand: "Volkswagen",  model: "T-Cross" },
-  { registration: "7379TU254", brand: "Volkswagen",  model: "T-Cross" },
-  { registration: "7360TU255", brand: "Citroen",     model: "Berlingo" },
-  { registration: "6155TU259", brand: "Seat",        model: "Ibiza N" },
-];
+const DEFAULT_FLEET = FLEET_CARS.map(car => ({
+  registration: car.registration,
+  brand: car.brand,
+  model: car.model,
+}));
 
 // ─── Main page: list of all cars ─────────────────────────────────────────────
 export default function Vehicles() {
@@ -65,7 +41,7 @@ export default function Vehicles() {
 
   // Load profiles from Firebase to get latest documents
   useEffect(() => {
-    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/car_profiles.json")
+    fetch(`${DB}/${config.firebase.paths.carProfiles}.json`)
       .then(r => r.json())
       .then(data => {
         if (data) {
@@ -83,14 +59,13 @@ export default function Vehicles() {
 
   // Sync overrides and custom states from Firebase
   useEffect(() => {
-    const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
-    fetch(`${DB}/app_settings/overrides.json`).then(r => r.json()).then(data => {
+    fetch(`${DB}/${config.firebase.paths.overrides}.json`).then(r => r.json()).then(data => {
       if (data && typeof data === "object") {
         safeSetItem("palma_state_overrides", data);
         setOverrideHistory(data);
       }
     }).catch(() => {});
-    fetch(`${DB}/app_settings/custom_states.json`).then(r => r.json()).then(data => {
+    fetch(`${DB}/${config.firebase.paths.customStates}.json`).then(r => r.json()).then(data => {
       if (Array.isArray(data) && data.length > 0) {
         safeSetItem("palma_custom_states", data);
         setCustomStates(data);

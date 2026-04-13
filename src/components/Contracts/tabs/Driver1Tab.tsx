@@ -47,7 +47,10 @@ export default function Driver1Tab({ register, errors, prefix, setValue, watch }
         setSearching(false);
       }
     }, 600);
-  }, [cinValue]);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [cinValue, setValue, prefix]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
