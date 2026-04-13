@@ -15,6 +15,7 @@ import SMSSettingsModal from "../components/SMS/SMSSettingsModal";
 import { useSousTraitantCars } from "../hooks/useSousTraitantCars";
 import DeliveryReceipt from "../components/DeliveryReceipt";
 import PaymentModal from "../components/Contracts/PaymentModal";
+import { getPaymentSummary } from "../services/paymentService";
 import type { Contract } from "../types";
 
 type SortKey = "contractNumber" | "driverName" | "brand" | "departureDate" | "returnDate" | "totalFacture" | "_createdAt" | "depot" | "resteAPayer";
@@ -111,9 +112,25 @@ export default function Contracts() {
     return "Palma Rent A Car";
   }
 
+  // Calculate paid amounts from payments for each contract
+  const contractsWithPayments = useMemo(() => {
+    return contracts.map(c => {
+      const total = parseFloat(c.totalFacture || c.somme || "0");
+      const summary = getPaymentSummary(c.id!, total);
+      // Use depot as fallback if no payments exist
+      const paidAmount = summary.payments.length > 0 ? summary.paid : parseFloat(c.depot || "0");
+      const calculatedReste = Math.max(0, total - paidAmount);
+      return {
+        ...c,
+        paidAmount,
+        calculatedReste
+      };
+    });
+  }, [contracts]);
+
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    const allContracts = q ? [...contracts, ...archiveContracts] : [...contracts];
+    const allContracts = q ? [...contractsWithPayments, ...archiveContracts] : [...contractsWithPayments];
     let result = q
       ? allContracts.filter(c =>
           c.contractNumber.includes(q) ||
@@ -122,7 +139,7 @@ export default function Contracts() {
           (c.model || "").toLowerCase().includes(q) ||
           (c.registration || "").toLowerCase().includes(q)
         )
-      : [...contracts];
+      : [...contractsWithPayments];
 
     // Owner filter
     if (ownerFilter === "palma") {
@@ -147,13 +164,17 @@ export default function Contracts() {
     });
 
     return result;
-  }, [contracts, archiveContracts, searchQuery, sortKey, sortDir, ownerFilter, stRegs, stList]);
+  }, [contractsWithPayments, archiveContracts, searchQuery, sortKey, sortDir, ownerFilter, stRegs, stList]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function openNew() { setEditingContract(null); setModalOpen(true); }
-  function openEdit(c: Contract) { setEditingContract(c); setModalOpen(true); }
+  function openEdit(c: Contract) {
+    console.log("Opening contract:", c.contractNumber, c.id);
+    setEditingContract(c);
+    setModalOpen(true);
+  }
 
   async function handleDelete(id: string) {
     await deleteContract(id);
@@ -302,9 +323,9 @@ export default function Contracts() {
                         ? new Date((c as any)._createdAt < 1e12 ? (c as any)._createdAt * 1000 : (c as any)._createdAt).toLocaleDateString("fr-FR", { day:"2-digit", month:"2-digit", year:"numeric" })
                         : "-"}
                     </td>
-                    <td className="px-5 py-3 text-slate-600">{c.depot || "0"} TND</td>
-                    <td className={`px-5 py-3 font-medium ${parseFloat(c.resteAPayer || "0") > 0 ? "text-red-500" : "text-green-500"}`}>
-                      {c.resteAPayer || "0"} TND
+                    <td className="px-5 py-3 text-slate-600">{(c as any).paidAmount || c.depot || "0"} TND</td>
+                    <td className={`px-5 py-3 font-medium ${parseFloat((c as any).calculatedReste || c.resteAPayer || "0") > 0 ? "text-red-500" : "text-green-500"}`}>
+                      {(c as any).calculatedReste || c.resteAPayer || "0"} TND
                     </td>
                     <td className="px-5 py-3 font-medium text-green-600">{c.totalFacture || "-"} TND</td>
                     <td className="px-5 py-3 text-xs">
@@ -430,11 +451,11 @@ export default function Contracts() {
                 </div>
                 <div className="bg-green-50 rounded-lg p-2">
                   <p className="text-slate-400">Avance</p>
-                  <p className="font-medium text-green-600">{c.depot || "0"} TND</p>
+                  <p className="font-medium text-green-600">{(c as any).paidAmount || c.depot || "0"} TND</p>
                 </div>
-                <div className={`${parseFloat(c.resteAPayer || "0") > 0 ? "bg-red-50" : "bg-green-50"} rounded-lg p-2`}>
+                <div className={`${parseFloat((c as any).calculatedReste || c.resteAPayer || "0") > 0 ? "bg-red-50" : "bg-green-50"} rounded-lg p-2`}>
                   <p className="text-slate-400">Reste</p>
-                  <p className={`font-medium ${parseFloat(c.resteAPayer || "0") > 0 ? "text-red-600" : "text-green-600"}`}>{c.resteAPayer || "0"} TND</p>
+                  <p className={`font-medium ${parseFloat((c as any).calculatedReste || c.resteAPayer || "0") > 0 ? "text-red-600" : "text-green-600"}`}>{(c as any).calculatedReste || c.resteAPayer || "0"} TND</p>
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs">

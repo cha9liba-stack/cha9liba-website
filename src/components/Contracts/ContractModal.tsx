@@ -283,6 +283,9 @@ export default function ContractModal({ contract, onClose }: Props) {
       const somme = parseFloat(data.somme  || "0");
       const reste = Math.max(0, somme - paid);
 
+      // Set resteAPayer in data
+      data.resteAPayer = reste.toFixed(3);
+
       function syncDebt(contractId: string) {
         try {
           const debts = JSON.parse(localStorage.getItem("palma_contract_debts") || "{}");
