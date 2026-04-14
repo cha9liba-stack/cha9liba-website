@@ -34,6 +34,13 @@ async function restPost(path: string, data: any): Promise<string> {
   const json = await res.json();
   return json.name;
 }
+async function restPatch(path: string, data: any) {
+  await fetchWithTimeout(`${DB_URL}/${path}.json`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
 async function restDelete(path: string) {
   await fetchWithTimeout(`${DB_URL}/${path}.json`, { method: "DELETE" });
 }

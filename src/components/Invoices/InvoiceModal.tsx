@@ -158,7 +158,7 @@ export default function InvoiceModal({ invoice, onSave, onClose }: Props) {
     setSaving(true);
 try {
       setSaving(true);
-      const invoice: Invoice = {
+      const invoiceData: Invoice = {
         id: invoice?.id,
         type,
         number,
@@ -171,13 +171,13 @@ try {
         _createdAt: invoice?._createdAt || Date.now(),
         _createdBy: invoice?._createdBy || user?.username,
       };
-      
-      if (invoice.id) {
-        await updateInvoice(invoice.id, invoice);
-        onSave(invoice);
+
+      if (invoiceData.id) {
+        await updateInvoice(invoiceData.id, invoiceData);
+        onSave(invoiceData);
       } else {
-        const id = await insertInvoice(invoice);
-        onSave({ ...invoice, id });
+        const id = await insertInvoice(invoiceData);
+        onSave({ ...invoiceData, id });
       }
     } finally {
       setSaving(false);

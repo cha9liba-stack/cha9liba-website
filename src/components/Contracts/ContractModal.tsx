@@ -13,6 +13,7 @@ import {
 import { logAction } from "../../services/auditService";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useContractStore } from "../../store/useContractStore";
+import { canEditContract } from "../../lib/permissions";
 import type { Contract } from "../../types";
 import VehicleTab from "./tabs/VehicleTab";
 import Driver1Tab from "./tabs/Driver1Tab";
@@ -474,6 +475,11 @@ export default function ContractModal({ contract, onClose }: Props) {
   };
 
   function handleSaveClick() {
+    // Check edit permission for existing contracts
+    if (contract && !canEditContract(user)) {
+      setError(isRTL ? "⚠️ ليس لديك صلاحية تعديل العقود" : "⚠️ Vous n'avez pas la permission de modifier les contrats");
+      return;
+    }
     handleSubmit(onSubmit as any, (errs) => jumpToFirstError(errs))();
   }
 

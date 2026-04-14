@@ -22,6 +22,7 @@ export interface Invoice {
   date: string;             // YYYY-MM-DD
   type: InvoiceType;
   client: InvoiceClient;
+  companyId?: string | null; // ID of the selected company from palma_companies
   lines: InvoiceLine[];
   montantHT: number;
   tva: number;

@@ -309,6 +309,11 @@ export default function Settings() {
         </div>
       )}
 
+      {/* Role permissions - admin only */}
+      {user?.role === "admin" && (
+        <RolePermissionsSettings DB_URL={DB_URL} isRTL={isRTL} />
+      )}
+
       {/* GPS Settings - admin only */}
       {user?.role === "admin" && (
         <GPSSettings DB_URL={DB_URL} />
@@ -558,6 +563,92 @@ function UserRow({ u, currentUserId, showPass, onTogglePass, onDelete, onResetPa
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function RolePermissionsSettings({ DB_URL, isRTL }: { DB_URL: string; isRTL: boolean }) {
+  const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({});
+  const [saved, setSaved] = useState(false);
+
+  // Available permissions
+  const PERMISSIONS = [
+    { key: "view_contracts", label: "View Contracts", labelAr: "عرض العقود" },
+    { key: "edit_contracts", label: "Edit Contracts", labelAr: "تعديل العقود" },
+    { key: "delete_contracts", label: "Delete Contracts", labelAr: "حذف العقود" },
+    { key: "view_invoices", label: "View Invoices", labelAr: "عرض الفواتير" },
+    { key: "edit_invoices", label: "Edit Invoices", labelAr: "تعديل الفواتير" },
+    { key: "delete_invoices", label: "Delete Invoices", labelAr: "حذف الفواتير" },
+    { key: "view_statistics", label: "View Statistics", labelAr: "عرض الإحصائيات" },
+    { key: "manage_users", label: "Manage Users", labelAr: "إدارة المستخدمين" },
+    { key: "manage_settings", label: "Manage Settings", labelAr: "إدارة الإعدادات" },
+    { key: "print_reports", label: "Print Reports", labelAr: "طباعة التقارير" },
+  ];
+
+  const ROLES = ["admin", "user", "sous-traitant"] as const;
+
+  useEffect(() => {
+    fetch(`${DB_URL}/role_permissions.json`)
+      .then(r => r.json())
+      .then(data => { if (data) setRolePermissions(data); })
+      .catch(() => {});
+  }, []);
+
+  async function togglePermission(role: string, permission: string) {
+    const currentPerms = rolePermissions[role] || [];
+    const updatedPerms = currentPerms.includes(permission)
+      ? currentPerms.filter(p => p !== permission)
+      : [...currentPerms, permission];
+    
+    const updated = { ...rolePermissions, [role]: updatedPerms };
+    setRolePermissions(updated);
+    
+    await fetch(`${DB_URL}/role_permissions.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+    
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+      <h2 className="font-semibold text-slate-700 flex items-center gap-2">
+        <Shield size={16} className="text-blue-500" />
+        {isRTL ? "صلاحيات الأدوار" : "Permissions des rôles"}
+      </h2>
+      <p className="text-xs text-slate-400">
+        {isRTL ? "تحديد الصلاحيات لكل دور مستخدم" : "Définir les permissions pour chaque rôle d'utilisateur"}
+      </p>
+
+      <div className="space-y-4">
+        {ROLES.map(role => (
+          <div key={role} className="border border-slate-200 rounded-xl p-4">
+            <h3 className="font-semibold text-slate-700 mb-3 capitalize">
+              {role === "admin" ? "Admin" : role === "sous-traitant" ? "Sous-traitant" : "Employé"}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+              {PERMISSIONS.map(perm => (
+                <button
+                  key={perm.key}
+                  onClick={() => togglePermission(role, perm.key)}
+                  className={`p-2 rounded-lg text-xs text-start transition-colors ${
+                    (rolePermissions[role] || []).includes(perm.key)
+                      ? "bg-blue-50 border-blue-200 text-blue-700"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  {isRTL ? perm.labelAr : perm.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {saved && <p className="text-xs text-green-600 font-medium">✓ {isRTL ? "تم الحفظ" : "Enregistré"}</p>}
     </div>
   );
 }

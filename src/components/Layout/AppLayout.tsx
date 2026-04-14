@@ -11,6 +11,7 @@ import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import BranchSelectModal from "../BranchSelectModal";
 import DailySummaryModal from "../DailySummaryModal";
 import { config } from "../../lib/config";
+import { fetchRolePermissions } from "../../lib/permissions";
 
 export default function AppLayout() {
   const { i18n } = useTranslation();
@@ -37,6 +38,11 @@ export default function AppLayout() {
       .then(r => r.json())
       .then(data => { if (data) setContractSettings(data); })
       .catch(() => {});
+  }, []);
+
+  // Load role permissions from Firebase
+  useEffect(() => {
+    fetchRolePermissions();
   }, []);
   const user = useAuthStore(s => s.user);
   const selectedBranch = useAuthStore(s => s.selectedBranch);

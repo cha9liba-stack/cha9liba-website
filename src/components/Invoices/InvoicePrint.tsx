@@ -141,10 +141,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               <tbody><tr>
                 <td style={{ verticalAlign: "middle", width: "35%" }}>
                   <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameFr}</div>
-                  <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrFr}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.tel}</div>
-                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px", whiteSpace: "nowrap" }}>{CO.addrFr}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px", whiteSpace: "nowrap" }}>{CO.email}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px", whiteSpace: "nowrap" }}>{CO.tel}</div>
+                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold", whiteSpace: "nowrap" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
                   <img src="/invoice_logo.png" alt="Palma" style={{ height: "180px", objectFit: "contain", display: "block", margin: "0 auto" }}
@@ -154,10 +154,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "middle", width: "35%" }}>
                   <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameAr}</div>
-                  <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrAr}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.telAr}</div>
-                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px", whiteSpace: "nowrap" }}>{CO.addrAr}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px", whiteSpace: "nowrap" }}>{CO.email}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px", whiteSpace: "nowrap" }}>{CO.telAr}</div>
+                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold", whiteSpace: "nowrap" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
