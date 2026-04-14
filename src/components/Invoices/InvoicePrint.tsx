@@ -134,11 +134,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
               <tbody><tr>
                 <td style={{ verticalAlign: "top", width: "35%" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "10px" }}>{CO.nameFr}</div>
-                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "8px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.tel}</div>
-                  <div style={{ fontSize: "16px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameFr}</div>
+                  <div style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.tel}</div>
+                  <div style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
                   <img src="/invoice_logo.png" alt="Palma" style={{ height: "180px", objectFit: "contain", display: "block", margin: "0 auto" }}
@@ -147,11 +147,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontSize: "17px", marginTop: "4px" }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "top", width: "35%" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "10px" }}>{CO.nameAr}</div>
-                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "8px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.telAr}</div>
-                  <div style={{ fontSize: "16px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameAr}</div>
+                  <div style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.telAr}</div>
+                  <div style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
