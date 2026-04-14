@@ -147,10 +147,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold", whiteSpace: "nowrap" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "180px", objectFit: "contain", display: "block", margin: "0 auto" }}
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "180px", objectFit: "contain", display: "block", margin: "0 auto", position: "absolute", opacity: 0.3, zIndex: 0 }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
-                  <div style={{ fontWeight: "bold", fontSize: "26px", marginTop: "10px" }}>N° {invNum}</div>
-                  <div style={{ fontSize: "17px", marginTop: "4px" }}>Kélibia le: {invDate}</div>
+                  <div style={{ fontWeight: "bold", fontSize: "26px", position: "relative", zIndex: 1 }}>N° {invNum}</div>
+                  <div style={{ fontSize: "17px", position: "relative", zIndex: 1 }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "middle", width: "35%" }}>
                   <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameAr}</div>
