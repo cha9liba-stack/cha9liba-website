@@ -96,7 +96,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         .header-name{font-size:32px!important}
         .header-addr{font-size:22px!important}
         .header-info{font-size:20px!important}
-        @page{margin:3mm;size:A4 landscape}
+        @page{margin:5mm;size:A4}
+        html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
       </style>
     </head><body><div class="inv-content">${content}</div></body></html>`);
     win.document.close();
