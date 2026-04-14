@@ -131,27 +131,27 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         <div className="flex-1 overflow-auto p-6 bg-slate-100">
           <div ref={ref} style={{ background: "#fff", padding: "15px", width: "100%", fontFamily: "Arial,sans-serif", fontSize: "13px", minHeight: "100vh", position: "relative" }}>
 
-            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
               <tbody><tr>
-                <td style={{ verticalAlign: "top" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "20px" }}>{CO.nameFr}</div>
-                  <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "14px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "14px" }}>{CO.tel}</div>
-                  <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                <td style={{ verticalAlign: "top", width: "35%" }}>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "6px" }}>{CO.nameFr}</div>
+                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "4px" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.tel}</div>
+                  <div style={{ fontSize: "16px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
-                <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "150px", objectFit: "contain", display: "block", margin: "0 auto" }}
+                <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
+                  <img src="/invoice_logo.png" alt="Palma" style={{ height: "180px", objectFit: "contain", display: "block", margin: "0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
-                  <div style={{ fontWeight: "bold", fontSize: "22px", marginTop: "8px" }}>N° {invNum}</div>
-                  <div style={{ fontSize: "16px" }}>Kélibia le: {invDate}</div>
+                  <div style={{ fontWeight: "bold", fontSize: "26px", marginTop: "10px" }}>N° {invNum}</div>
+                  <div style={{ fontSize: "17px", marginTop: "4px" }}>Kélibia le: {invDate}</div>
                 </td>
-                <td style={{ textAlign: "right", verticalAlign: "top" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "20px" }}>{CO.nameAr}</div>
-                  <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "14px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "14px" }}>{CO.telAr}</div>
-                  <div style={{ fontSize: "14px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                <td style={{ textAlign: "right", verticalAlign: "top", width: "35%" }}>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "6px" }}>{CO.nameAr}</div>
+                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "4px" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.telAr}</div>
+                  <div style={{ fontSize: "16px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
