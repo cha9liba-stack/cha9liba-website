@@ -133,8 +133,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px" }}>
               <tbody><tr>
-                <td style={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameFr}</div>
+                <td style={{ verticalAlign: "top" }}>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "20px" }}>{CO.nameFr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrFr}</div>
                   <div style={{ fontSize: "14px" }}>{CO.email}</div>
                   <div style={{ fontSize: "14px" }}>{CO.tel}</div>
@@ -146,8 +146,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontWeight: "bold", fontSize: "22px", marginTop: "8px" }}>N° {invNum}</div>
                   <div style={{ fontSize: "16px" }}>Kélibia le: {invDate}</div>
                 </td>
-                <td style={{ textAlign: "right", verticalAlign: "top", whiteSpace: "nowrap" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px" }}>{CO.nameAr}</div>
+                <td style={{ textAlign: "right", verticalAlign: "top" }}>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "20px" }}>{CO.nameAr}</div>
                   <div style={{ fontSize: "15px", fontWeight: "bold" }}>{CO.addrAr}</div>
                   <div style={{ fontSize: "14px" }}>{CO.email}</div>
                   <div style={{ fontSize: "14px" }}>{CO.telAr}</div>
@@ -213,27 +213,12 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Aucune ligne</td>
                   </tr>
                 )}
-                {lines.length < 15 && Array.from({ length: 15 - lines.length }).map((_, i) => (
-                  <tr key={`empty-${i}`}>
-                    {isDevis ? (
-                      <>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                      </>
-                    ) : (
-                      <>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                        <td style={{ border: "1px solid #bbb", padding: "10px 12px", background: "#fafafa" }}></td>
-                      </>
-                    )}
+                {/* Empty space without borders */}
+                {lines.length < 15 && (
+                  <tr>
+                    <td colSpan={5} style={{ padding: `${(15 - lines.length) * 18}px 0`, border: "none", background: "white" }}></td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
             
