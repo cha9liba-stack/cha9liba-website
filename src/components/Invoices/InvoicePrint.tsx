@@ -93,9 +93,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         .total-row td{background:#1a56db!important;color:#fff!important;font-weight:bold}
         .footer-bar{border-top:2px solid #2d7a2d;text-align:center;padding:6px 0;color:#2d7a2d;font-weight:bold;font-size:11px}
         .inv-content{padding:10px;max-width:100%}
-        .header-name{font-size:28px!important}
+        .header-name{font-size:24px!important}
         .header-addr{font-size:19px!important}
         .header-info{font-size:17px!important}
+        .header-name,.header-addr,.header-info{margin-bottom:5px!important}
         @page{margin:5mm;size:A4}
         html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
       </style>
@@ -138,7 +139,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
               <tbody><tr>
-                <td style={{ verticalAlign: "top", width: "35%" }}>
+                <td style={{ verticalAlign: "middle", width: "35%" }}>
                   <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameFr}</div>
                   <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrFr}</div>
                   <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
@@ -151,7 +152,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontWeight: "bold", fontSize: "26px", marginTop: "10px" }}>N° {invNum}</div>
                   <div style={{ fontSize: "17px", marginTop: "4px" }}>Kélibia le: {invDate}</div>
                 </td>
-                <td style={{ textAlign: "right", verticalAlign: "top", width: "35%" }}>
+                <td style={{ textAlign: "right", verticalAlign: "middle", width: "35%" }}>
                   <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameAr}</div>
                   <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrAr}</div>
                   <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
