@@ -93,9 +93,9 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         .total-row td{background:#1a56db!important;color:#fff!important;font-weight:bold}
         .footer-bar{border-top:2px solid #2d7a2d;text-align:center;padding:6px 0;color:#2d7a2d;font-weight:bold;font-size:11px}
         .inv-content{padding:10px;max-width:100%}
-        .header-name{font-size:32px!important}
-        .header-addr{font-size:22px!important}
-        .header-info{font-size:20px!important}
+        .header-name{font-size:28px!important}
+        .header-addr{font-size:19px!important}
+        .header-info{font-size:17px!important}
         @page{margin:5mm;size:A4}
         html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
       </style>
