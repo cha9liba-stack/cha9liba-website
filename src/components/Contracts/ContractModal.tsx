@@ -22,31 +22,70 @@ import OtherTab from "./tabs/OtherTab";
 import ContractPreview from "./ContractPreview";
 import ContractLookupDialog from "./ContractLookupDialog";
 
+// Palma Fleet cars (from RegistrationInput.tsx)
+const PALMA_FLEET: Record<string, { brand: string; model: string; category: string }> = {
+  "7468TU245": { brand: "Kia",        model: "Stonic D",      category: "SUV" },
+  "9192TU234": { brand: "Renault",    model: "Clio Bleu",     category: "Citadine" },
+  "5605TU236": { brand: "Hyundai",    model: "I20 Noir",      category: "Citadine" },
+  "5606TU236": { brand: "Hyundai",    model: "I20 Blanc",     category: "Citadine" },
+  "8305TU238": { brand: "Kia",        model: "Rio",           category: "Citadine" },
+  "4485TU240": { brand: "Volkswagen", model: "Virtus Blanc",  category: "Berline" },
+  "4486TU240": { brand: "Volkswagen", model: "Virtus Blanc",  category: "Berline" },
+  "2526TU242": { brand: "MG",         model: "ZS B",          category: "SUV" },
+  "2532TU242": { brand: "MG",         model: "ZS G",          category: "SUV" },
+  "1389TU244": { brand: "Seat",       model: "Ibiza",         category: "Citadine" },
+  "1162TU245": { brand: "Renault",    model: "Clio Blanc",    category: "Citadine" },
+  "2504TU246": { brand: "Hyundai",    model: "I20 G",         category: "Citadine" },
+  "2508TU246": { brand: "Hyundai",    model: "I20 B",         category: "Citadine" },
+  "4912TU246": { brand: "Kia",        model: "Stonic B",      category: "SUV" },
+  "203TU248":  { brand: "Seat",       model: "Ibiza N",       category: "Citadine" },
+  "201TU248":  { brand: "Seat",       model: "Ibiza B",       category: "Citadine" },
+  "1958TU248": { brand: "Mahindra",   model: "XUV R",         category: "SUV" },
+  "1959TU248": { brand: "Mahindra",   model: "KUV300 B",      category: "SUV" },
+  "1945TU251": { brand: "Suzuki",     model: "Swift R",       category: "Citadine" },
+  "5941TU251": { brand: "Renault",    model: "Clio Noir",     category: "Citadine" },
+  "5943TU251": { brand: "Renault",    model: "Clio Gris C",   category: "Citadine" },
+  "7138TU251": { brand: "Seat",       model: "Ibiza N",       category: "Citadine" },
+  "7057TU252": { brand: "Kia",        model: "Picanto",       category: "Citadine" },
+  "9601TU252": { brand: "Skoda",      model: "Kushaq B",      category: "SUV" },
+  "9603TU252": { brand: "Skoda",      model: "Kushaq Bleu",   category: "SUV" },
+  "3541TU253": { brand: "Volkswagen", model: "Virtus Gris",   category: "Berline" },
+  "7378TU254": { brand: "Volkswagen", model: "T-Cross",       category: "SUV" },
+  "7379TU254": { brand: "Volkswagen", model: "T-Cross",       category: "SUV" },
+  "7360TU255": { brand: "Citroen",    model: "Berlingo",      category: "Utilitaire" },
+  "6155TU259": { brand: "Seat",       model: "Ibiza N",       category: "Citadine" },
+};
+
+function isPalmaCar(registration: string): boolean {
+  const normReg = registration.replace(/\s+/g, "").toUpperCase();
+  return PALMA_FLEET.hasOwnProperty(normReg);
+}
+
 const schema = z.object({
-  contractNumber: z.string().min(1),
-  brand: z.string().min(1),
-  model: z.string().min(1),
+  contractNumber: z.string().optional().default(""),
+  brand: z.string().optional().default(""),
+  model: z.string().optional().default(""),
   category: z.string().optional().default(""),
-  registration: z.string().min(1),
-  departureDate: z.string().min(1),
-  departureTime: z.string().min(1),
-  departurePlace: z.string().min(1),
-  returnDate: z.string().min(1),
-  returnTime: z.string().min(1),
+  registration: z.string().optional().default(""),
+  departureDate: z.string().optional().default(""),
+  departureTime: z.string().optional().default(""),
+  departurePlace: z.string().optional().default(""),
+  returnDate: z.string().optional().default(""),
+  returnTime: z.string().optional().default(""),
   departureKm: z.string().optional().default("0"),
   returnKm: z.string().optional().default(""),
   fuelType: z.enum(["Essence", "Gasoil", ""]).default(""),
   remiseRetour: z.string().optional().default(""),
-  driverName: z.string().min(1),
-  driverDob: z.string().min(1),
+  driverName: z.string().optional().default(""),
+  driverDob: z.string().optional().default(""),
   driverBirthPlace: z.string().optional().default(""),
-  driverAddress: z.string().min(1),
-  driverPhone: z.string().min(1),
-  driverCin: z.string().min(1),
-  driverCinDate: z.string().min(1),
-  driverCinPlace: z.string().min(1),
-  driverLicense: z.string().min(1),
-  driverLicenseDate: z.string().min(1),
+  driverAddress: z.string().optional().default(""),
+  driverPhone: z.string().optional().default(""),
+  driverCin: z.string().optional().default(""),
+  driverCinDate: z.string().optional().default(""),
+  driverCinPlace: z.string().optional().default(""),
+  driverLicense: z.string().optional().default(""),
+  driverLicenseDate: z.string().optional().default(""),
   driverLicensePlace: z.string().optional().default(""),
   hasDriver2: z.boolean().default(false),
   driver2Name: z.string().optional().default(""),
@@ -66,7 +105,7 @@ const schema = z.object({
   tva: z.string().optional().default("0.000"),
   totalFacture: z.string().optional().default("0.000").refine(v => parseFloat(v || "0") >= 0, { message: "Le montant ne peut pas être négatif" }),
   plusMoinsDivers: z.string().optional().default("0.000"),
-  depot: z.string().min(1),
+  depot: z.string().optional().default(""),
   depotGarantie: z.string().optional().default("0.000"),
   prep: z.string().optional().default("0.000"),
   total: z.string().optional().default("0.000"),
@@ -94,22 +133,54 @@ export default function ContractModal({ contract, onClose }: Props) {
   const user = useAuthStore((s) => s.user);
   const selectedBranch = useAuthStore((s) => s.selectedBranch);
   const { upsertContract } = useContractStore();
+  const contracts = useContractStore((s) => s.contracts);
 
-  // Calculate next contract number (only contracts starting with 0)
+  // Calculate next contract number (contracts starting with 0 and max 6 digits)
   const nextContractNumber = useMemo(() => {
     if (contract) return contract.contractNumber;
     const contracts = useContractStore.getState().contracts;
-    const numbers = contracts
-      .filter(c => c.contractNumber && c.contractNumber.startsWith("0") && /^\d+$/.test(c.contractNumber))
-      .map(c => parseInt(c.contractNumber, 10));
+    const filteredContracts = contracts.filter(c =>
+      c.contractNumber &&
+      c.contractNumber.startsWith("0") &&
+      /^\d+$/.test(c.contractNumber) &&
+      c.contractNumber.length <= 6
+    );
+    const numbers = filteredContracts.map(c => parseInt(c.contractNumber, 10));
     const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 300000;
-    return String(maxNumber + 1).padStart(7, "0");
+    return String(maxNumber + 1).padStart(6, "0");
   }, [contract]);
 
   const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Handle Enter key to move to next field
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+        e.preventDefault();
+        // Check if the input is inside a modal by looking for the closest fixed div
+        const modal = (e.target as HTMLElement).closest('.fixed.inset-0');
+        if (!modal) return;
+
+        // Only consider visible inputs (in current tab)
+        const allInputs = Array.from(modal.querySelectorAll("input:not([readonly]):not([disabled])")) as HTMLInputElement[];
+        const visibleInputs = allInputs.filter(input => {
+          const rect = input.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0;
+        });
+        const currentIndex = visibleInputs.indexOf(e.target);
+        if (currentIndex !== -1 && currentIndex < visibleInputs.length - 1) {
+          visibleInputs[currentIndex + 1].focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const [bannedWarning, setBannedWarning] = useState<{ name: string; reason: string } | null>(null);
+  const [debtWarning, setDebtWarning] = useState<{ amount: string; contractNumber: string } | null>(null);
   const [previewData, setPreviewData] = useState<Contract | null>(null);
   const [lookupOpen, setLookupOpen] = useState(false);
   const [clientDebt, setClientDebt] = useState<{ total: number; paid: number; reste: number } | null>(null);
@@ -132,9 +203,147 @@ export default function ContractModal({ contract, onClose }: Props) {
               date: today,
               departureDate: today,
               departureTime: time,
+              fuelType: "Essence",
+              driverCinPlace: "Tunis",
             };
           })(),
     });
+
+  // Save client to Firebase when creating a new contract
+  async function saveClientToFirebase(data: FormData) {
+    try {
+      const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+      const cin = data.driverCin?.trim().toUpperCase();
+      if (!cin) return;
+
+      // Fetch existing clients from Firebase
+      const response = await fetch(`${DB}/clients.json`);
+      const clients = await response.json() || {};
+      const now = Date.now();
+
+      // Find existing client by CIN
+      let existingId = null;
+      for (const [id, client] of Object.entries(clients) as any[]) {
+        if (client.cin?.trim().toUpperCase() === cin) {
+          existingId = id;
+          break;
+        }
+      }
+
+      if (existingId) {
+        // Update existing client
+        clients[existingId] = {
+          ...clients[existingId],
+          name: data.driverName,
+          phone: data.driverPhone,
+          address: data.driverAddress,
+          dob: data.driverDob,
+          cinDate: data.driverCinDate,
+          cinPlace: data.driverCinPlace,
+          license: data.driverLicense,
+          licenseDate: data.driverLicenseDate,
+          licensePlace: data.driverLicensePlace,
+          _updatedAt: now,
+        };
+      } else {
+        // Create new client
+        const newId = `${now}-${Math.random().toString(36).substr(2, 9)}`;
+        clients[newId] = {
+          id: newId,
+          name: data.driverName,
+          cin: data.driverCin,
+          phone: data.driverPhone,
+          address: data.driverAddress,
+          dob: data.driverDob,
+          cinDate: data.driverCinDate,
+          cinPlace: data.driverCinPlace,
+          license: data.driverLicense,
+          licenseDate: data.driverLicenseDate,
+          licensePlace: data.driverLicensePlace,
+          isCompany: false,
+          _createdAt: now,
+          _updatedAt: now,
+        };
+      }
+
+      // Save to Firebase
+      await fetch(`${DB}/clients.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clients),
+      }).catch(() => {});
+
+      // Also save to localStorage for offline use
+      const clientsArray = Object.values(clients);
+      localStorage.setItem("palma_clients", JSON.stringify(clientsArray));
+    } catch (error) {
+      console.error("Error saving client to Firebase:", error);
+    }
+  }
+
+  // Save car to Firebase when creating a new contract
+  async function saveCarToFirebase(data: FormData) {
+    try {
+      const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+      const reg = data.registration?.trim().toUpperCase();
+      if (!reg) return;
+
+      // Check if car is in Palma fleet
+      if (isPalmaCar(data.registration)) {
+        return; // Don't save Palma cars
+      }
+
+      // Fetch existing custom cars from Firebase
+      const response = await fetch(`${DB}/custom_cars.json`);
+      const customCars = await response.json() || {};
+      const now = Date.now();
+
+      // Find existing car by registration
+      let existingId = null;
+      for (const [id, car] of Object.entries(customCars) as any[]) {
+        if (car.registration?.trim().toUpperCase() === reg) {
+          existingId = id;
+          break;
+        }
+      }
+
+      if (existingId) {
+        // Update existing car
+        customCars[existingId] = {
+          ...customCars[existingId],
+          brand: data.brand,
+          model: data.model,
+          category: data.category || "Citadine",
+          _updatedAt: now,
+        };
+      } else {
+        // Create new car
+        const newId = `${now}-${Math.random().toString(36).substr(2, 9)}`;
+        customCars[newId] = {
+          id: newId,
+          registration: data.registration,
+          brand: data.brand,
+          model: data.model,
+          category: data.category || "Citadine",
+          _createdAt: now,
+          _updatedAt: now,
+        };
+      }
+
+      // Save to Firebase
+      await fetch(`${DB}/custom_cars.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customCars),
+      }).catch(() => {});
+
+      // Also save to localStorage for offline use
+      const carsArray = Object.values(customCars);
+      localStorage.setItem("palma_custom_cars", JSON.stringify(carsArray));
+    } catch (error) {
+      console.error("Error saving car to Firebase:", error);
+    }
+  }
 
   // Sync contract date with departureDate for new contracts
   const watchedDepartureDate = watch("departureDate");
@@ -150,38 +359,65 @@ export default function ContractModal({ contract, onClose }: Props) {
   useEffect(() => {
     if (!watchedCin && !watchedName) return;
     // Debounce: wait 600ms after user stops typing
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
     try {
-      const clients = JSON.parse(localStorage.getItem("palma_clients") || "[]");
-      const found = clients.find((c: any) =>
-        (watchedCin && c.cin?.trim().toUpperCase() === watchedCin?.trim().toUpperCase()) ||
-        (watchedName && c.name?.trim().toLowerCase() === watchedName?.trim().toLowerCase())
-      );
+      // Search in Firebase first
+      const DB = "https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app";
+      const response = await fetch(`${DB}/clients.json`);
+      const clients = await response.json() || {};
+
+      let found = null;
+      for (const [id, client] of Object.entries(clients) as any[]) {
+        if ((watchedCin && client.cin?.trim().toUpperCase() === watchedCin?.trim().toUpperCase()) ||
+            (watchedName && client.name?.trim().toLowerCase() === watchedName?.trim().toLowerCase())) {
+          found = { ...client, id };
+          break;
+        }
+      }
+
+      // Auto-fill client data from Firebase if found
+      if (found && watchedCin && found.cin?.trim().toUpperCase() === watchedCin?.trim().toUpperCase()) {
+        if (found.name && !watchedName) setValue("driverName", found.name, { shouldDirty: true });
+        if (found.dob) setValue("driverDob", found.dob, { shouldDirty: true });
+        if (found.birthPlace) setValue("driverBirthPlace", found.birthPlace, { shouldDirty: true });
+        if (found.address) setValue("driverAddress", found.address, { shouldDirty: true });
+        if (found.phone) setValue("driverPhone", found.phone, { shouldDirty: true });
+        if (found.cinDate) setValue("driverCinDate", found.cinDate, { shouldDirty: true });
+        if (found.cinPlace) setValue("driverCinPlace", found.cinPlace, { shouldDirty: true });
+        if (found.license) setValue("driverLicense", found.license, { shouldDirty: true });
+        if (found.licenseDate) setValue("driverLicenseDate", found.licenseDate, { shouldDirty: true });
+        if (found.licensePlace) setValue("driverLicensePlace", found.licensePlace, { shouldDirty: true });
+      }
+
       if (found?.banned) {
         setBannedWarning({ name: found.name, reason: found.banReason || "" });
       } else {
         setBannedWarning(null);
       }
-      // Also check alerts
-      if (found?.alerts?.length > 0) {
-        setBannedWarning(prev => prev || { name: found.name, reason: `⚠️ ${found.alerts.length} alerte(s): ${found.alerts.map((a: any) => a.message).join(" | ")}` });
-      }
 
-      // Calculate client debt from previous contracts
-      if (watchedCin) {
-        const contracts = useContractStore.getState().contracts;
-        const debtsKey = "palma_contract_debts";
-        const debts: Record<string, { paid: number; reste: number }> = JSON.parse(localStorage.getItem(debtsKey) || "{}");
+      // Check for debt warnings
+      if (watchedCin && found) {
+        fetch(`${DB}/clients/${found.id}/alerts.json`)
+          .then(r => r.json())
+          .then(alerts => {
+            if (alerts) {
+              const debtAlert = Object.values(alerts).find((a: any) => a.type === "debt");
+              if (debtAlert) {
+                setDebtWarning({ amount: debtAlert.amount || "", contractNumber: debtAlert.contractNumber || "" });
+              } else {
+                setDebtWarning(null);
+              }
+            } else {
+              setDebtWarning(null);
+            }
+          }).catch(() => setDebtWarning(null));
 
-        let totalDebt = 0;
+        // Calculate debt from contracts
+        const clientContracts = contracts.filter((c: any) => c.driverCin?.trim().toUpperCase() === watchedCin?.trim().toUpperCase());
+        const debts: Record<string, { paid: number; reste: number }> = {};
         let totalPaid = 0;
         let totalReste = 0;
-
-        const clientContracts = contracts.filter(c =>
-          c.driverCin?.trim().toUpperCase() === watchedCin.trim().toUpperCase() &&
-          !c._deleted &&
-          c.id !== contract?.id
-        );
+        let totalDebt = 0;
 
         for (const c of clientContracts) {
           if (!c.id) continue;
@@ -211,7 +447,7 @@ export default function ContractModal({ contract, onClose }: Props) {
     } catch {}
     }, 600);
     return () => clearTimeout(timer);
-  }, [watchedCin, watchedName, contract?.id]);
+  }, [watchedCin, watchedName, contract?.id, setValue, contracts]);
 
   // Jump to first tab with errors
   const TAB_FIELDS: Record<number, string[]> = {
@@ -249,6 +485,105 @@ export default function ContractModal({ contract, onClose }: Props) {
       // Check internet connection
       if (!navigator.onLine) {
         setError("⚠️ Pas de connexion internet. Le contrat sera sauvegardé localement.");
+      }
+
+      // For Palma cars, all fields are required
+      if (isPalmaCar(data.registration)) {
+        if (!data.contractNumber?.trim()) {
+          setError(isRTL ? "⚠️ رقم العقد مطلوب" : "⚠️ Le numéro de contrat est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.brand?.trim()) {
+          setError(isRTL ? "⚠️ الماركة مطلوبة" : "⚠️ La marque est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.model?.trim()) {
+          setError(isRTL ? "⚠️ الموديل مطلوب" : "⚠️ Le modèle est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.registration?.trim()) {
+          setError(isRTL ? "⚠️ المتريكيل مطلوب" : "⚠️ L'immatriculation est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.departureDate?.trim()) {
+          setError(isRTL ? "⚠️ تاريخ المغادرة مطلوب" : "⚠️ La date de départ est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.departureTime?.trim()) {
+          setError(isRTL ? "⚠️ وقت المغادرة مطلوب" : "⚠️ L'heure de départ est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.departurePlace?.trim()) {
+          setError(isRTL ? "⚠️ مكان المغادرة مطلوب" : "⚠️ Le lieu de départ est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.returnDate?.trim()) {
+          setError(isRTL ? "⚠️ تاريخ العودة مطلوب" : "⚠️ La date de retour est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.returnTime?.trim()) {
+          setError(isRTL ? "⚠️ وقت العودة مطلوب" : "⚠️ L'heure de retour est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverName?.trim()) {
+          setError(isRTL ? "⚠️ اسم السائق مطلوب" : "⚠️ Le nom du conducteur est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverDob?.trim()) {
+          setError(isRTL ? "⚠️ تاريخ ميلاد السائق مطلوب" : "⚠️ La date de naissance du conducteur est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverAddress?.trim()) {
+          setError(isRTL ? "⚠️ عنوان السائق مطلوب" : "⚠️ L'adresse du conducteur est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverPhone?.trim()) {
+          setError(isRTL ? "⚠️ رقم هاتف السائق مطلوب" : "⚠️ Le téléphone du conducteur est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverCin?.trim()) {
+          setError(isRTL ? "⚠️ رقم بطاقة التعريف مطلوب" : "⚠️ Le CIN du conducteur est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverCinDate?.trim()) {
+          setError(isRTL ? "⚠️ تاريخ بطاقة التعريف مطلوب" : "⚠️ La date du CIN est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverCinPlace?.trim()) {
+          setError(isRTL ? "⚠️ مكان بطاقة التعريف مطلوب" : "⚠️ Le lieu du CIN est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverLicense?.trim()) {
+          setError(isRTL ? "⚠️ رقم رخصة السياقة مطلوب" : "⚠️ Le numéro de permis est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.driverLicenseDate?.trim()) {
+          setError(isRTL ? "⚠️ تاريخ رخصة السياقة مطلوب" : "⚠️ La date du permis est obligatoire");
+          setSaving(false);
+          return;
+        }
+        if (!data.depot?.trim()) {
+          setError(isRTL ? "⚠️ المبلغ المدفوع مطلوب" : "⚠️ L'avance est obligatoire");
+          setSaving(false);
+          return;
+        }
       }
 
       // Validate amounts
@@ -314,11 +649,15 @@ export default function ContractModal({ contract, onClose }: Props) {
         upsertContract({ ...data, id: contract.id, branchId: originalBranchId, _updatedBy: user?.username || "unknown", _updatedAt: Date.now() } as Contract);
         syncDebt(contract.id);
         await logAction(user, "update_contract", contract.id);
+        await saveClientToFirebase(data);
+        await saveCarToFirebase(data);
       } else {
         const id = await insertContract({ ...data, _createdBy: user?.username || "unknown", _createdAt: Date.now(), branchId: selectedBranch?.id || "main" } as Omit<Contract, "id">);
         upsertContract({ ...data, id } as Contract);
         syncDebt(id);
         await logAction(user, "create_contract", id);
+        await saveClientToFirebase(data);
+        await saveCarToFirebase(data);
         // Clear any manual override for this car starting from contract departure date
         try {
           const reg = String((data as any).registration || "").replace(/\s+/g, "").toUpperCase();

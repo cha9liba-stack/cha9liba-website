@@ -58,8 +58,9 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
   // Combine Palma fleet + sous-traitant fleet
   const FLEET = { ...PALMA_FLEET, ...stFleet };
 
-  // Load sous-traitant cars from Firebase
+  // Load sous-traitant cars from Firebase, localStorage, and contracts
   useEffect(() => {
+    // Load from Firebase (sous_traitants)
     fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/sous_traitants.json")
       .then(r => r.json())
       .then(data => {
@@ -80,7 +81,57 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
         }
         setStFleet(fleet);
       }).catch(() => {});
-  }, []);
+
+    // Load from Firebase (custom_cars)
+    fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/custom_cars.json")
+      .then(r => r.json())
+      .then(data => {
+        if (!data) return;
+        const fleet: Record<string, { brand: string; model: string; category: string }> = {};
+        for (const car of Object.values(data) as any[]) {
+          if (car.registration && car.brand && car.model) {
+            const normReg = car.registration.replace(/\s+/g, "").toUpperCase();
+            fleet[normReg] = {
+              brand: car.brand,
+              model: car.model,
+              category: car.category || "Citadine"
+            };
+          }
+        }
+        setStFleet(prev => ({ ...prev, ...fleet }));
+      }).catch(() => {});
+
+    // Load from localStorage (palma_custom_cars) for offline use
+    try {
+      const customCars = JSON.parse(localStorage.getItem("palma_custom_cars") || "[]");
+      const fleet: Record<string, { brand: string; model: string; category: string }> = {};
+      for (const car of customCars) {
+        if (car.registration && car.brand && car.model) {
+          const normReg = car.registration.replace(/\s+/g, "").toUpperCase();
+          fleet[normReg] = {
+            brand: car.brand,
+            model: car.model,
+            category: car.category || "Citadine"
+          };
+        }
+      }
+      setStFleet(prev => ({ ...prev, ...fleet }));
+    } catch {}
+
+    // Load from contracts
+    const contractFleet: Record<string, { brand: string; model: string; category: string }> = {};
+    for (const c of contracts) {
+      if (c.registration && c.brand && c.model) {
+        const normReg = c.registration.replace(/\s+/g, "").toUpperCase();
+        contractFleet[normReg] = {
+          brand: c.brand,
+          model: c.model,
+          category: c.category || "Citadine"
+        };
+      }
+    }
+    setStFleet(prev => ({ ...prev, ...contractFleet }));
+  }, [contracts]);
 
   // Split into left (before TU) and right (after TU)
   const parseReg = (val: string) => {
@@ -97,6 +148,67 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
   const [conflict, setConflict] = useState<{ contractNumber: string; driverName: string; returnDate: string } | null>(null);
   const [loadingKm, setLoadingKm] = useState(false);
   const rightRef = useRef<HTMLInputElement>(null);
+
+  // Search for car in Firebase contracts if not found in local sources
+  async function searchCarInFirebase(registration: string) {
+    try {
+      const targetReg = registration.replace(/\s+/g, "").toUpperCase();
+      console.log("Searching Firebase for:", targetReg);
+      const response = await fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/contracts.json");
+      const data = await response.json();
+      if (!data) {
+        console.log("No data from Firebase");
+        return null;
+      }
+
+      console.log("Firebase contracts count:", Object.keys(data).length);
+      for (const contract of Object.values(data) as any[]) {
+        if (contract.registration) {
+          const contractReg = contract.registration.replace(/\s+/g, "").toUpperCase();
+          if (contractReg === targetReg) {
+            console.log("Found car in Firebase:", contract.brand, contract.model);
+            return {
+              brand: contract.brand || "",
+              model: contract.model || "",
+              category: contract.category || "Citadine"
+            };
+          }
+        }
+      }
+      console.log("Car not found in Firebase");
+    } catch (error) {
+      console.error("Error searching Firebase:", error);
+    }
+    return null;
+  }
+
+  // Search for car in localStorage contracts
+  function searchCarInLocalStorage(registration: string) {
+    try {
+      const targetReg = registration.replace(/\s+/g, "").toUpperCase();
+      console.log("Searching localStorage for:", targetReg);
+      const localContracts = JSON.parse(localStorage.getItem("palma_contracts") || "[]");
+      console.log("Local contracts count:", localContracts.length);
+
+      for (const contract of localContracts) {
+        if (contract.registration) {
+          const contractReg = contract.registration.replace(/\s+/g, "").toUpperCase();
+          if (contractReg === targetReg) {
+            console.log("Found car in localStorage:", contract.brand, contract.model);
+            return {
+              brand: contract.brand || "",
+              model: contract.model || "",
+              category: contract.category || "Citadine"
+            };
+          }
+        }
+      }
+      console.log("Car not found in localStorage");
+    } catch (error) {
+      console.error("Error searching localStorage:", error);
+    }
+    return null;
+  }
 
   function buildReg(l: string, r: string) {
     return `${l}TU${r}`;
@@ -153,25 +265,47 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
     setConflict(active ? { contractNumber: active.contractNumber, driverName: active.driverName, returnDate: active.returnDate } : null);
   }
 
-  function tryAutoFill(l: string, r: string) {
+  async function tryAutoFill(l: string, r: string) {
     const full = normReg(buildReg(l, r));
     const car = FLEET[full];
+    const reg = buildReg(l, r);
+
     if (car) {
       setMatched(car);
-      setValue("registration", buildReg(l, r));
+      setValue("registration", reg);
       setValue("brand",    car.brand,    { shouldDirty: true });
       setValue("model",    car.model,    { shouldDirty: true });
       setValue("category", car.category, { shouldDirty: true });
     } else {
       setMatched(null);
-      setValue("registration", buildReg(l, r));
+      setValue("registration", reg);
+
+      // Only search Firebase and localStorage when registration is complete
+      if (l.length === 4 && r.length === 3) {
+        const firebaseCar = await searchCarInFirebase(reg);
+        if (firebaseCar) {
+          setMatched(firebaseCar);
+          setValue("brand",    firebaseCar.brand,    { shouldDirty: true });
+          setValue("model",    firebaseCar.model,    { shouldDirty: true });
+          setValue("category", firebaseCar.category, { shouldDirty: true });
+        } else {
+          // Search localStorage if not found in Firebase
+          const localCar = searchCarInLocalStorage(reg);
+          if (localCar) {
+            setMatched(localCar);
+            setValue("brand",    localCar.brand,    { shouldDirty: true });
+            setValue("model",    localCar.model,    { shouldDirty: true });
+            setValue("category", localCar.category, { shouldDirty: true });
+          }
+        }
+      }
     }
-    checkAvailability(buildReg(l, r));
+    checkAvailability(reg);
 
     // Fetch odometer from GPS if registration is complete
     if (l.length >= 3 && r.length >= 3) {
       setLoadingKm(true);
-      getOdometerForReg(buildReg(l, r)).then(km => {
+      getOdometerForReg(reg).then(km => {
         setLoadingKm(false);
         if (km !== null && km !== undefined) {
           setValue("departureKm", String(km), { shouldDirty: true });

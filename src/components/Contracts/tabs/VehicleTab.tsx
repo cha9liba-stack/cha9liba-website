@@ -132,7 +132,24 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
         <input type="time" {...register("departureTime")} className="input" />
       </Field>
       <Field label={t("departure_place")}>
-        <input {...register("departurePlace")} className="input" />
+        <input
+          {...register("departurePlace")}
+          className="input"
+          list="places-list"
+          placeholder={isRTL ? "اختر أو اكتب مكان الانطلاق" : "Choisir ou saisir le lieu de départ"}
+        />
+        <datalist id="places-list">
+          <option value="Kelibia" />
+          <option value="Tunis" />
+          <option value="Bizerte" />
+          <option value="Nabeul" />
+          <option value="Hammamet" />
+          <option value="Sousse" />
+          <option value="Monastir" />
+          <option value="Sfax" />
+          <option value="Gabès" />
+          <option value="Djerba" />
+        </datalist>
       </Field>
       <Field label={t("departure_km")}>
         <div className="flex items-center gap-2">
