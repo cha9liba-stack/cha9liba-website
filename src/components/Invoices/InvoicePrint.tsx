@@ -162,7 +162,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               </tr></tbody>
             </table>
 
-            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "8px 12px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "12px", display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "15px", width: "100%", boxSizing: "border-box", whiteSpace: "nowrap" }}>
+            <div style={{ background: "#f1f5f9", borderRadius: "6px", padding: "12px 15px", marginBottom: "15px", border: "1px solid #cbd5e1", fontSize: "14px", display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "20px", width: "100%", boxSizing: "border-box", whiteSpace: "nowrap" }}>
               <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span>
               <span>{client.name}</span>
               {client.mf && <span>MF: {client.mf}</span>}
