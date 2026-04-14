@@ -182,6 +182,39 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
     return null;
   }
 
+  // Search for car in Firebase custom_cars
+  async function searchCarInFirebaseCustom(registration: string) {
+    try {
+      const targetReg = registration.replace(/\s+/g, "").toUpperCase();
+      console.log("Searching Firebase custom_cars for:", targetReg);
+      const response = await fetch("https://palmarentacare-default-rtdb.europe-west1.firebasedatabase.app/custom_cars.json");
+      const data = await response.json();
+      if (!data) {
+        console.log("No data from Firebase custom_cars");
+        return null;
+      }
+
+      console.log("Firebase custom_cars count:", Object.keys(data).length);
+      for (const car of Object.values(data) as any[]) {
+        if (car.registration) {
+          const carReg = car.registration.replace(/\s+/g, "").toUpperCase();
+          if (carReg === targetReg) {
+            console.log("Found car in Firebase custom_cars:", car.brand, car.model);
+            return {
+              brand: car.brand || "",
+              model: car.model || "",
+              category: car.category || "Citadine"
+            };
+          }
+        }
+      }
+      console.log("Car not found in Firebase custom_cars");
+    } catch (error) {
+      console.error("Error searching Firebase custom_cars:", error);
+    }
+    return null;
+  }
+
   // Search for car in localStorage contracts
   function searchCarInLocalStorage(registration: string) {
     try {
@@ -282,20 +315,30 @@ export default function RegistrationInput({ setValue, defaultValue = "", current
 
       // Only search Firebase and localStorage when registration is complete
       if (l.length === 4 && r.length === 3) {
-        const firebaseCar = await searchCarInFirebase(reg);
-        if (firebaseCar) {
-          setMatched(firebaseCar);
-          setValue("brand",    firebaseCar.brand,    { shouldDirty: true });
-          setValue("model",    firebaseCar.model,    { shouldDirty: true });
-          setValue("category", firebaseCar.category, { shouldDirty: true });
+        // Search Firebase custom_cars first
+        const customCar = await searchCarInFirebaseCustom(reg);
+        if (customCar) {
+          setMatched(customCar);
+          setValue("brand",    customCar.brand,    { shouldDirty: true });
+          setValue("model",    customCar.model,    { shouldDirty: true });
+          setValue("category", customCar.category, { shouldDirty: true });
         } else {
-          // Search localStorage if not found in Firebase
-          const localCar = searchCarInLocalStorage(reg);
-          if (localCar) {
-            setMatched(localCar);
-            setValue("brand",    localCar.brand,    { shouldDirty: true });
-            setValue("model",    localCar.model,    { shouldDirty: true });
-            setValue("category", localCar.category, { shouldDirty: true });
+          // Search Firebase contracts
+          const firebaseCar = await searchCarInFirebase(reg);
+          if (firebaseCar) {
+            setMatched(firebaseCar);
+            setValue("brand",    firebaseCar.brand,    { shouldDirty: true });
+            setValue("model",    firebaseCar.model,    { shouldDirty: true });
+            setValue("category", firebaseCar.category, { shouldDirty: true });
+          } else {
+            // Search localStorage if not found in Firebase
+            const localCar = searchCarInLocalStorage(reg);
+            if (localCar) {
+              setMatched(localCar);
+              setValue("brand",    localCar.brand,    { shouldDirty: true });
+              setValue("model",    localCar.model,    { shouldDirty: true });
+              setValue("category", localCar.category, { shouldDirty: true });
+            }
           }
         }
       }
