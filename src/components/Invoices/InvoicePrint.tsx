@@ -134,10 +134,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
               <tbody><tr>
                 <td style={{ verticalAlign: "top", width: "35%" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "6px" }}>{CO.nameFr}</div>
-                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "4px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.tel}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "10px" }}>{CO.nameFr}</div>
+                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "8px" }}>{CO.addrFr}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.tel}</div>
                   <div style={{ fontSize: "16px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
@@ -147,10 +147,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontSize: "17px", marginTop: "4px" }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "top", width: "35%" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "6px" }}>{CO.nameAr}</div>
-                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "4px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "15px", marginBottom: "3px" }}>{CO.telAr}</div>
+                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "26px", marginBottom: "10px" }}>{CO.nameAr}</div>
+                  <div style={{ fontSize: "17px", fontWeight: "bold", marginBottom: "8px" }}>{CO.addrAr}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.email}</div>
+                  <div style={{ fontSize: "15px", marginBottom: "8px" }}>{CO.telAr}</div>
                   <div style={{ fontSize: "16px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
