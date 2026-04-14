@@ -93,6 +93,9 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         .total-row td{background:#1a56db!important;color:#fff!important;font-weight:bold}
         .footer-bar{border-top:2px solid #2d7a2d;text-align:center;padding:6px 0;color:#2d7a2d;font-weight:bold;font-size:11px}
         .inv-content{padding:10px;max-width:100%}
+        .header-name{font-size:22px!important}
+        .header-addr{font-size:15px!important}
+        .header-info{font-size:13px!important}
       </style>
     </head><body><div class="inv-content">${content}</div></body></html>`);
     win.document.close();
@@ -134,11 +137,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
               <tbody><tr>
                 <td style={{ verticalAlign: "top", width: "35%" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameFr}</div>
-                  <div style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrFr}</div>
-                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.tel}</div>
-                  <div style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameFr}</div>
+                  <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrFr}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.tel}</div>
+                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
                 <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
                   <img src="/invoice_logo.png" alt="Palma" style={{ height: "180px", objectFit: "contain", display: "block", margin: "0 auto" }}
@@ -147,11 +150,11 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <div style={{ fontSize: "17px", marginTop: "4px" }}>Kélibia le: {invDate}</div>
                 </td>
                 <td style={{ textAlign: "right", verticalAlign: "top", width: "35%" }}>
-                  <div style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameAr}</div>
-                  <div style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrAr}</div>
-                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
-                  <div style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.telAr}</div>
-                  <div style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div className="header-name" style={{ color: "#2d7a2d", fontWeight: "bold", fontSize: "32px", marginBottom: "12px" }}>{CO.nameAr}</div>
+                  <div className="header-addr" style={{ fontSize: "22px", fontWeight: "bold", marginBottom: "10px" }}>{CO.addrAr}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.email}</div>
+                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "10px" }}>{CO.telAr}</div>
+                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
