@@ -18,7 +18,6 @@ import Statistics from "./pages/Statistics";
 import OnlineBookings from "./pages/OnlineBookings";
 import SousTraitants from "./pages/SousTraitants";
 import GPS from "./pages/GPS";
-import GPSTest from "./pages/GPSTest";
 import Notifications from "./pages/Notifications";
 import { isSousTraitant } from "./lib/permissions";
 
@@ -78,7 +77,6 @@ export default function App() {
           <Route path="notifications" element={<STProtectedRoute><Notifications /></STProtectedRoute>} />
           <Route path="sous-traitants" element={<STProtectedRoute><SousTraitants /></STProtectedRoute>} />
           <Route path="gps" element={<STProtectedRoute><GPS /></STProtectedRoute>} />
-          <Route path="gps-test" element={<STProtectedRoute><GPSTest /></STProtectedRoute>} />
           <Route path="sms-test" element={<SMSTest />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -57,6 +57,12 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
   const isDevis   = invType === "devis";
   const isFacture = invType === "facture";
+  const targetRowsForSinglePage = isDevis ? 9 : 8;
+  const maxEmptyRows = 5;
+  const emptyRowsCount = Math.min(
+    Math.max(targetRowsForSinglePage - lines.length, 0),
+    maxEmptyRows
+  );
   const typeLabel = { facture: "Facture", bon: "Bon de livraison", devis: "Devis" }[invType] || "Facture";
   const fmt = (n: number) => n.toFixed(3);
 
@@ -86,19 +92,20 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
         body{padding:0}
         .inv-wrap{padding:4px!important}
         table{width:100%;border-collapse:collapse;table-layout:fixed}
-        td,th{overflow:hidden;font-size:18px}
+        td,th{overflow:hidden;font-size:15px!important;padding:10px 12px!important;line-height:1.3}
         .blue-val{color:#1e40af!important;font-weight:bold}
         .blue-bg{background:#1e40af!important;color:#fff!important;font-weight:bold}
         .total-row td{background:#1e40af!important;color:#fff!important;font-weight:bold}
-        .footer-bar{border-top:2px solid #1e40af;text-align:center;padding:6px 0;color:#1e40af;font-weight:bold;font-size:14px;white-space:nowrap}
-        .inv-content{padding:10px;max-width:100%}
-        .invoice-print-surface{min-height:0!important;height:auto!important}
-        .header-name{font-size:48px!important}
-        .header-addr{font-size:20px!important;white-space:nowrap}
-        .header-info{font-size:22px!important}
-        .header-name,.header-addr,.header-info{margin-bottom:5px!important}
-        .header-addr-ar{font-size:26px!important;white-space:nowrap}
-        @page{margin:5mm;size:A4}
+        .footer-bar{border-top:2px solid #1e40af;text-align:center;padding:4px 0;color:#1e40af;font-weight:bold;font-size:13px;white-space:nowrap}
+        .inv-content{padding:6px;max-width:100%}
+        .invoice-print-surface{min-height:auto!important;height:auto!important}
+        .header-name{font-size:38px!important}
+        .header-addr{font-size:17px!important;white-space:nowrap}
+        .header-info{font-size:16px!important}
+        .header-name,.header-addr,.header-info{margin-bottom:3px!important}
+        .header-addr-ar{font-size:18px!important;white-space:nowrap}
+        @page{margin:4mm;size:A4}
+        tr,td,th{page-break-inside:avoid}
         html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
       </style>
     </head><body><div class="inv-content">${content}</div></body></html>`);
@@ -109,14 +116,14 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
   const cell = (content: React.ReactNode, style?: React.CSSProperties) =>
     <td style={{ border: B, padding: "14px 16px", fontSize: "18px", textAlign: "center", ...style }}>{content}</td>;
 
+  const emptyCell = () =>
+    <td style={{ border: B, padding: "8px 16px", fontSize: "18px", textAlign: "center" }}>&nbsp;</td>;
+
   const hcell = (content: React.ReactNode, style?: React.CSSProperties) =>
     <th style={{ border: BG, padding: "12px", background: "#1e40af", color: "white", textAlign: "left", fontWeight: "bold", fontSize: "18px", ...style }}>{content}</th>;
 
   const nameFontSize = client.name.length > 25 ? Math.max(12, 18 - Math.floor((client.name.length - 25) / 4)) : 18;
   const addrFontSize = client.address.length > 35 ? Math.max(12, 16 - Math.floor((client.address.length - 35) / 5)) : 16;
-
-  const tableFillerPx =
-    lines.length < 12 ? Math.min((12 - lines.length) * 22, 260) : 0;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -148,7 +155,7 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
               width: "100%",
               fontFamily: "Arial,sans-serif",
               fontSize: "13px",
-              minHeight: "100vh",
+              minHeight: "auto",
               display: "flex",
               flexDirection: "column",
               boxSizing: "border-box",
@@ -217,11 +224,12 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     </>
                   ) : (
                     <>
-                      {hcell("N° Contrat", { width: "12%" })}
-                      {hcell("Date", { width: "18%" })}
-                      {hcell("Désignation", { width: "40%" })}
+                      {hcell("N° Contrat", { width: "11%" })}
+                      {hcell("Date", { width: "16%" })}
+                      {hcell("Désignation", { width: "35%" })}
                       {hcell("Jours", { width: "6%", textAlign: "center" })}
-                      {hcell("Montant", { width: "16%", textAlign: "right" })}
+                      {hcell("Prix/Jour", { width: "14%", textAlign: "right" })}
+                      {hcell("Montant", { width: "18%", textAlign: "right" })}
                     </>
                   )}
                 </tr>
@@ -243,22 +251,34 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                         {cell(l.date)}
                         {cell(l.designation)}
                         {cell(l.days)}
+                        {cell(l.pricePerDay ? fmt(l.pricePerDay) : "-", { textAlign: "right" })}
                         {cell(fmt(l.amount||0), { fontWeight: "bold" })}
                       </>
 )}
                   </tr>
                 ))}
-                {lines.length === 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>Aucune ligne</td>
+                {Array.from({ length: emptyRowsCount }).map((_, i) => (
+                  <tr key={`empty-${i}`}>
+                    {isDevis ? (
+                      <>
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                      </>
+                    ) : (
+                      <>
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                        {emptyCell()}
+                      </>
+                    )}
                   </tr>
-                )}
-                {/* Empty row padding (kept small for single-page print) */}
-                {tableFillerPx > 0 && (
-                  <tr>
-                    <td colSpan={5} style={{ padding: `${tableFillerPx}px 0`, border: "none", background: "white" }}></td>
-                  </tr>
-                )}
+                ))}
               </tbody>
             </table>
             </div>

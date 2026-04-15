@@ -57,6 +57,66 @@ interface OverrideEntry {
 // Storage format: { [normReg]: OverrideEntry[] }
 type OverrideHistory = Record<string, OverrideEntry[]>;
 
+function parseOverrideHistory(raw: unknown): OverrideHistory {
+  if (!raw || typeof raw !== "object") return {};
+  const source = raw as Record<string, unknown>;
+  const parsed: OverrideHistory = {};
+  for (const [key, val] of Object.entries(source)) {
+    if (Array.isArray(val)) {
+      parsed[key] = val
+        .filter((e: any) => e && typeof e === "object" && typeof e.from === "string")
+        .map((e: any) => ({
+          state: e.state as CarOverride,
+          from: e.from,
+          to: typeof e.to === "string" ? e.to : null,
+        }));
+      continue;
+    }
+    if (val && typeof val === "object") {
+      const e = val as any;
+      if (typeof e.from === "string") {
+        parsed[key] = [{
+          state: e.state as CarOverride,
+          from: e.from,
+          to: typeof e.to === "string" ? e.to : null,
+        }];
+      }
+      continue;
+    }
+    if (typeof val === "string") {
+      parsed[key] = [{ state: val as CarOverride, from: "2020-01-01", to: null }];
+    }
+  }
+  return parsed;
+}
+
+function loadLocalOverrideHistory(): OverrideHistory {
+  try {
+    const raw = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}");
+    return parseOverrideHistory(raw);
+  } catch {
+    return {};
+  }
+}
+
+function mergeOverrideHistories(localHistory: OverrideHistory, remoteHistory: OverrideHistory): OverrideHistory {
+  const merged: OverrideHistory = { ...remoteHistory };
+  const allRegs = new Set([...Object.keys(remoteHistory), ...Object.keys(localHistory)]);
+  for (const reg of allRegs) {
+    const combined = [...(remoteHistory[reg] || []), ...(localHistory[reg] || [])];
+    const seen = new Set<string>();
+    const unique = combined.filter(entry => {
+      const id = `${entry.state}|${entry.from}|${entry.to ?? "null"}`;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+    unique.sort((a, b) => a.from.localeCompare(b.from));
+    if (unique.length > 0) merged[reg] = unique;
+  }
+  return merged;
+}
+
 function loadOverrideHistory(): OverrideHistory {
   // Don't load from localStorage - always wait for Firebase sync
   // This prevents stale overrides from blocking active contracts
@@ -321,19 +381,13 @@ export default function Fleet() {
     function syncFromFirebase() {
       fbLoadOverrides().then(data => {
         if (!data) return;
-        const migrated: OverrideHistory = {};
-        for (const [key, val] of Object.entries(data)) {
-          if (typeof val === "string") {
-            migrated[key] = [{ state: val as CarOverride, from: "2020-01-01", to: null }];
-          } else if (Array.isArray(val)) {
-            migrated[key] = val as OverrideEntry[];
-          } else if (val && typeof val === "object") {
-            migrated[key] = [val as OverrideEntry];
-          }
-        }
-        // Firebase always wins - overwrite localStorage
-        localStorage.setItem(OVERRIDES_KEY, JSON.stringify(migrated));
-        setOverrideHistory(migrated);
+        const remoteHistory = parseOverrideHistory(data);
+        const localHistory = loadLocalOverrideHistory();
+        const merged = mergeOverrideHistories(localHistory, remoteHistory);
+        // Keep local overrides even if last Firebase write failed.
+        localStorage.setItem(OVERRIDES_KEY, JSON.stringify(merged));
+        setOverrideHistory(merged);
+        fbSaveOverrides(merged);
       });
       // Sync custom states
       fetch(`${DB_URL_FLEET}/app_settings/custom_states.json`)

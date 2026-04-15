@@ -65,7 +65,6 @@ export default function Sidebar() {
     { to: "/app/notifications",  icon: Bell,       label: isRTL ? "إشعارات التوفر"  : "Notifications",     hidden: isST },
     { to: "/app/sous-traitants", icon: Gauge,      label: isRTL ? "المقاولون"      : "Sous-traitants",    hidden: isST },
     { to: "/app/gps",            icon: Navigation, label: "GPS",                                           hidden: isST },
-    { to: "/app/gps-test",       icon: Navigation, label: "GPS Test",                                      hidden: isST },
   ].filter(i => !i.hidden);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
