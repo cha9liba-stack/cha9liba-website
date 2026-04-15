@@ -35,15 +35,25 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
     phone:   raw["معلومات_العميل"]?.["هاتف"]               || "",
   };
   const lines: any[] = invoice.lines?.length
-    ? invoice.lines
-    : (raw["العقود"] || []).map((c: any) => ({
-        contractNumber: c["رقم العقد"] || "",
-        date:           c["يوم الانطلاق"] || "",
-        designation:    c["designation"] || "",
-        days:           parseInt(c["عدد الأيام"] || "1") || 1,
-        pricePerDay:    parseFloat(c["السعر في اليوم"] || "0") || 0,
-        amount:         parseFloat(c["المبلغ"] || "0") || 0,
-      }));
+    ? invoice.lines.map((l: any) => {
+        const days = l.days || 1;
+        const amount = l.amount || 0;
+        const pricePerDay = days > 0 ? amount / days : 0;
+        return { ...l, pricePerDay };
+      })
+    : (raw["العقود"] || []).map((c: any) => {
+        const days = parseInt(c["عدد الأيام"] || "1") || 1;
+        const amount = parseFloat(c["المبلغ"] || "0") || 0;
+        const pricePerDay = days > 0 ? amount / days : 0;
+        return {
+          contractNumber: c["رقم العقد"] || "",
+          date:           c["يوم الانطلاق"] || "",
+          designation:    c["designation"] || "",
+          days,
+          pricePerDay,
+          amount,
+        };
+      });
 
   const montantHT = invoice.montantHT ?? parseFloat(raw["المجموع_HT"] || "0");
   const tva       = invoice.tva       ?? parseFloat(raw["TVA"]         || "0");
@@ -57,12 +67,8 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
 
   const isDevis   = invType === "devis";
   const isFacture = invType === "facture";
-  const targetRowsForSinglePage = isDevis ? 9 : 8;
-  const maxEmptyRows = 5;
-  const emptyRowsCount = Math.min(
-    Math.max(targetRowsForSinglePage - lines.length, 0),
-    maxEmptyRows
-  );
+  const targetRowsForSinglePage = 9;
+  const emptyRowsCount = Math.max(targetRowsForSinglePage - lines.length, 0);
   const typeLabel = { facture: "Facture", bon: "Bon de livraison", devis: "Devis" }[invType] || "Facture";
   const fmt = (n: number) => n.toFixed(3);
 
@@ -85,32 +91,48 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
     if (!win) return;
     win.document.write(`<!DOCTYPE html><html dir="${isRTL ? 'rtl' : 'ltr'}"><head>
       <meta charset="utf-8"/>
-      <title>${typeLabel} ${invNum}</title>
+      <title></title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:Arial,sans-serif;font-size:13px;color:#000;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
         body{padding:0}
         .inv-wrap{padding:4px!important}
         table{width:100%;border-collapse:collapse;table-layout:fixed}
-        td,th{overflow:hidden;font-size:15px!important;padding:10px 12px!important;line-height:1.3}
+        td,th{overflow:visible;font-size:15px!important;padding:10px 12px!important;line-height:1.3}
         .blue-val{color:#1e40af!important;font-weight:bold}
         .blue-bg{background:#1e40af!important;color:#fff!important;font-weight:bold}
         .total-row td{background:#1e40af!important;color:#fff!important;font-weight:bold}
         .footer-bar{border-top:2px solid #1e40af;text-align:center;padding:4px 0;color:#1e40af;font-weight:bold;font-size:13px;white-space:nowrap}
         .inv-content{padding:6px;max-width:100%}
         .invoice-print-surface{min-height:auto!important;height:auto!important}
-        .header-name{font-size:38px!important}
-        .header-addr{font-size:17px!important;white-space:nowrap}
-        .header-info{font-size:16px!important}
+        .header-name{font-size:48px!important}
+        .header-addr{font-size:20px!important;white-space:nowrap;overflow:visible!important}
+        .header-info{font-size:18px!important}
         .header-name,.header-addr,.header-info{margin-bottom:3px!important}
-        .header-addr-ar{font-size:18px!important;white-space:nowrap}
-        @page{margin:4mm;size:A4}
+        .header-addr-ar{font-size:20px!important;white-space:nowrap;overflow:visible!important}
+        @page{margin:1cm 0.5cm;size:A4}
+        @print{
+          @top-left{content:none}
+          @top-right{content:none}
+          @bottom-left{content:none}
+          @bottom-right{content:none}
+          @bottom-center{content:none}
+        }
         tr,td,th{page-break-inside:avoid}
         html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
       </style>
+      <script>
+        window.onload = function() {
+          // Hide print headers and footers
+          document.body.style.display = 'none';
+          setTimeout(function() {
+            document.body.style.display = 'block';
+            window.print();
+          }, 100);
+        };
+      </script>
     </head><body><div class="inv-content">${content}</div></body></html>`);
     win.document.close();
-    setTimeout(() => win.print(), 600);
   }
 
   const cell = (content: React.ReactNode, style?: React.CSSProperties) =>
@@ -164,30 +186,30 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
             <div style={{ flex: "1 1 auto", minHeight: 0 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
               <tbody><tr>
-                <td style={{ verticalAlign: "middle", width: "35%" }}>
-                  <div className="header-name" style={{ color: "#15803d", fontWeight: "bold", fontSize: "48px", marginBottom: "16px" }}>{CO.nameFr}</div>
-                  <div className="header-addr" style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "12px", whiteSpace: "nowrap" }}>{CO.addrFr}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "12px" }}>{CO.email}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "12px" }}>{CO.tel}</div>
-                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                <td style={{ verticalAlign: "top", width: "35%" }}>
+                  <div className="header-name" style={{ color: "#15803d", fontWeight: "bold", fontSize: "72px", marginBottom: "18px" }}>{CO.nameFr}</div>
+                  <div className="header-addr" style={{ fontSize: "28px", fontWeight: "bold", marginBottom: "14px", whiteSpace: "nowrap", overflow: "visible" }}>{CO.addrFr}</div>
+                  <div className="header-info" style={{ fontSize: "28px", marginBottom: "14px" }}>{CO.email}</div>
+                  <div className="header-info" style={{ fontSize: "28px", marginBottom: "14px" }}>{CO.tel}</div>
+                  <div className="header-info" style={{ fontSize: "28px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
-                <td style={{ textAlign: "center", verticalAlign: "middle", width: "30%" }}>
+                <td style={{ textAlign: "center", verticalAlign: "top", width: "30%" }}>
                   <img src="/invoice_logo.png" alt="Palma" style={{ height: "220px", objectFit: "contain", display: "block", margin: "0 auto" }}
                     onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}/>
                   <div style={{ fontWeight: "bold", fontSize: "32px", marginTop: "12px" }}>N° {invNum}</div>
-                  <div style={{ fontSize: "20px", marginTop: "6px" }}>Kélibia le: {invDate}</div>
-                  <div style={{ fontSize: "18px", marginTop: "10px" }}>
-                    <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> {client.name}
+                  <div style={{ fontSize: "20px", marginTop: "6px", whiteSpace: "nowrap" }}>Kélibia le: {invDate}</div>
+                  <div style={{ fontSize: "18px", marginTop: "10px", whiteSpace: "nowrap", display: "flex", justifyContent: "center" }}>
+                    <span style={{ fontWeight: "bold", color: "#1e40af" }}>Client:</span> <span>{client.name}</span>
                   </div>
                 </td>
-                <td style={{ textAlign: "right", verticalAlign: "middle", width: "35%" }}>
+                <td style={{ textAlign: "right", verticalAlign: "top", width: "35%" }}>
                   <div
                     className="header-name"
                     style={{
                       color: "#15803d",
                       fontWeight: "bold",
-                      fontSize: "48px",
-                      marginBottom: "16px",
+                      fontSize: "72px",
+                      marginBottom: "18px",
                       lineHeight: 1.15,
                       display: "inline-flex",
                       flexDirection: "column",
@@ -197,10 +219,10 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                     <div>{CO.nameAr}</div>
                     <div>السيارات</div>
                   </div>
-                  <div className="header-addr header-addr-ar" style={{ fontSize: "26px", fontWeight: "bold", marginBottom: "12px", whiteSpace: "nowrap" }}>{CO.addrAr}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "12px" }}>{CO.email}</div>
-                  <div className="header-info" style={{ fontSize: "20px", marginBottom: "12px" }}>{CO.telAr}</div>
-                  <div className="header-info" style={{ fontSize: "20px", fontWeight: "bold" }}>MF: {CO.mf}</div>
+                  <div className="header-addr header-addr-ar" style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "14px", whiteSpace: "nowrap", overflow: "visible" }}>{CO.addrAr}</div>
+                  <div className="header-info" style={{ fontSize: "28px", marginBottom: "14px" }}>{CO.email}</div>
+                  <div className="header-info" style={{ fontSize: "28px", marginBottom: "14px" }}>{CO.telAr}</div>
+                  <div className="header-info" style={{ fontSize: "28px", fontWeight: "bold" }}>MF: {CO.mf}</div>
                 </td>
               </tr></tbody>
             </table>
@@ -216,20 +238,20 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                 <tr>
                   {isDevis ? (
                     <>
-                      {hcell("Date", { width: "18%" })}
-                      {hcell("Désignation", { width: "46%" })}
-                      {hcell("Jours", { width: "6%", textAlign: "center" })}
-                      {hcell("Prix/Jour", { width: "14%", textAlign: "right" })}
-                      {hcell("Montant", { width: "16%", textAlign: "right" })}
+                      {hcell("Date", { width: "18%", textAlign: "center" })}
+                      {hcell("Désignation", { width: "32%", textAlign: "center" })}
+                      {hcell("Jours", { width: "13%", textAlign: "center" })}
+                      {hcell("Prix/Jour", { width: "13%", textAlign: "center" })}
+                      {hcell("Montant", { width: "24%", textAlign: "center" })}
                     </>
                   ) : (
                     <>
-                      {hcell("N° Contrat", { width: "11%" })}
-                      {hcell("Date", { width: "16%" })}
-                      {hcell("Désignation", { width: "35%" })}
-                      {hcell("Jours", { width: "6%", textAlign: "center" })}
-                      {hcell("Prix/Jour", { width: "14%", textAlign: "right" })}
-                      {hcell("Montant", { width: "18%", textAlign: "right" })}
+                      {hcell("N° Contrat", { width: "12%", textAlign: "center" })}
+                      {hcell("Date", { width: "16%", textAlign: "center" })}
+                      {hcell("Désignation", { width: "32%", textAlign: "center" })}
+                      {hcell("Jours", { width: "12%", textAlign: "center" })}
+                      {hcell("Prix/Jour", { width: "12%", textAlign: "center" })}
+                      {hcell("Montant", { width: "16%", textAlign: "center" })}
                     </>
                   )}
                 </tr>
@@ -239,20 +261,20 @@ export default function InvoicePrint({ invoice, onClose }: Props) {
                   <tr key={i}>
                     {isDevis ? (
                       <>
-                        {cell(l.date)}
-                        {cell(l.designation)}
-                        {cell(l.days)}
-                        {cell(fmt(l.pricePerDay||0))}
-                        {cell(fmt(l.amount||0), { fontWeight: "bold" })}
+                        {cell(l.date, { textAlign: "center", whiteSpace: "nowrap" })}
+                        {cell(l.designation, { textAlign: "center" })}
+                        {cell(l.days, { textAlign: "center" })}
+                        {cell(fmt(l.pricePerDay||0), { textAlign: "center" })}
+                        {cell(fmt(l.amount||0), { fontWeight: "bold", textAlign: "center" })}
                       </>
                     ) : (
                       <>
-                        {cell(l.contractNumber)}
-                        {cell(l.date)}
-                        {cell(l.designation)}
-                        {cell(l.days)}
-                        {cell(l.pricePerDay ? fmt(l.pricePerDay) : "-", { textAlign: "right" })}
-                        {cell(fmt(l.amount||0), { fontWeight: "bold" })}
+                        {cell(l.contractNumber, { textAlign: "center" })}
+                        {cell(l.date, { textAlign: "center", whiteSpace: "nowrap" })}
+                        {cell(l.designation, { textAlign: "center" })}
+                        {cell(l.days, { textAlign: "center" })}
+                        {cell(l.pricePerDay ? fmt(l.pricePerDay) : "-", { textAlign: "center" })}
+                        {cell(fmt(l.amount||0), { fontWeight: "bold", textAlign: "center" })}
                       </>
 )}
                   </tr>
