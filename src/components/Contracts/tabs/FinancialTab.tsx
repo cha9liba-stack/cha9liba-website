@@ -72,6 +72,14 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
     setValue("resteAPayer", fmt(Math.max(0, reste)), { shouldDirty: false });
   }, [reste]);
 
+  // Auto-fill divers with number of days
+  useEffect(() => {
+    if (nj > 0) {
+      const diversText = nj === 1 ? `${nj} jour` : `${nj} jours`;
+      setValue("divers", diversText, { shouldDirty: false });
+    }
+  }, [nj, setValue]);
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -92,7 +100,7 @@ export default function FinancialTab({ register, watch, setValue }: Props) {
         </Field>
 
         <Field label={t("divers")}>
-          <input {...register("divers")} type="number" min="0" step="0.001" className="input text-end font-mono" placeholder="0.000" />
+          <input {...register("divers")} type="text" className="input text-end font-mono" placeholder="X jour(s)" />
         </Field>
         <Field label={t("prep")}>
           <input {...register("prep")} type="number" min="0" step="0.001" className="input text-end font-mono" placeholder="0.000" />

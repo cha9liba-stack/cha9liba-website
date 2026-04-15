@@ -40,8 +40,8 @@ export function validateContract(contract: Partial<Contract>): { valid: boolean;
     }
   }
 
-  // Phone validation (basic)
-  if (contract.driverPhone && !/^\d[\d\s\-\+\(\)]{7,}$/.test(contract.driverPhone)) {
+  // Phone validation (basic) - removed length restriction
+  if (contract.driverPhone && !/^\d[\d\s\-\+\(\)]*$/.test(contract.driverPhone)) {
     errors.push("driverPhone is invalid");
   }
 

@@ -167,7 +167,20 @@ function contractToLegacy(c: Contract): Record<string, string> {
       }
       return c.totalPartiel || "";
     })(),
-    "Divers":               c.divers,
+    "Divers":               (() => {
+      // Calculate number of days for preview
+      if (c.departureDate && c.returnDate) {
+        const d1 = new Date(c.departureDate);
+        const d2 = new Date(c.returnDate);
+        if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+          const days = Math.max(0, Math.ceil((d2.getTime() - d1.getTime()) / 86400000));
+          if (days > 0) {
+            return days === 1 ? `${days} jour` : `${days} jours`;
+          }
+        }
+      }
+      return c.divers || "";
+    })(),
     "TOTAL HT":             c.totalHT,
     "TVA":                  c.tva,
     "TOTAL FACTURE":        c.totalFacture,
