@@ -52,8 +52,6 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
 
   const contractNumber = watch("contractNumber");
 
-  const returnDateValue = watch("returnDate");
-
   const [fetchingKm, setFetchingKm] = useState(false);
 
 
@@ -351,15 +349,7 @@ export default function VehicleTab({ register, errors, watch, setValue, isNew, c
 
       <Field label={t("return_date")} error={errors.returnDate?.message as string}>
 
-        <input
-          type="date"
-          {...register("returnDate")}
-          className="input"
-          onKeyDown={(e) => {
-            // Prevent manual typing - force use of date picker
-            e.preventDefault();
-          }}
-        />
+        <input type="date" {...register("returnDate")} className="input" />
 
       </Field>
 
