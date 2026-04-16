@@ -115,7 +115,15 @@ const schema = z.object({
   city: z.string().optional().default(""),
   date: z.string().optional().default(""),
 }).refine(
-  data => !data.departureDate || !data.returnDate || data.returnDate > data.departureDate,
+  data => {
+    if (!data.departureDate || !data.returnDate) return true;
+    const dep = new Date(data.departureDate);
+    const ret = new Date(data.returnDate);
+    // Check if dates are valid
+    if (isNaN(dep.getTime()) || isNaN(ret.getTime())) return true;
+    // Compare dates (returnDate must be > departureDate)
+    return ret > dep;
+  },
   { message: "La date de retour doit être supérieure à la date de départ (minimum 1 jour)", path: ["returnDate"] }
 );
 
@@ -347,10 +355,17 @@ export default function ContractModal({ contract, onClose }: Props) {
   }
 
   // Sync contract date with departureDate for new contracts
+  // Only auto-sync if user hasn't manually changed the date tab
   const watchedDepartureDate = watch("departureDate");
+  const watchedDate = watch("date");
   useEffect(() => {
     if (!contract && watchedDepartureDate) {
-      setValue("date", watchedDepartureDate, { shouldDirty: false });
+      // Only set if date equals previous departureDate or is empty
+      const currentDate = getValues("date");
+      const prevDep = getValues("departureDate");
+      if (!currentDate || currentDate === prevDep) {
+        setValue("date", watchedDepartureDate, { shouldDirty: false });
+      }
     }
   }, [watchedDepartureDate]);
 
@@ -382,7 +397,10 @@ export default function ContractModal({ contract, onClose }: Props) {
         if (found.dob) setValue("driverDob", found.dob, { shouldDirty: true });
         if (found.birthPlace) setValue("driverBirthPlace", found.birthPlace, { shouldDirty: true });
         if (found.address) setValue("driverAddress", found.address, { shouldDirty: true });
-        if (found.phone) setValue("driverPhone", found.phone, { shouldDirty: true });
+        // Only auto-fill phone if it's valid (not "00", "000", etc.)
+        if (found.phone && found.phone !== "00" && found.phone !== "000" && found.phone !== "0000" && found.phone.length > 3) {
+          setValue("driverPhone", found.phone, { shouldDirty: true });
+        }
         if (found.cinDate) setValue("driverCinDate", found.cinDate, { shouldDirty: true });
         if (found.cinPlace) setValue("driverCinPlace", found.cinPlace, { shouldDirty: true });
         if (found.license) setValue("driverLicense", found.license, { shouldDirty: true });

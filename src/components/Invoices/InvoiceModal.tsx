@@ -29,8 +29,10 @@ function saveCompanies(d: Company[]) { localStorage.setItem(COMPANIES_KEY, JSON.
 function loadCompaniesFromClients(): Company[] {
   try {
     const clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]") as Client[];
+    console.log("Clients loaded:", clients.length);
     const companies: Company[] = [];
     for (const client of clients) {
+      console.log("Client:", client.name, "isCompany:", client.isCompany, "company:", client.company);
       if (client.isCompany && client.company?.name) {
         companies.push({
           id: client.id,
@@ -41,8 +43,12 @@ function loadCompaniesFromClients(): Company[] {
         });
       }
     }
+    console.log("Companies from clients:", companies);
     return companies;
-  } catch { return []; }
+  } catch (e) {
+    console.error("Error loading companies from clients:", e);
+    return [];
+  }
 }
 
 interface Props {

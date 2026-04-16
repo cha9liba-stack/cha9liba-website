@@ -38,7 +38,13 @@ export default function Driver1Tab({ register, errors, prefix, setValue, watch }
 
         if (data) {
           Object.entries(data).forEach(([key, val]) => {
-            if (val) setValue(key, val, { shouldDirty: true });
+            // Skip invalid phone numbers from contracts
+            if (key === 'driverPhone' && typeof val === 'string' && (val === '00' || val === '000' || val === '0000' || val.length <= 3)) {
+              return;
+            }
+            if (val) {
+              setValue(key, val, { shouldDirty: true });
+            }
           });
           setFound(true);
           setTimeout(() => setFound(false), 3000);
