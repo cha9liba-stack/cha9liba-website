@@ -32,6 +32,7 @@ export default function Invoices() {
   const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("number");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -51,6 +52,15 @@ export default function Invoices() {
       (inv.number || "").toLowerCase().includes(q) ||
       (inv.client?.name || "").toLowerCase().includes(q)
     );
+
+    // Filter by year
+    if (selectedYear !== "all") {
+      result = result.filter(inv => {
+        const invYear = (inv.date || "").slice(0, 4);
+        return invYear === selectedYear;
+      });
+    }
+
     result.sort((a, b) => {
       let va = "", vb = "";
       if (sortKey === "number") { va = a.number || ""; vb = b.number || ""; }
@@ -60,7 +70,13 @@ export default function Invoices() {
       return sortDir === "asc" ? va.localeCompare(vb) : vb.localeCompare(va);
     });
     return result;
-  }, [invoices, search, sortKey, sortDir]);
+  }, [invoices, search, sortKey, sortDir, selectedYear]);
+
+  // Get available years from invoices
+  const availableYears = useMemo(() => {
+    const years = new Set(invoices.map(inv => (inv.date || "").slice(0, 4)).filter(y => y));
+    return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+  }, [invoices]);
 
   async function handleDelete(id: string) {
     await deleteInvoice(id);
@@ -101,14 +117,26 @@ export default function Invoices() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search size={15} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? "right-3" : "left-3"}`} />
-        <input
-          type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder={isRTL ? "بحث..." : "Rechercher..."}
-          className={`w-full bg-white border border-slate-200 rounded-xl py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${isRTL ? "pr-9 pl-4" : "pl-9 pr-4"}`}
-        />
+      {/* Search and Year Filter */}
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <Search size={15} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? "right-3" : "left-3"}`} />
+          <input
+            type="text" value={search} onChange={e => setSearch(e.target.value)}
+            placeholder={isRTL ? "بحث..." : "Rechercher..."}
+            className={`w-full bg-white border border-slate-200 rounded-xl py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${isRTL ? "pr-9 pl-4" : "pl-9 pr-4"}`}
+          />
+        </div>
+        <select
+          value={selectedYear}
+          onChange={e => setSelectedYear(e.target.value)}
+          className="bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 min-w-[140px]"
+        >
+          <option value="all">{isRTL ? "كل السنوات" : "Toutes les années"}</option>
+          {availableYears.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
       </div>
 
       {/* Table */}
