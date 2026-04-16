@@ -30,7 +30,12 @@ async function loadClientsFromFirebase(): Promise<Client[] | null> {
     const res = await fetch(`${DB}/clients.json`);
     if (!res.ok) return null;
     const data = await res.json();
+    // Handle both array and object formats
     if (Array.isArray(data) && data.length > 0) return data;
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+      const array = Object.values(data) as Client[];
+      if (array.length > 0) return array;
+    }
     return null;
   } catch { return null; }
 }

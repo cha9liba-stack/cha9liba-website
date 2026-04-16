@@ -8,9 +8,11 @@ import {
   calcInvoiceTotals, amountInWords, updateInvoice
 } from "../../services/invoiceService";
 import type { Invoice, InvoiceLine, InvoiceType } from "../../types/invoice";
+import type { Client } from "../../types";
 
 // ─── Company registry ─────────────────────────────────────────────────────────
 const COMPANIES_KEY = "palma_companies";
+const CLIENTS_KEY = "palma_clients";
 interface Company {
   id: string;
   name: string;
@@ -22,6 +24,26 @@ function loadCompanies(): Company[] {
   try { return JSON.parse(localStorage.getItem(COMPANIES_KEY) || "[]"); } catch { return []; }
 }
 function saveCompanies(d: Company[]) { localStorage.setItem(COMPANIES_KEY, JSON.stringify(d)); }
+
+// Load companies from clients (clients with isCompany=true or company info)
+function loadCompaniesFromClients(): Company[] {
+  try {
+    const clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]") as Client[];
+    const companies: Company[] = [];
+    for (const client of clients) {
+      if (client.isCompany && client.company?.name) {
+        companies.push({
+          id: client.id,
+          name: client.company.name,
+          mf: client.company.mf || "",
+          address: client.company.address || "",
+          phone: client.company.phone || "",
+        });
+      }
+    }
+    return companies;
+  } catch { return []; }
+}
 
 interface Props {
   invoice?: Invoice;
@@ -46,8 +68,19 @@ export default function InvoiceModal({ invoice, onSave, onClose }: Props) {
   const [contractSearch, setContractSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Company state
-  const [companies, setCompanies] = useState<Company[]>(loadCompanies);
+  // Company state - load from both palma_companies and clients
+  const [companies, setCompanies] = useState<Company[]>(() => {
+    const regCompanies = loadCompanies();
+    const clientCompanies = loadCompaniesFromClients();
+    // Merge without duplicates (by id)
+    const merged = [...regCompanies];
+    for (const cc of clientCompanies) {
+      if (!merged.find(c => c.id === cc.id)) {
+        merged.push(cc);
+      }
+    }
+    return merged;
+  });
   const [showCompanyPicker, setShowCompanyPicker] = useState(false);
   const [showAddCompany, setShowAddCompany] = useState(false);
   const [newCompany, setNewCompany] = useState<Omit<Company, "id">>({ name: "", mf: "", address: "", phone: "" });
