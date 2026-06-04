@@ -392,7 +392,13 @@ try {
                 <tbody className="divide-y divide-slate-100">
                   {lines.map((l, i) => (
                     <tr key={i} className="hover:bg-slate-50">
-                      <td className="px-3 py-2 font-mono text-amber-600">#{l.contractNumber}</td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={l.contractNumber}
+                          onChange={e => updateLine(i, "contractNumber", e.target.value)}
+                          className="input text-xs py-1 w-28 font-mono text-amber-600"
+                        />
+                      </td>
                       <td className="px-3 py-2">
                         <input type="date" value={l.date} onChange={e => updateLine(i, "date", e.target.value)}
                           className="input text-xs py-1 w-32" />
