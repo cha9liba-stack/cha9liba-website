@@ -1,71 +1,591 @@
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palma Trading | Expert Advisors MT5</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <!-- SEO Primary -->
-    <title>Palma Rent a Car Kélibia - Location de Voitures à Kélibia, Tunisie</title>
-    <meta name="description" content="Palma Rent a Car Kélibia — Location de voitures à Kélibia, Nabeul. Large choix de véhicules récents, prix compétitifs, assurance comprise, kilométrage illimité. Réservation en ligne 24h/24." />
-    <meta name="keywords" content="location voiture Kélibia, rent a car Kélibia, location voiture Nabeul, Palma rent car, تأجير سيارات قليبية, كراء سيارات قليبية" />
-    <meta name="author" content="Palma Rent a Car" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://palmarentacar.vercel.app" />
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            line-height: 1.6;
+        }
 
-    <!-- Open Graph (Facebook, WhatsApp) -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Palma Rent a Car Kélibia - Location de Voitures" />
-    <meta property="og:description" content="Location de voitures à Kélibia, Nabeul. Prix compétitifs, assurance comprise, kilométrage illimité. Réservez en ligne !" />
-    <meta property="og:url" content="https://palmarentacar.vercel.app" />
-    <meta property="og:image" content="/logo.png" />
-    <meta property="og:locale" content="fr_TN" />
-    <meta property="og:site_name" content="Palma Rent a Car" />
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Palma Rent a Car Kélibia" />
-    <meta name="twitter:description" content="Location de voitures à Kélibia, Nabeul. Réservez en ligne !" />
-    <meta name="twitter:image" content="/logo.png" />
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
 
-    <!-- Geo tags -->
-    <meta name="geo.region" content="TN-21" />
-    <meta name="geo.placename" content="Kélibia, Nabeul, Tunisie" />
-    <meta name="geo.position" content="36.8469;11.1014" />
-    <meta name="ICBM" content="36.8469, 11.1014" />
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00d4aa;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
 
-    <!-- Schema.org JSON-LD -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "CarRental",
-      "name": "Palma Rent a Car",
-      "description": "Location de voitures à Kélibia, Nabeul, Tunisie",
-      "url": "https://palmarentacar.vercel.app",
-      "telephone": "+21672208711",
-      "email": "ste.palmacar@gmail.com",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Avenue du Tunis",
-        "addressLocality": "Kélibia",
-        "postalCode": "8090",
-        "addressCountry": "TN"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": 36.8469,
-        "longitude": 11.1014
-      },
-      "openingHours": "Mo-Su 00:00-24:00",
-      "priceRange": "$$",
-      "image": "/logo.png"
-    }
-    </script>
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
 
-    <link rel="icon" type="image/x-icon" href="/logo.ico" />
-  </head>
+        .nav-links a {
+            color: #8a8a9a;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 120px 0 80px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #00d4aa;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(135deg, #00d4aa, #00a3ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: #6a6a7a;
+            max-width: 560px;
+            margin: 0 auto 40px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: #00d4aa;
+            color: #0a0a0f;
+        }
+
+        .btn-primary:hover {
+            background: #00b894;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            padding: 80px 0;
+        }
+
+        .feature-card {
+            padding: 40px 32px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(0, 212, 170, 0.3);
+            background: rgba(0, 212, 170, 0.03);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 212, 170, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon i {
+            font-size: 1.2rem;
+            color: #00d4aa;
+        }
+
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: #6a6a7a;
+            line-height: 1.7;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .section-header p {
+            font-size: 1rem;
+            color: #6a6a7a;
+        }
+
+        .products {
+            padding: 80px 0;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .product-card {
+            padding: 40px 32px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            border-color: rgba(0, 212, 170, 0.3);
+        }
+
+        .product-card.featured {
+            border-color: rgba(0, 212, 170, 0.4);
+            background: rgba(0, 212, 170, 0.03);
+        }
+
+        .product-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 14px;
+            background: #00d4aa;
+            color: #0a0a0f;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 12px;
+        }
+
+        .product-card h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .product-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00d4aa;
+            margin: 24px 0;
+        }
+
+        .product-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #6a6a7a;
+        }
+
+        .product-features {
+            list-style: none;
+            margin: 32px 0;
+        }
+
+        .product-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.9rem;
+            color: #a0a0b0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-features li i {
+            color: #00d4aa;
+            font-size: 0.8rem;
+        }
+
+        .btn-product {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            text-align: center;
+            background: rgba(0, 212, 170, 0.1);
+            color: #00d4aa;
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-product:hover {
+            background: #00d4aa;
+            color: #0a0a0f;
+        }
+
+        .btn-product-filled {
+            background: #00d4aa;
+            color: #0a0a0f;
+            border: none;
+        }
+
+        .btn-product-filled:hover {
+            background: #00b894;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            padding: 80px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00d4aa;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6a6a7a;
+        }
+
+        .contact {
+            padding: 80px 0;
+        }
+
+        .contact-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 60px;
+            text-align: center;
+        }
+
+        .contact-box h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .contact-box p {
+            color: #6a6a7a;
+            margin-bottom: 32px;
+        }
+
+        .contact-methods {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .contact-method {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #a0a0b0;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-method:hover {
+            color: #00d4aa;
+        }
+
+        .contact-method i {
+            font-size: 1.1rem;
+            color: #00d4aa;
+        }
+
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer p {
+            font-size: 0.85rem;
+            color: #4a4a5a;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-size: 0.85rem;
+            color: #4a4a5a;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 968px) {
+            .features,
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .contact-methods {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="#" class="logo">PALMA</a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a href="#contact" class="btn btn-primary">Get Started</a>
+        </nav>
+
+        <section class="hero">
+            <div class="badge">Professional Trading Solutions</div>
+            <h1>Automated Trading<br><span>Expert Advisors</span></h1>
+            <p>High-performance MT5 Expert Advisors built with advanced algorithms and proven strategies for consistent results.</p>
+            <div class="btn-group">
+                <a href="#products" class="btn btn-primary">View Products</a>
+                <a href="#contact" class="btn btn-secondary">Contact Us</a>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>Advanced Algorithms</h3>
+                <p>EAs powered by machine learning and statistical analysis for market-adaptive trading decisions.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3>Risk Management</h3>
+                <p>Built-in stop loss, take profit, and drawdown protection to safeguard your capital.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Real-Time Analytics</h3>
+                <p>Live performance tracking and detailed reporting for informed decision making.</p>
+            </div>
+        </section>
+
+        <section class="products" id="products">
+            <div class="section-header">
+                <h2>Our Products</h2>
+                <p>Choose the Expert Advisor that fits your trading style</p>
+            </div>
+            <div class="product-grid">
+                <div class="product-card">
+                    <h3>EA Scalper Pro</h3>
+                    <div class="product-price">$199 <span>/ one-time</span></div>
+                    <ul class="product-features">
+                        <li><i class="fas fa-check"></i> M1/M5 Timeframes</li>
+                        <li><i class="fas fa-check"></i> Low Spread Pairs</li>
+                        <li><i class="fas fa-check"></i> Auto Risk Adjustment</li>
+                        <li><i class="fas fa-check"></i> Backtest Results Included</li>
+                        <li><i class="fas fa-check"></i> 30-Day Support</li>
+                    </ul>
+                    <a href="#contact" class="btn-product">Purchase Now</a>
+                </div>
+                <div class="product-card featured">
+                    <div class="product-tag">Most Popular</div>
+                    <h3>EA Gold Master</h3>
+                    <div class="product-price">$349 <span>/ one-time</span></div>
+                    <ul class="product-features">
+                        <li><i class="fas fa-check"></i> XAUUSD Optimized</li>
+                        <li><i class="fas fa-check"></i> M15/H1 Timeframes</li>
+                        <li><i class="fas fa-check"></i> Trend Following System</li>
+                        <li><i class="fas fa-check"></i> Trailing Stop Loss</li>
+                        <li><i class="fas fa-check"></i> Lifetime Updates</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                    </ul>
+                    <a href="#contact" class="btn-product btn-product-filled">Purchase Now</a>
+                </div>
+                <div class="product-card">
+                    <h3>EA Forex Suite</h3>
+                    <div class="product-price">$499 <span>/ one-time</span></div>
+                    <ul class="product-features">
+                        <li><i class="fas fa-check"></i> All Major Pairs</li>
+                        <li><i class="fas fa-check"></i> Multi-Timeframe Analysis</li>
+                        <li><i class="fas fa-check"></i> News Filter</li>
+                        <li><i class="fas fa-check"></i> Custom Parameters</li>
+                        <li><i class="fas fa-check"></i> VPS Setup Guide</li>
+                        <li><i class="fas fa-check"></i> 1-Year Support</li>
+                    </ul>
+                    <a href="#contact" class="btn-product">Purchase Now</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="stat-item">
+                <div class="stat-value">500+</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">94%</div>
+                <div class="stat-label">Win Rate</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">3+</div>
+                <div class="stat-label">Years Active</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">24/7</div>
+                <div class="stat-label">Support</div>
+            </div>
+        </section>
+
+        <section class="contact" id="contact">
+            <div class="contact-box">
+                <h2>Get In Touch</h2>
+                <p>Have questions? We're here to help.</p>
+                <div class="contact-methods">
+                    <a href="mailto:contact@palma-trading.com" class="contact-method">
+                        <i class="fas fa-envelope"></i>
+                        contact@palma-trading.com
+                    </a>
+                    <a href="#" class="contact-method">
+                        <i class="fab fa-telegram"></i>
+                        @palma_trading
+                    </a>
+                    <a href="#" class="contact-method">
+                        <i class="fab fa-discord"></i>
+                        Join Discord
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Palma Trading. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Disclaimer</a>
+            </div>
+        </footer>
+    </div>
+</body>
 </html>
